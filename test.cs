@@ -6,9 +6,10 @@ using System.Linq;
 public class IslandTextureGeneratorEditor : EditorWindow
 {
     private SkinnedMeshRenderer skinnedMeshRenderer;
-    private List<List<int>> islands;
+    private List<Island> islands;
     private Texture2D generatedTexture;
-    private int padding = 0; // パディングのデフォルト値
+    private int padding = 5; // パディングのデフォルト値
+    private Vector2 scrollPosition;
 
     [MenuItem("Window/Island Texture Generator")]
     public static void ShowWindow()
@@ -26,7 +27,8 @@ public class IslandTextureGeneratorEditor : EditorWindow
             skinnedMeshRenderer = newRenderer;
             if (skinnedMeshRenderer != null)
             {
-                islands = MeshIslandUtility.GetIslands(skinnedMeshRenderer);
+                islands = MeshIslandUtility.GetIslands(skinnedMeshRenderer, padding);
+                Debug.Log(islands.Count);
                 generatedTexture = MeshIslandUtility.GenerateIslandMaskedTexture(skinnedMeshRenderer, islands, 512, 512, padding);
             }
         }
@@ -34,7 +36,18 @@ public class IslandTextureGeneratorEditor : EditorWindow
         if (generatedTexture != null)
         {
             GUILayout.Label("Generated Texture:");
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
             GUILayout.Label(generatedTexture);
+            GUILayout.EndScrollView();
+
+            Rect textureRect = GUILayoutUtility.GetLastRect();
+            Vector2 textureCoords = Event.current.mousePosition - new Vector2(textureRect.x, textureRect.y);
+            
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+            {   
+                Debug.Log(1);
+                HandleTextureClick(textureCoords, textureRect);
+            }
         }
 
         padding = EditorGUILayout.IntField("Padding", padding);
@@ -50,11 +63,59 @@ public class IslandTextureGeneratorEditor : EditorWindow
             }
         }
     }
+
+    private void HandleTextureClick(Vector2 textureCoords, Rect textureRect)
+    {
+        if (islands != null && islands.Count > 0)
+        {
+            Debug.Log(2);
+            Island clickedIsland = null;
+            foreach (var island in islands)
+            {
+                if (textureCoords.x >= island.StartX && textureCoords.x <= island.EndX &&
+                    textureCoords.y >= island.StartY && textureCoords.y <= island.EndY)
+                {
+                    if (clickedIsland == null || 
+                        (clickedIsland.EndX - clickedIsland.StartX) * (clickedIsland.EndY - clickedIsland.StartY) > 
+                        (island.EndX - island.StartX) * (island.EndY - island.StartY))
+                    {
+                        Debug.Log(3);
+                        clickedIsland = island;
+                    }
+                }
+            }
+
+            if (clickedIsland != null)
+            {
+                ColorVertices(clickedIsland.Vertices, Color.cyan);
+                generatedTexture = MeshIslandUtility.GenerateIslandMaskedTexture(skinnedMeshRenderer, islands, 512, 512, padding); // テクスチャを再生成
+                Repaint();
+            }
+        }
+    }
+
+    private void ColorVertices(List<int> vertices, Color color)
+    {
+        Mesh mesh = skinnedMeshRenderer.sharedMesh;
+        Color[] vertexColors = new Color[mesh.vertexCount];
+
+        for (int i = 0; i < vertexColors.Length; i++)
+        {
+            vertexColors[i] = mesh.colors.Length > 0 ? mesh.colors[i] : Color.white;
+        }
+
+        foreach (int vertex in vertices)
+        {
+            vertexColors[vertex] = color;
+        }
+
+        mesh.colors = vertexColors;
+    }
 }
 
 public static class MeshIslandUtility
 {
-    public static List<List<int>> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
+    public static List<Island> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer, int padding)
     {
         Mesh mesh = skinnedMeshRenderer.sharedMesh;
         int[] triangles = mesh.triangles;
@@ -84,16 +145,17 @@ public static class MeshIslandUtility
             islandDict[root].Add(i);
         }
 
-        List<List<int>> islands = new List<List<int>>();
-        foreach (var island in islandDict.Values)
+        List<Island> islands = new List<Island>();
+        foreach (var kvp in islandDict)
         {
+            var island = CreateIsland(kvp.Value, mesh.uv, padding);
             islands.Add(island);
         }
 
         return islands;
     }
 
-    public static Texture2D GenerateIslandMaskedTexture(SkinnedMeshRenderer skinnedMeshRenderer, List<List<int>> islands, int width, int height, int padding)
+    public static Texture2D GenerateIslandMaskedTexture(SkinnedMeshRenderer skinnedMeshRenderer, List<Island> islands, int width, int height, int padding)
     {
         Mesh mesh = skinnedMeshRenderer.sharedMesh;
         Vector2[] uv = mesh.uv;
@@ -105,22 +167,10 @@ public static class MeshIslandUtility
 
         foreach (var island in islands)
         {
-            float minX = float.MaxValue, minY = float.MaxValue;
-            float maxX = float.MinValue, maxY = float.MinValue;
-
-            foreach (int vertexIndex in island)
-            {
-                Vector2 uvCoord = uv[vertexIndex];
-                if (uvCoord.x < minX) minX = uvCoord.x;
-                if (uvCoord.y < minY) minY = uvCoord.y;
-                if (uvCoord.x > maxX) maxX = uvCoord.x;
-                if (uvCoord.y > maxY) maxY = uvCoord.y;
-            }
-
-            int startX = Mathf.Max(0, Mathf.FloorToInt(minX * width) - padding);
-            int startY = Mathf.Max(0, Mathf.FloorToInt(minY * height) - padding);
-            int endX = Mathf.Min(width - 1, Mathf.CeilToInt(maxX * width) + padding);
-            int endY = Mathf.Min(height - 1, Mathf.CeilToInt(maxY * height) + padding);
+            int startX = Mathf.Max(0, island.StartX - padding);
+            int startY = Mathf.Max(0, island.StartY - padding);
+            int endX = Mathf.Min(width - 1, island.EndX + padding);
+            int endY = Mathf.Min(height - 1, island.EndY + padding);
 
             for (int x = startX; x <= endX; x++)
             {
@@ -135,18 +185,33 @@ public static class MeshIslandUtility
                     colors[y * width + x] = color;
                 }
             }
-            foreach (int vertexIndex in island)
-            {
-                Vector2 uvCoord = uv[vertexIndex];
-                int x = Mathf.FloorToInt(uvCoord.x * width);
-                int y = Mathf.FloorToInt(uvCoord.y * height);
-                colors[y * width + x] = Color.cyan;
-            }
         }
 
         texture.SetPixels(colors);
         texture.Apply();
         return texture;
+    }
+
+    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int padding)
+    {
+        float minX = float.MaxValue, minY = float.MaxValue;
+        float maxX = float.MinValue, maxY = float.MinValue;
+
+        foreach (int vertexIndex in vertices)
+        {
+            Vector2 uvCoord = uv[vertexIndex];
+            if (uvCoord.x < minX) minX = uvCoord.x;
+            if (uvCoord.y < minY) minY = uvCoord.y;
+            if (uvCoord.x > maxX) maxX = uvCoord.x;
+            if (uvCoord.y > maxY) maxY = uvCoord.y;
+        }
+
+        int startX = Mathf.FloorToInt(minX * 512); // 512はテクスチャの幅
+        int startY = Mathf.FloorToInt(minY * 512); // 512はテクスチャの高さ
+        int endX = Mathf.CeilToInt(maxX * 512);
+        int endY = Mathf.CeilToInt(maxY * 512);
+
+        return new Island(vertices, startX, startY, endX, endY);
     }
 
     public static Texture2D MakeReadable(Texture2D original)
@@ -187,6 +252,24 @@ public static class MeshIslandUtility
                            .OrderByDescending(g => g.Count())
                            .First()
                            .Key;
+    }
+}
+
+public class Island
+{
+    public List<int> Vertices { get; }
+    public int StartX { get; }
+    public int StartY { get; }
+    public int EndX { get; }
+    public int EndY { get; }
+
+    public Island(List<int> vertices, int startX, int startY, int endX, int endY)
+    {
+        Vertices = vertices;
+        StartX = startX;
+        StartY = startY;
+        EndX = endX;
+        EndY = endY;
     }
 }
 
