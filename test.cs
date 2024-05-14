@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
 
 public class IslandTextureGeneratorEditor : EditorWindow
 {
     private SkinnedMeshRenderer skinnedMeshRenderer;
     private List<List<int>> islands;
-    private Texture2D texture;
+    private Texture2D generatedTexture;
+    private int padding = 0; // パディングのデフォルト値
 
     [MenuItem("Window/Island Texture Generator")]
     public static void ShowWindow()
@@ -25,24 +27,26 @@ public class IslandTextureGeneratorEditor : EditorWindow
             if (skinnedMeshRenderer != null)
             {
                 islands = MeshIslandUtility.GetIslands(skinnedMeshRenderer);
-                texture = MeshIslandUtility.GenerateIslandExclusionTexture(skinnedMeshRenderer, islands, 512, 512);
+                generatedTexture = MeshIslandUtility.GenerateIslandMaskedTexture(skinnedMeshRenderer, islands, 512, 512, padding);
             }
         }
 
-        if (texture != null)
+        if (generatedTexture != null)
         {
             GUILayout.Label("Generated Texture:");
-            GUILayout.Label(texture);
+            GUILayout.Label(generatedTexture);
         }
+
+        padding = EditorGUILayout.IntField("Padding", padding);
 
         if (GUILayout.Button("Save Texture"))
         {
-            if (texture != null)
+            if (generatedTexture != null)
             {
-                byte[] bytes = texture.EncodeToPNG();
-                System.IO.File.WriteAllBytes("Assets/IslandExclusionTexture.png", bytes);
+                byte[] bytes = generatedTexture.EncodeToPNG();
+                System.IO.File.WriteAllBytes("Assets/IslandMaskedTexture.png", bytes);
                 AssetDatabase.Refresh();
-                Debug.Log("Texture saved to Assets/IslandExclusionTexture.png");
+                Debug.Log("Texture saved to Assets/IslandMaskedTexture.png");
             }
         }
     }
@@ -89,32 +93,100 @@ public static class MeshIslandUtility
         return islands;
     }
 
-    public static Texture2D GenerateIslandExclusionTexture(SkinnedMeshRenderer skinnedMeshRenderer, List<List<int>> islands, int width, int height)
+    public static Texture2D GenerateIslandMaskedTexture(SkinnedMeshRenderer skinnedMeshRenderer, List<List<int>> islands, int width, int height, int padding)
     {
         Mesh mesh = skinnedMeshRenderer.sharedMesh;
         Vector2[] uv = mesh.uv;
-        Texture2D texture = new Texture2D(width, height);
-        Color[] colors = new Color[width * height];
+        Texture2D originalTexture = MakeReadable((Texture2D)skinnedMeshRenderer.sharedMaterial.mainTexture);
 
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = Color.black;
-        }
+        Color backgroundColor = GetDominantCornerColor(originalTexture);
+        Texture2D texture = new Texture2D(width, height);
+        Color[] colors = Enumerable.Repeat(backgroundColor, width * height).ToArray();
 
         foreach (var island in islands)
         {
+            float minX = float.MaxValue, minY = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue;
+
+            foreach (int vertexIndex in island)
+            {
+                Vector2 uvCoord = uv[vertexIndex];
+                if (uvCoord.x < minX) minX = uvCoord.x;
+                if (uvCoord.y < minY) minY = uvCoord.y;
+                if (uvCoord.x > maxX) maxX = uvCoord.x;
+                if (uvCoord.y > maxY) maxY = uvCoord.y;
+            }
+
+            int startX = Mathf.Max(0, Mathf.FloorToInt(minX * width) - padding);
+            int startY = Mathf.Max(0, Mathf.FloorToInt(minY * height) - padding);
+            int endX = Mathf.Min(width - 1, Mathf.CeilToInt(maxX * width) + padding);
+            int endY = Mathf.Min(height - 1, Mathf.CeilToInt(maxY * height) + padding);
+
+            for (int x = startX; x <= endX; x++)
+            {
+                for (int y = startY; y <= endY; y++)
+                {
+                    float u = (float)x / width;
+                    float v = (float)y / height;
+
+                    if (u < 0 || u > 1 || v < 0 || v > 1) continue;
+
+                    Color color = originalTexture.GetPixelBilinear(u, v);
+                    colors[y * width + x] = color;
+                }
+            }
             foreach (int vertexIndex in island)
             {
                 Vector2 uvCoord = uv[vertexIndex];
                 int x = Mathf.FloorToInt(uvCoord.x * width);
                 int y = Mathf.FloorToInt(uvCoord.y * height);
-                colors[y * width + x] = Color.white;
+                colors[y * width + x] = Color.cyan;
             }
         }
 
         texture.SetPixels(colors);
         texture.Apply();
         return texture;
+    }
+
+    public static Texture2D MakeReadable(Texture2D original)
+    {
+        RenderTexture tempRT = RenderTexture.GetTemporary(
+            original.width,
+            original.height,
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear
+        );
+
+        Graphics.Blit(original, tempRT);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = tempRT;
+
+        Texture2D readableTexture = new Texture2D(original.width, original.height);
+        readableTexture.ReadPixels(new Rect(0, 0, tempRT.width, tempRT.height), 0, 0);
+        readableTexture.Apply();
+
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(tempRT);
+
+        return readableTexture;
+    }
+
+    public static Color GetDominantCornerColor(Texture2D texture)
+    {
+        Color[] cornerColors = new Color[]
+        {
+            texture.GetPixel(0, 0), // Bottom-left corner
+            texture.GetPixel(texture.width - 1, 0), // Bottom-right corner
+            texture.GetPixel(0, texture.height - 1), // Top-left corner
+            texture.GetPixel(texture.width - 1, texture.height - 1) // Top-right corner
+        };
+
+        return cornerColors.GroupBy(c => c)
+                           .OrderByDescending(g => g.Count())
+                           .First()
+                           .Key;
     }
 }
 
