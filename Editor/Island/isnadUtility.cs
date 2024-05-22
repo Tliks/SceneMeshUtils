@@ -62,9 +62,9 @@ public class Island
 
     public int Index { get; }
 
-    public List<int> BoundaryVertices { get; }
+    public HashSet<(int, int)> BoundaryVertices { get; }
 
-    public Island(List<int> vertices, Vector2 startUV, Vector2 endUV, int index, float area, List<int> boundaryVertices)
+    public Island(List<int> vertices, Vector2 startUV, Vector2 endUV, int index, float area, HashSet<(int, int)> boundaryVertices)
     {
         Vertices = vertices;
         StartUV = startUV;
@@ -151,7 +151,7 @@ public static class MeshIslandUtility
         vertexEdges[v2].Add(v1);
     }
 
-    private static List<int> GetBoundaryVertices(List<int> vertices, Dictionary<(int, int), int> edgeCount, Dictionary<int, List<int>> vertexEdges)
+    private static HashSet<(int, int)> GetBoundaryVertices(List<int> vertices, Dictionary<(int, int), int> edgeCount, Dictionary<int, List<int>> vertexEdges)
     {
         HashSet<int> boundaryVertices = new HashSet<int>();
         HashSet<(int, int)> boundaryEdges = new HashSet<(int, int)>();
@@ -173,7 +173,8 @@ public static class MeshIslandUtility
             }
         }
         //return OrderBoundaryVertices(boundaryVertices, boundaryEdges);
-        return  boundaryVertices.ToList();
+        //return  boundaryVertices.ToList();
+        return boundaryEdges;
     }
 
     private static List<int> OrderBoundaryVertices(HashSet<int> boundaryVertices, HashSet<(int, int)> boundaryEdges)
@@ -215,7 +216,7 @@ public static class MeshIslandUtility
         return orderedBoundary;
     }
 
-    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int index, List<int> boundaryVertices)
+    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int index, HashSet<(int, int)> boundaryVertices)
     {
         float minX = float.MaxValue, minY = float.MaxValue;
         float maxX = float.MinValue, maxY = float.MinValue;

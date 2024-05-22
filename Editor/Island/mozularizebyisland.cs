@@ -19,8 +19,7 @@ public class ModuleCreatorIsland : EditorWindow
     private Dictionary<int, Mesh> islandMeshes = new Dictionary<int, Mesh>();
     private int previousIslandIndex = -1;
 
-    private GameObject previewObject;
-    private SkinnedMeshRenderer previewRenderer;
+    private HighlightEdgesManager highlightManager;
 
     private Stopwatch stopwatch = new Stopwatch();
     private const double raycastInterval = 0.01;
@@ -48,9 +47,9 @@ public class ModuleCreatorIsland : EditorWindow
     {
         SceneView.duringSceneGui -= OnSceneGUI;
         ClearPreviewMesh();
-        if (previewObject != null)
+        if (highlightManager != null)
         {
-            DestroyImmediate(previewObject);
+            DestroyImmediate(highlightManager.gameObject);
         }
     }
 
@@ -80,12 +79,25 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
+    private void EnsureHighlightManagerExists()
+    {
+        if (highlightManager == null)
+        {
+            highlightManager = skinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
+            highlightManager.SkinnedMeshRenderer = skinnedMeshRenderer;
+        }
+    }
+
     private void ToggleRaycast()
     {
         isRaycastEnabled = !isRaycastEnabled;
         if (!isRaycastEnabled)
         {
             ClearPreviewMesh();
+        }
+        else
+        {
+            EnsureHighlightManagerExists();
         }
     }
 
@@ -98,35 +110,6 @@ public class ModuleCreatorIsland : EditorWindow
         UnityEngine.Debug.Log($"Islands count: {islands.Count}");
         Island_Index.Clear();
         
-        GenerateIslandMeshes();
-    }
-
-    private void GenerateIslandMeshes()
-    {
-        stopwatch.Restart();
-        islandMeshes.Clear();
-
-        int islandsCount = islands.Count;
-        ConcurrentDictionary<int, List<int>> islandVerticesDict = new ConcurrentDictionary<int, List<int>>();
-
-        // Using parallel processing to collect island vertices
-        System.Threading.Tasks.Parallel.ForEach(Enumerable.Range(0, islandsCount), index =>
-        {
-            Island island = islands[index];
-            islandVerticesDict[index] = island.Vertices;
-        });
-
-        // Create meshes on the main thread
-        foreach (var kvp in islandVerticesDict)
-        {
-            int index = kvp.Key;
-            List<int> vertices = kvp.Value;
-            Mesh islandMesh = MeshDeletionUtility.DeleteMesh(skinnedMeshRenderer, vertices);
-            islandMeshes[index] = islandMesh;
-        }
-
-        stopwatch.Stop();
-        UnityEngine.Debug.Log($"Generate Island Meshes: {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private void CreateModule()
@@ -137,30 +120,14 @@ public class ModuleCreatorIsland : EditorWindow
             SaveModule(allVertices.ToList());
         }
         isRaycastEnabled = false;
-        ClearPreviewMesh();
         Island_Index.Clear();
     }
 
-    private void CreatePreviewMesh(int islandIndex)
+    private void ClearPreviewMesh()
     {
-        if (previewObject == null)
+        if (highlightManager != null)
         {
-            previewObject = new GameObject("PreviewObject");
-            previewObject.transform.position = Vector3.zero;
-            previewRenderer = previewObject.AddComponent<SkinnedMeshRenderer>();
-            previewRenderer.sharedMaterials = skinnedMeshRenderer.sharedMaterials;
-            previewRenderer.bones = skinnedMeshRenderer.bones;
-            previewRenderer.rootBone = skinnedMeshRenderer.rootBone;
-            Vector3 extents = new Vector3(10, 10, 10);
-            Vector3 center = new Vector3(0, 0, 0);
-            previewRenderer.localBounds =  new Bounds(center, extents);;
-        }
-
-        if (islandMeshes.TryGetValue(islandIndex, out Mesh previewMesh))
-        {
-            //UnityEngine.Debug.Log("Updated Island");
-            previewRenderer.sharedMesh = previewMesh;
-            Selection.activeGameObject = previewObject;
+            highlightManager.HighlightEdges(new HashSet<(int, int)>(), skinnedMeshRenderer);
         }
     }
 
@@ -180,10 +147,10 @@ public class ModuleCreatorIsland : EditorWindow
             PerformRaycast();
         }
 
-        UnityEngine.Debug.Log($"click?");
+        //UnityEngine.Debug.Log($"click?");
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
         {
-            UnityEngine.Debug.Log($"click");
+            //UnityEngine.Debug.Log($"click");
             if (!Island_Index.Contains(previousIslandIndex))
             {
                 Island_Index.Add(previousIslandIndex);
@@ -197,6 +164,22 @@ public class ModuleCreatorIsland : EditorWindow
     {
     }
 
+    private void HighlightIslandEdges(int islandIndex)
+    {
+        UnityEngine.Debug.Log($"raycast1");
+        if (highlightManager == null) EnsureHighlightManagerExists();
+
+        Island island = islands[islandIndex];
+        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+        foreach (var edge in island.BoundaryVertices)
+        {
+            edgesToHighlight.Add((edge.Item1, edge.Item2));
+        }
+
+        UnityEngine.Debug.Log($"raycast");
+        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+    }
+
     private void PerformRaycast()
     {
         if (EditorRaycastHelper.RaycastAgainstScene(out RaycastHit hit))
@@ -204,7 +187,7 @@ public class ModuleCreatorIsland : EditorWindow
             int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(skinnedMeshRenderer, hit.triangleIndex, islands);
             if (index != previousIslandIndex)
             {
-                CreatePreviewMesh(index);
+                HighlightIslandEdges(index);
                 previousIslandIndex = index;
             }
         }
@@ -228,14 +211,6 @@ public class ModuleCreatorIsland : EditorWindow
         stopwatch.Restart();
         new ModuleCreator(Settings).CheckAndCopyBones(skinnedMeshRenderer.gameObject);
         stopwatch.Stop();
-    }
-
-    private void ClearPreviewMesh()
-    {
-        if (previewRenderer != null)
-        {
-            previewRenderer.sharedMesh = null;
-        }
     }
 
 
