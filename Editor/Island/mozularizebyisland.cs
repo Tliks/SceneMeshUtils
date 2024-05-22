@@ -3,7 +3,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Collections.Concurrent;
 
 public class ModuleCreatorIsland : EditorWindow
 {
@@ -39,14 +38,13 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBoneColider = false
         };
         SceneView.duringSceneGui += OnSceneGUI;
-        EditorApplication.update += Update;
-
+        RemoveHighlight();
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
-        ClearPreviewMesh();
+        SceneView.RepaintAll();
         if (highlightManager != null)
         {
             DestroyImmediate(highlightManager.gameObject);
@@ -93,7 +91,7 @@ public class ModuleCreatorIsland : EditorWindow
         isRaycastEnabled = !isRaycastEnabled;
         if (!isRaycastEnabled)
         {
-            ClearPreviewMesh();
+            RemoveHighlight();
         }
         else
         {
@@ -109,7 +107,6 @@ public class ModuleCreatorIsland : EditorWindow
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         UnityEngine.Debug.Log($"Islands count: {islands.Count}");
         Island_Index.Clear();
-        
     }
 
     private void CreateModule()
@@ -121,63 +118,16 @@ public class ModuleCreatorIsland : EditorWindow
         }
         isRaycastEnabled = false;
         Island_Index.Clear();
+        RemoveHighlight();
     }
 
-    private void ClearPreviewMesh()
+    private void RemoveHighlight()
     {
         if (highlightManager != null)
         {
-            highlightManager.HighlightEdges(new HashSet<(int, int)>(), skinnedMeshRenderer);
+            DestroyImmediate(highlightManager);
+            SceneView.RepaintAll();
         }
-    }
-
-    private void OnSceneGUI(SceneView sceneView)
-    {
-        if (!isRaycastEnabled || skinnedMeshRenderer == null) return;
-
-        HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
-        
-        if (!isRaycastEnabled || skinnedMeshRenderer == null)
-            return;
-
-        double currentTime = EditorApplication.timeSinceStartup;
-        if (currentTime - lastUpdateTime >= raycastInterval)
-        {
-            lastUpdateTime = currentTime;
-            PerformRaycast();
-        }
-
-        //UnityEngine.Debug.Log($"click?");
-        if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
-        {
-            //UnityEngine.Debug.Log($"click");
-            if (!Island_Index.Contains(previousIslandIndex))
-            {
-                Island_Index.Add(previousIslandIndex);
-            }
-            Repaint();
-        }
-
-    }
-
-    private void Update()
-    {
-    }
-
-    private void HighlightIslandEdges(int islandIndex)
-    {
-        UnityEngine.Debug.Log($"raycast1");
-        if (highlightManager == null) EnsureHighlightManagerExists();
-
-        Island island = islands[islandIndex];
-        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        foreach (var edge in island.BoundaryVertices)
-        {
-            edgesToHighlight.Add((edge.Item1, edge.Item2));
-        }
-
-        UnityEngine.Debug.Log($"raycast");
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
     }
 
     private void PerformRaycast()
@@ -191,6 +141,40 @@ public class ModuleCreatorIsland : EditorWindow
                 previousIslandIndex = index;
             }
         }
+    }
+
+    private void OnSceneGUI(SceneView sceneView)
+    {
+        if (!isRaycastEnabled || skinnedMeshRenderer == null) return;
+
+        HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+        
+        double currentTime = EditorApplication.timeSinceStartup;
+        if (currentTime - lastUpdateTime >= raycastInterval)
+        {
+            lastUpdateTime = currentTime;
+            PerformRaycast();
+        }
+
+        if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+        {
+            if (!Island_Index.Contains(previousIslandIndex))
+            {
+                Island_Index.Add(previousIslandIndex);
+            }
+            Repaint();
+        }
+    }
+
+    private void HighlightIslandEdges(int islandIndex)
+    {
+        Island island = islands[islandIndex];
+        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+        foreach (var edge in island.AllEdges)
+        {
+            edgesToHighlight.Add((edge.Item1, edge.Item2));
+        }
+        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
     }
 
     private void SaveModule(List<int> vertices)
@@ -212,7 +196,6 @@ public class ModuleCreatorIsland : EditorWindow
         new ModuleCreator(Settings).CheckAndCopyBones(skinnedMeshRenderer.gameObject);
         stopwatch.Stop();
     }
-
 
     private void porcess_options()
     {   
@@ -253,34 +236,4 @@ public class ModuleCreatorIsland : EditorWindow
 
         EditorGUILayout.Space();
     }
-
-
-    /*
-    private void Update()
-    {
-        if (!isRaycastEnabled || skinnedMeshRenderer == null || islands == null || islands.Count == 0)
-            return;
-
-        HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
-        RaycastHit hit;
-
-        if (EditorRaycastHelper.RaycastAgainstScene(out hit))
-        {
-            int triangleIndex = hit.triangleIndex;
-            int currentIslandIndex = MeshIslandUtility.GetIslandIndexFromTriangleIndex(skinnedMeshRenderer, triangleIndex, islands);
-
-            if (currentIslandIndex != previousIslandIndex)
-            {
-                previousIslandIndex = currentIslandIndex;
-
-                if (!Island_Index.Contains(currentIslandIndex))
-                {
-                    Island_Index.Add(currentIslandIndex);
-                    CreatePreviewMesh(islands[currentIslandIndex]);
-                    Repaint();
-                }
-            }
-        }
-    }
-    */
 }

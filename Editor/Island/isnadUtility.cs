@@ -53,18 +53,14 @@ public class UnionFind
 public class Island
 {
     public List<int> Vertices { get; }
-
     public Vector2 StartUV { get; }
-
     public Vector2 EndUV { get; }
-
     public float Area { get; }
-
     public int Index { get; }
-
     public HashSet<(int, int)> BoundaryVertices { get; }
+    public HashSet<(int, int)> AllEdges { get; }
 
-    public Island(List<int> vertices, Vector2 startUV, Vector2 endUV, int index, float area, HashSet<(int, int)> boundaryVertices)
+    public Island(List<int> vertices, Vector2 startUV, Vector2 endUV, int index, float area, HashSet<(int, int)> boundaryVertices, HashSet<(int, int)> allEdges)
     {
         Vertices = vertices;
         StartUV = startUV;
@@ -72,9 +68,9 @@ public class Island
         Index = index;
         Area = area;
         BoundaryVertices = boundaryVertices;
+        AllEdges = allEdges;
     }
 }
-
 
 public static class MeshIslandUtility
 {
@@ -118,8 +114,9 @@ public static class MeshIslandUtility
         int index = 0;
         foreach (var kvp in islandDict)
         {
+            var allEdges = GetAllEdges(kvp.Value, vertexEdges);
             var boundaryVertices = GetBoundaryVertices(kvp.Value, edgeCount, vertexEdges);
-            var island = CreateIsland(kvp.Value, mesh.uv, index, boundaryVertices);
+            var island = CreateIsland(kvp.Value, mesh.uv, index, boundaryVertices, allEdges);
             islands.Add(island);
             index++;
         }
@@ -172,51 +169,29 @@ public static class MeshIslandUtility
                 }
             }
         }
-        //return OrderBoundaryVertices(boundaryVertices, boundaryEdges);
-        //return  boundaryVertices.ToList();
         return boundaryEdges;
     }
 
-    private static List<int> OrderBoundaryVertices(HashSet<int> boundaryVertices, HashSet<(int, int)> boundaryEdges)
+    private static HashSet<(int, int)> GetAllEdges(List<int> vertices, Dictionary<int, List<int>> vertexEdges)
     {
-        List<int> orderedBoundary = new List<int>();
-        HashSet<int> visited = new HashSet<int>();
-
-        int start = boundaryVertices.First();
-        int current = start;
-        orderedBoundary.Add(current);
-        visited.Add(current);
-
-        while (orderedBoundary.Count < boundaryVertices.Count)
+        HashSet<(int, int)> allEdges = new HashSet<(int, int)>();
+        
+        foreach (int v in vertices)
         {
-            bool foundNext = false;
-            foreach (var edge in boundaryEdges)
+            if (vertexEdges.ContainsKey(v))
             {
-                if (edge.Item1 == current && !visited.Contains(edge.Item2))
+                foreach (var adjacent in vertexEdges[v])
                 {
-                    orderedBoundary.Add(edge.Item2);
-                    visited.Add(edge.Item2);
-                    current = edge.Item2;
-                    foundNext = true;
-                    break;
-                }
-                else if (edge.Item2 == current && !visited.Contains(edge.Item1))
-                {
-                    orderedBoundary.Add(edge.Item1);
-                    visited.Add(edge.Item1);
-                    current = edge.Item1;
-                    foundNext = true;
-                    break;
+                    var edge = v < adjacent ? (v, adjacent) : (adjacent, v);
+                    allEdges.Add(edge);
                 }
             }
-            // Remove the used edge to improve efficiency
-            boundaryEdges.Remove(foundNext ? (current, orderedBoundary.Last()) : (orderedBoundary.Last(), current));
         }
 
-        return orderedBoundary;
+        return allEdges;
     }
 
-    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int index, HashSet<(int, int)> boundaryVertices)
+    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int index, HashSet<(int, int)> boundaryVertices, HashSet<(int, int)> allEdges)
     {
         float minX = float.MaxValue, minY = float.MaxValue;
         float maxX = float.MinValue, maxY = float.MinValue;
@@ -237,9 +212,9 @@ public static class MeshIslandUtility
         float height = Mathf.Abs(endUV.y - startUV.y);
         float area = width * height;
 
-        return new Island(vertices, startUV, endUV, index, area, boundaryVertices);
+        return new Island(vertices, startUV, endUV, index, area, boundaryVertices, allEdges);
     }
-    
+
     public static int GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<Island> islands)
     {
         Mesh mesh = skinnedMeshRenderer.sharedMesh;
@@ -262,27 +237,4 @@ public static class MeshIslandUtility
 
         throw new InvalidOperationException("Triangle index does not belong to any island.");
     }
-
-    public static void HighlightVertices(SkinnedMeshRenderer skinnedMeshRenderer, 
-                                         List<int> vertexIndices, 
-                                         Color color, 
-                                         float size)
-    {
-        if (skinnedMeshRenderer == null || skinnedMeshRenderer.sharedMesh == null) return;
-
-        Mesh mesh = skinnedMeshRenderer.sharedMesh;
-        Transform transform = skinnedMeshRenderer.transform;
-
-        foreach (int index in vertexIndices)
-        {
-            if (index < 0 || index >= mesh.vertexCount) continue;
-
-            Vector3 vertexPosition = transform.TransformPoint(mesh.vertices[index]);
-
-            Handles.color = color;
-            Handles.SphereHandleCap(0, vertexPosition, Quaternion.identity, size, EventType.Repaint);
-        }
-    }
-
 }
-
