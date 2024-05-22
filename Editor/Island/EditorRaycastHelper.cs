@@ -11,6 +11,11 @@ public static class EditorRaycastHelper
 
     public static bool RaycastAgainstScene(out RaycastHit hit)
     {
+        if (Event.current == null)
+        {
+            hit = new RaycastHit();
+            return false;
+        }
         Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
         // First, try raycasting against scene geometry with or without colliders (it doesn't matter)
