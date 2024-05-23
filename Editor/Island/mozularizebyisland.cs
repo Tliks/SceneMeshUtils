@@ -71,6 +71,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
         processend();
+        FocusCustomViewObject(defaultsceneView, skinnedMeshRenderer);
     }
 
     private void processend()
