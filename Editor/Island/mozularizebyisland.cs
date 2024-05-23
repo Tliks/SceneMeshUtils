@@ -294,6 +294,24 @@ public class ModuleCreatorIsland : EditorWindow
         Mesh originalMesh = duplicatedSkinnedMeshRenderer.sharedMesh;
         previewmesh = Instantiate(originalMesh);
         duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
+        
+        Bounds bounds = duplicatedSkinnedMeshRenderer.bounds;
+
+        SceneView sceneView = SceneView.lastActiveSceneView;
+
+        // 必要に応じて距離の調整
+        //float cameraDistance = bounds.size.magnitude * 0.1f; // 近づけたい距離を設定
+        float cameraDistance = 0.3f;
+        Vector3 direction = sceneView.camera.transform.forward; // カメラの向き
+
+        // カメラ位置を計算
+        Vector3 newCameraPosition = bounds.center - direction * cameraDistance;
+
+        sceneView.LookAt(bounds.center, sceneView.rotation, cameraDistance);
+
+        // シーンビューを再描画して更新
+        sceneView.Repaint();
+
     }
 
 }
