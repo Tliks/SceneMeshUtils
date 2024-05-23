@@ -42,6 +42,7 @@ public class ModuleCreatorIsland : EditorWindow
         };
         SceneView.duringSceneGui += OnSceneGUI;
         RemoveHighlight();
+        isRaycastEnabled = false;
     }
 
     private void OnDisable()
@@ -52,7 +53,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             DestroyImmediate(highlightManager);
         }
-        //RestoreOriginalSkinnedMeshes();
+        isRaycastEnabled = false;
     }
 
     private void OnGUI()
