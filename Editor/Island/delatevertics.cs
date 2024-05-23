@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 public class MeshDeletionUtility
 {
@@ -25,38 +26,59 @@ public class MeshDeletionUtility
 
     private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
     {
+        Stopwatch stopwatch = new Stopwatch();
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
-        List<Vector3> newVerticesList = new();
-        List<Vector3> newNormalsList = new();
-        List<Vector4> newTangentsList = new();
-        List<Vector2> newUvList = new();
+        HashSet<int> verticesIndexesSet = new(verticesIndexes);
+        int newVerticesCount = keepVertices ? verticesIndexesSet.Count : originalMesh.vertexCount - verticesIndexesSet.Count;
+
+        stopwatch.Start();
+
+        List<Vector3> newVerticesList = new(newVerticesCount);
+        List<Vector3> newNormalsList = new(newVerticesCount);
+        List<Vector4> newTangentsList = new(newVerticesCount);
+        List<Vector2> newUvList = new(newVerticesCount);
         List<Vector2> newUv2List = new();
         List<Vector2> newUv3List = new();
         List<Vector2> newUv4List = new();
-        List<BoneWeight> newBoneWeight = new();
+        List<BoneWeight> newBoneWeight = new(newVerticesCount);
         List<int> newTrianglesList = new();
 
-        Dictionary<int, int> indexMap = new();
-        HashSet<int> verticesIndexesSet = new(verticesIndexes);
+        Dictionary<int, int> indexMap = new(newVerticesCount);
+
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Initialization: " + stopwatch.ElapsedMilliseconds + " ms");
+
+        stopwatch.Start();
+
+        Vector3[] vertices = originalMesh.vertices;
+        Vector3[] normals = originalMesh.normals;
+        Vector4[] tangents = originalMesh.tangents;
+        Vector2[] uv = originalMesh.uv;
+        Vector2[] uv2 = originalMesh.uv2;
+        Vector2[] uv3 = originalMesh.uv3;
+        Vector2[] uv4 = originalMesh.uv4;
+        BoneWeight[] boneWeights = originalMesh.boneWeights;
 
         for (int i = 0; i < originalMesh.vertexCount; i++)
         {
-            if ((keepVertices && verticesIndexesSet.Contains(i)) || 
-                (!keepVertices && !verticesIndexesSet.Contains(i)))
+            if ((keepVertices && verticesIndexesSet.Contains(i)) || (!keepVertices && !verticesIndexesSet.Contains(i)))
             {
                 indexMap[i] = newVerticesList.Count;
-                newVerticesList.Add(originalMesh.vertices[i]);
-                newNormalsList.Add(originalMesh.normals[i]);
-                newTangentsList.Add(originalMesh.tangents[i]);
-                newUvList.Add(originalMesh.uv[i]);
-                newBoneWeight.Add(originalMesh.boneWeights[i]);
+                newVerticesList.Add(vertices[i]);
+                newNormalsList.Add(normals[i]);
+                newTangentsList.Add(tangents[i]);
+                newUvList.Add(uv[i]);
+                newBoneWeight.Add(boneWeights[i]);
 
-                if (originalMesh.uv2.Length > 0) newUv2List.Add(originalMesh.uv2[i]);
-                if (originalMesh.uv3.Length > 0) newUv3List.Add(originalMesh.uv3[i]);
-                if (originalMesh.uv4.Length > 0) newUv4List.Add(originalMesh.uv4[i]);
+                if (uv2.Length > 0) newUv2List.Add(uv2[i]);
+                if (uv3.Length > 0) newUv3List.Add(uv3[i]);
+                if (uv4.Length > 0) newUv4List.Add(uv4[i]);
             }
         }
+
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
 
         Mesh newMesh = existingMesh ? existingMesh : new Mesh();
         newMesh.Clear();
@@ -71,10 +93,14 @@ public class MeshDeletionUtility
         if (newUv3List.Count > 0) newMesh.uv3 = newUv3List.ToArray();
         if (newUv4List.Count > 0) newMesh.uv4 = newUv4List.ToArray();
 
+        stopwatch.Start();
         CopyColors(originalMesh, newMesh, indexMap);
         CopyTriangles(originalMesh, newMesh, indexMap, ref newTrianglesList);
         CopyBlendShapes(originalMesh, newMesh, indexMap);
         newMesh.bindposes = originalMesh.bindposes;
+        stopwatch.Stop();
+
+        UnityEngine.Debug.Log("Copy Process: " + stopwatch.ElapsedMilliseconds + " ms");
 
         return newMesh;
     }
