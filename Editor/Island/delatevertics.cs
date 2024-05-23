@@ -24,6 +24,17 @@ public class MeshDeletionUtility
         return DeleteMesh(skinnedMeshRenderer, removeVerticesIndexes, existingMesh, false);
     }
 
+    public static Mesh RemoveVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes)
+    {
+        return RemoveVerticesUsingDegenerateTriangles(skinnedMeshRenderer, removeVerticesIndexes, null);
+    }
+
+    public static Mesh RemoveVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes, Mesh existingMesh)
+    {
+        return MarkVerticesForDegeneration(skinnedMeshRenderer, removeVerticesIndexes, existingMesh);
+    }
+
+    // DeleteMesh関連のコード
     private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
     {
         Stopwatch stopwatch = new Stopwatch();
@@ -188,6 +199,163 @@ public class MeshDeletionUtility
                 }
 
                 newMesh.AddBlendShapeFrame(blendShapeName, frameWeight, newFrameVertices, newFrameNormals, newFrameTangents);
+            }
+        }
+    }
+
+    // RemoveVerticesUsingDegenerateTriangles専用の関数
+    private static Mesh MarkVerticesForDegeneration(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes, Mesh existingMesh)
+    {
+        Stopwatch stopwatch = new Stopwatch();
+        Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
+
+        stopwatch.Start();
+
+        Vector3[] vertices = originalMesh.vertices;
+
+        foreach (int index in removeVerticesIndexes)
+        {
+            vertices[index] = Vector3.zero; // Example position to collapse triangles
+        }
+
+        Mesh newMesh = existingMesh ? existingMesh : new Mesh();
+        newMesh.Clear();
+
+        newMesh.vertices = vertices;
+
+        CopyNormals(originalMesh, newMesh);
+        CopyTangents(originalMesh, newMesh);
+        CopyUV(originalMesh, newMesh);
+        CopyBoneWeights(originalMesh, newMesh);
+        CopyBindposes(originalMesh, newMesh);
+        CopyColors(originalMesh, newMesh);
+        DegenerateTriangles(originalMesh, newMesh, removeVerticesIndexes);
+        CopyBlendShapesForDegeneration(originalMesh, newMesh, removeVerticesIndexes);
+
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Mark for Degeneration: " + stopwatch.ElapsedMilliseconds + " ms");
+
+        return newMesh;
+    }
+
+    private static void CopyNormals(Mesh originalMesh, Mesh newMesh)
+    {
+        Vector3[] normals = originalMesh.normals;
+        if (normals.Length > 0)
+        {
+            newMesh.normals = normals;
+        }
+    }
+
+    private static void CopyTangents(Mesh originalMesh, Mesh newMesh)
+    {
+        Vector4[] tangents = originalMesh.tangents;
+        if (tangents.Length > 0)
+        {
+            newMesh.tangents = tangents;
+        }
+    }
+
+    private static void CopyUV(Mesh originalMesh, Mesh newMesh)
+    {
+        Vector2[] uv = originalMesh.uv;
+        if (uv.Length > 0)
+        {
+            newMesh.uv = uv;
+        }
+
+        Vector2[] uv2 = originalMesh.uv2;
+        if (uv2.Length > 0)
+        {
+            newMesh.uv2 = uv2;
+        }
+
+        Vector2[] uv3 = originalMesh.uv3;
+        if (uv3.Length > 0)
+        {
+            newMesh.uv3 = uv3;
+        }
+
+        Vector2[] uv4 = originalMesh.uv4;
+        if (uv4.Length > 0)
+        {
+            newMesh.uv4 = uv4;
+        }
+    }
+
+    private static void CopyBoneWeights(Mesh originalMesh, Mesh newMesh)
+    {
+        BoneWeight[] boneWeights = originalMesh.boneWeights;
+        if (boneWeights.Length > 0)
+        {
+            newMesh.boneWeights = boneWeights;
+        }
+    }
+
+    private static void CopyBindposes(Mesh originalMesh, Mesh newMesh)
+    {
+        newMesh.bindposes = originalMesh.bindposes;
+    }
+
+    private static void CopyColors(Mesh originalMesh, Mesh newMesh)
+    {
+        if (originalMesh.colors != null && originalMesh.colors.Length > 0)
+        {
+            newMesh.colors = originalMesh.colors;
+        }
+        else if (originalMesh.colors32 != null && originalMesh.colors32.Length > 0)
+        {
+            newMesh.colors32 = originalMesh.colors32;
+        }
+    }
+
+    private static void DegenerateTriangles(Mesh originalMesh, Mesh newMesh, List<int> removeVerticesIndexes)
+    {
+        int subMeshCount = originalMesh.subMeshCount;
+        newMesh.subMeshCount = subMeshCount;
+
+        for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
+        {
+            int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
+            for (int i = 0; i < originalTriangles.Length; i += 3)
+            {
+                if (removeVerticesIndexes.Contains(originalTriangles[i]) || 
+                    removeVerticesIndexes.Contains(originalTriangles[i + 1]) || 
+                    removeVerticesIndexes.Contains(originalTriangles[i + 2]))
+                {
+                    // Make this a degenerate triangle
+                    originalTriangles[i] = originalTriangles[i + 1] = originalTriangles[i + 2] = originalTriangles[i];
+                }
+            }
+            newMesh.SetTriangles(originalTriangles, subMeshIndex);
+        }
+    }
+
+    private static void CopyBlendShapesForDegeneration(Mesh originalMesh, Mesh newMesh, List<int> removeVerticesIndexes)
+    {
+        for (int i = 0; i < originalMesh.blendShapeCount; i++)
+        {
+            string blendShapeName = originalMesh.GetBlendShapeName(i);
+            int frameCount = originalMesh.GetBlendShapeFrameCount(i);
+
+            for (int j = 0; j < frameCount; j++)
+            {
+                float frameWeight = originalMesh.GetBlendShapeFrameWeight(i, j);
+                Vector3[] frameVertices = new Vector3[originalMesh.vertexCount];
+                Vector3[] frameNormals = new Vector3[originalMesh.vertexCount];
+                Vector3[] frameTangents = new Vector3[originalMesh.vertexCount];
+
+                originalMesh.GetBlendShapeFrameVertices(i, j, frameVertices, frameNormals, frameTangents);
+
+                // Set vertices for degenerate triangles to zero
+                foreach (int index in removeVerticesIndexes)
+                {
+                    frameVertices[index] = Vector3.zero;
+                    frameNormals[index] = Vector3.zero;
+                    frameTangents[index] = Vector3.zero;
+                }
+
+                newMesh.AddBlendShapeFrame(blendShapeName, frameWeight, frameVertices, frameNormals, frameTangents);
             }
         }
     }

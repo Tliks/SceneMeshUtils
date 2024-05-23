@@ -191,7 +191,7 @@ public class ModuleCreatorIsland : EditorWindow
 
                 // Modify the sharedMesh using the specified method
                 stopwatch.Start();
-                previewmesh = MeshDeletionUtility.DeleteMeshByRemoveVertices(duplicatedSkinnedMeshRenderer, verticesToremove);
+                previewmesh = MeshDeletionUtility.RemoveVerticesUsingDegenerateTriangles(duplicatedSkinnedMeshRenderer, verticesToremove);
                 stopwatch.Stop();
                 UnityEngine.Debug.Log("updatedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
                 // Update the SkinnedMeshRenderer with the updated mesh
@@ -224,7 +224,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void SaveModule(List<int> vertices)
     {
         stopwatch.Restart();
-        Mesh newMesh = MeshDeletionUtility.DeleteMeshByKeepVertices(duplicatedSkinnedMeshRenderer, vertices);
+        Mesh newMesh = MeshDeletionUtility.DeleteMeshByKeepVertices(skinnedMeshRenderer, vertices);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
 
@@ -237,7 +237,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         _Settings.newmesh = newMesh;
         stopwatch.Restart();
-        new ModuleCreator(_Settings).CheckAndCopyBones(duplicatedSkinnedMeshRenderer.gameObject);
+        new ModuleCreator(_Settings).CheckAndCopyBones(skinnedMeshRenderer.gameObject);
         stopwatch.Stop();
     }
 
