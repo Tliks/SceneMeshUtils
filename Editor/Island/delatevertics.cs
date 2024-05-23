@@ -3,12 +3,27 @@ using System.Collections.Generic;
 
 public class MeshDeletionUtility
 {
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes)
+    public static Mesh DeleteMeshByKeepVertices(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes)
     {
-        return DeleteMesh(skinnedMeshRenderer, keepVerticesIndexes, null);
+        return DeleteMesh(skinnedMeshRenderer, keepVerticesIndexes, null, true);
     }
 
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes, Mesh existingMesh)
+    public static Mesh DeleteMeshByKeepVertices(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes, Mesh existingMesh)
+    {
+        return DeleteMesh(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
+    }
+
+    public static Mesh DeleteMeshByRemoveVertices(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes)
+    {
+        return DeleteMesh(skinnedMeshRenderer, removeVerticesIndexes, null, false);
+    }
+
+    public static Mesh DeleteMeshByRemoveVertices(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes, Mesh existingMesh)
+    {
+        return DeleteMesh(skinnedMeshRenderer, removeVerticesIndexes, existingMesh, false);
+    }
+
+    private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
     {
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
@@ -19,17 +34,16 @@ public class MeshDeletionUtility
         List<Vector2> newUv2List = new();
         List<Vector2> newUv3List = new();
         List<Vector2> newUv4List = new();
-        // If you have UV5 and beyond, initialize more lists like newUv5List, newUv6List, etc.
         List<BoneWeight> newBoneWeight = new();
         List<int> newTrianglesList = new();
 
         Dictionary<int, int> indexMap = new();
-
-        keepVerticesIndexes.Sort();
+        HashSet<int> verticesIndexesSet = new(verticesIndexes);
 
         for (int i = 0; i < originalMesh.vertexCount; i++)
         {
-            if (keepVerticesIndexes.Contains(i))
+            if ((keepVertices && verticesIndexesSet.Contains(i)) || 
+                (!keepVertices && !verticesIndexesSet.Contains(i)))
             {
                 indexMap[i] = newVerticesList.Count;
                 newVerticesList.Add(originalMesh.vertices[i]);
@@ -37,24 +51,15 @@ public class MeshDeletionUtility
                 newTangentsList.Add(originalMesh.tangents[i]);
                 newUvList.Add(originalMesh.uv[i]);
                 newBoneWeight.Add(originalMesh.boneWeights[i]);
-                
+
                 if (originalMesh.uv2.Length > 0) newUv2List.Add(originalMesh.uv2[i]);
                 if (originalMesh.uv3.Length > 0) newUv3List.Add(originalMesh.uv3[i]);
                 if (originalMesh.uv4.Length > 0) newUv4List.Add(originalMesh.uv4[i]);
-                // Add similar conditions for UV5 and beyond
             }
         }
-        
-        Mesh newMesh;
-        if (existingMesh)
-        {
-            newMesh = existingMesh;
-            newMesh.Clear();
-        }
-        else
-        {
-            newMesh = new Mesh();
-        }
+
+        Mesh newMesh = existingMesh ? existingMesh : new Mesh();
+        newMesh.Clear();
 
         newMesh.vertices = newVerticesList.ToArray();
         newMesh.normals = newNormalsList.ToArray();
@@ -65,7 +70,6 @@ public class MeshDeletionUtility
         if (newUv2List.Count > 0) newMesh.uv2 = newUv2List.ToArray();
         if (newUv3List.Count > 0) newMesh.uv3 = newUv3List.ToArray();
         if (newUv4List.Count > 0) newMesh.uv4 = newUv4List.ToArray();
-        // Set similar conditions for UV5 and beyond
 
         CopyColors(originalMesh, newMesh, indexMap);
         CopyTriangles(originalMesh, newMesh, indexMap, ref newTrianglesList);

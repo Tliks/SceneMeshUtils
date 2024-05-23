@@ -78,6 +78,46 @@ public class ModuleCreator
         }
     }
 
+    public SkinnedMeshRenderer PreciewMesh(GameObject sourceObject)
+    {
+        SkinnedMeshRenderer skinnedMeshRenderer = null;;
+        try
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            
+            //stopwatch.Start();
+            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            GameObject new_root = JustCopy(root, sourceObject.name);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("JustCopy: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            Selection.activeGameObject = new_root;
+
+        }
+
+        catch (InvalidOperationException ex)
+        {
+            UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError(ex.StackTrace);
+            UnityEngine.Debug.LogError(ex);
+        }
+
+        return skinnedMeshRenderer;
+
+    }
+
     private (GameObject, int) CheckObjects(GameObject targetObject)
     {
         Checktarget(targetObject);
@@ -181,7 +221,14 @@ public class ModuleCreator
         }
     }
 
-    private void CleanUpHierarchy(GameObject new_root, int skin_index)
+    private GameObject JustCopy(GameObject root_object, string source_name)
+    {
+        GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object, root_object.transform.position + new Vector3(0, 0, -10), root_object.transform.rotation);
+        duplicatedParent.name = source_name + " preview";
+        return duplicatedParent;
+    }
+
+    private SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index)
     {   
         HashSet<GameObject> objectsToSave = new HashSet<GameObject>();
 
@@ -212,6 +259,8 @@ public class ModuleCreator
         }
 
         CheckAndDeleteRecursive(new_root, objectsToSave);
+
+        return skinnedMeshRenderer;
     }
 
     private HashSet<GameObject> GetWeightedBones(SkinnedMeshRenderer skinnedMeshRenderer)

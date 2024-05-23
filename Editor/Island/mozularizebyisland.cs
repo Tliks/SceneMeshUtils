@@ -8,7 +8,7 @@ using System.Linq;
 public class ModuleCreatorIsland : EditorWindow
 {
     public SkinnedMeshRenderer skinnedMeshRenderer;
-    private static ModuleCreatorSettings Settings;
+    private static ModuleCreatorSettings _Settings;
     private const int MENU_PRIORITY = 49;
     private bool showAdvancedOptions = false;
 
@@ -25,6 +25,8 @@ public class ModuleCreatorIsland : EditorWindow
     private const double raycastInterval = 0.01;
     private double lastUpdateTime = 0;
 
+    private Mesh previewmesh = new Mesh();
+
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
     {
@@ -33,7 +35,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnEnable()
     {
-        Settings = new ModuleCreatorSettings
+        _Settings = new ModuleCreatorSettings
         {
             IncludePhysBone = false,
             IncludePhysBoneColider = false
@@ -164,7 +166,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!isRaycastEnabled || duplicatedSkinnedMeshRenderer == null) return;
 
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
-        
+
         double currentTime = EditorApplication.timeSinceStartup;
         if (currentTime - lastUpdateTime >= raycastInterval)
         {
@@ -177,6 +179,25 @@ public class ModuleCreatorIsland : EditorWindow
             if (!Island_Index.Contains(previousIslandIndex) && previousIslandIndex != -1)
             {
                 Island_Index.Add(previousIslandIndex);
+
+                Stopwatch stopwatch = new Stopwatch();
+
+                // Create the list of vertices to remove
+                stopwatch.Start();
+                var verticesToremove = islands[previousIslandIndex].Vertices.ToList();
+                stopwatch.Stop();
+                UnityEngine.Debug.Log("verticesToRemove: " + stopwatch.ElapsedMilliseconds + " ms");
+
+                // Modify the sharedMesh using the specified method
+                stopwatch.Start();
+                previewmesh = MeshDeletionUtility.DeleteMeshByRemoveVertices(duplicatedSkinnedMeshRenderer, verticesToremove);
+                stopwatch.Stop();
+                UnityEngine.Debug.Log("updatedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
+                // Update the SkinnedMeshRenderer with the updated mesh
+                stopwatch.Start();
+                duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
+                stopwatch.Stop();
+                UnityEngine.Debug.Log("sharedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
             }
             Repaint();
         }
@@ -202,7 +223,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void SaveModule(List<int> vertices)
     {
         stopwatch.Restart();
-        Mesh newMesh = MeshDeletionUtility.DeleteMesh(duplicatedSkinnedMeshRenderer, vertices);
+        Mesh newMesh = MeshDeletionUtility.DeleteMeshByKeepVertices(duplicatedSkinnedMeshRenderer, vertices);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
 
@@ -213,9 +234,9 @@ public class ModuleCreatorIsland : EditorWindow
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Save NewMesh: {stopwatch.ElapsedMilliseconds} ms");
 
-        Settings.newmesh = newMesh;
+        _Settings.newmesh = newMesh;
         stopwatch.Restart();
-        new ModuleCreator(Settings).CheckAndCopyBones(duplicatedSkinnedMeshRenderer.gameObject);
+        new ModuleCreator(_Settings).CheckAndCopyBones(duplicatedSkinnedMeshRenderer.gameObject);
         stopwatch.Stop();
     }
 
@@ -226,10 +247,10 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.Space();
 
         // PhysBone Options
-        Settings.IncludePhysBone = EditorGUILayout.Toggle("PhysBone ", Settings.IncludePhysBone);
+        _Settings.IncludePhysBone = EditorGUILayout.Toggle("PhysBone ", _Settings.IncludePhysBone);
 
-        GUI.enabled = Settings.IncludePhysBone;
-        Settings.IncludePhysBoneColider = EditorGUILayout.Toggle("PhysBoneColider", Settings.IncludePhysBoneColider);
+        GUI.enabled = _Settings.IncludePhysBone;
+        _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle("PhysBoneColider", _Settings.IncludePhysBoneColider);
         GUI.enabled = true;
 
         EditorGUILayout.Space();
@@ -238,65 +259,40 @@ public class ModuleCreatorIsland : EditorWindow
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options");
         if (showAdvancedOptions)
         {
-            GUI.enabled = Settings.IncludePhysBone;
+            GUI.enabled = _Settings.IncludePhysBone;
             GUIContent content_at = new GUIContent("Additional Transforms", "Output Additional PhysBones Affected Transforms for exact PhysBone movement");
-            Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, Settings.RemainAllPBTransforms);
+            _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
 
             GUIContent content_ii = new GUIContent("Include IgnoreTransforms", "Output PhysBone's IgnoreTransforms");
-            Settings.IncludeIgnoreTransforms = EditorGUILayout.Toggle(content_ii, Settings.IncludeIgnoreTransforms);
+            _Settings.IncludeIgnoreTransforms = EditorGUILayout.Toggle(content_ii, _Settings.IncludeIgnoreTransforms);
 
             GUIContent content_rr = new GUIContent(
                 "Rename RootTransform",
                 "Not Recommended: Due to the specifications of modular avatar, costume-side physbones may be deleted in some cases, so renaming physbone RootTransform will ensure that the costume-side physbones are integrated. This may cause duplication.");
-            Settings.RenameRootTransform = EditorGUILayout.Toggle(content_rr, Settings.RenameRootTransform);
+            _Settings.RenameRootTransform = EditorGUILayout.Toggle(content_rr, _Settings.RenameRootTransform);
 
             GUI.enabled = true;
 
             GUIContent content_sr = new GUIContent("Specify Root Object", "The default root object is the parent object of the specified skinned mesh renderer object");
-            Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, Settings.RootObject, typeof(GameObject), true);
+            _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
         }
 
         EditorGUILayout.Space();
     }
 
     private void DuplicateAndSetup()
-    {   
-        GameObject originalParent = skinnedMeshRenderer.transform.parent.gameObject;
-        Transform[] AllChildren = GetAllChildren(originalParent);
-        int skin_index = Array.IndexOf(AllChildren, skinnedMeshRenderer.transform);
-
-        GameObject duplicatedParent = Instantiate(originalParent, originalParent.transform.position + new Vector3(0, 0, -10), originalParent.transform.rotation);
-        Transform[] duplicatedAllChildren = GetAllChildren(duplicatedParent);
-        duplicatedSkinnedMeshRenderer = duplicatedAllChildren[skin_index].gameObject.GetComponent<SkinnedMeshRenderer>();
-        Selection.activeGameObject = duplicatedSkinnedMeshRenderer.gameObject;
-
-        SkinnedMeshRenderer[] allSkinnedMeshes = duplicatedParent.GetComponentsInChildren<SkinnedMeshRenderer>();
-        foreach (var skinnedMesh in allSkinnedMeshes)
+    {
+        ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
-            if (skinnedMesh != duplicatedSkinnedMeshRenderer)
-            {
-                //skinnedMesh.enabled = false;
-                DestroyImmediate(skinnedMesh.gameObject);
-            }
-        }
+            IncludePhysBone = false,
+            IncludePhysBoneColider = false
+        };
+        duplicatedSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(skinnedMeshRenderer.gameObject);
+
+        // Update the sharedMesh to a copy of the original to avoid modifying the original mesh
+        Mesh originalMesh = duplicatedSkinnedMeshRenderer.sharedMesh;
+        previewmesh = Instantiate(originalMesh);
+        duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
     }
 
-    private static Transform[] GetAllChildren(GameObject parent)
-    {
-        Transform[] children = parent.GetComponentsInChildren<Transform>(true);
-        return children;
-    }
-
-    private void DisableOtherSkinnedMeshes()
-    {
-    }
-
-    private void RestoreOriginalSkinnedMeshes()
-    {
-        SkinnedMeshRenderer[] allSkinnedMeshes = FindObjectsOfType<SkinnedMeshRenderer>();
-        foreach (var skinnedMesh in allSkinnedMeshes)
-        {
-            skinnedMesh.enabled = true;
-        }
-    }
 }
