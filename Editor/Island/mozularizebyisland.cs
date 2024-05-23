@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 using System.Diagnostics;
 using System.Linq;
 
@@ -11,13 +12,13 @@ public class ModuleCreatorIsland : EditorWindow
     private const int MENU_PRIORITY = 49;
     private bool showAdvancedOptions = false;
 
-    public List<int> Island_Index = new List<int>();
+    private List<int> Island_Index = new List<int>();
     private bool isRaycastEnabled = false;
 
     private List<Island> islands = new List<Island>();
     private Dictionary<int, Mesh> islandMeshes = new Dictionary<int, Mesh>();
     private int previousIslandIndex = -1;
-
+    private SkinnedMeshRenderer duplicatedSkinnedMeshRenderer;
     private HighlightEdgesManager highlightManager;
 
     private Stopwatch stopwatch = new Stopwatch();
@@ -49,6 +50,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             DestroyImmediate(highlightManager.gameObject);
         }
+        //RestoreOriginalSkinnedMeshes();
     }
 
     private void OnGUI()
@@ -56,6 +58,11 @@ public class ModuleCreatorIsland : EditorWindow
         skinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
         if (skinnedMeshRenderer)
         {
+            if (GUILayout.Button("Duplicate and Setup Skinned Mesh"))
+            {
+                DuplicateAndSetup();
+            }
+
             if (GUILayout.Button("Calculate Islands"))
             {
                 CalculateIslands();
@@ -81,8 +88,8 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (highlightManager == null)
         {
-            highlightManager = skinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
-            highlightManager.SkinnedMeshRenderer = skinnedMeshRenderer;
+            highlightManager = duplicatedSkinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
+            highlightManager.SkinnedMeshRenderer = duplicatedSkinnedMeshRenderer;
         }
     }
 
@@ -102,7 +109,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void CalculateIslands()
     {
         stopwatch.Restart();
-        islands = MeshIslandUtility.GetIslands(skinnedMeshRenderer);
+        islands = MeshIslandUtility.GetIslands(duplicatedSkinnedMeshRenderer);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         UnityEngine.Debug.Log($"Islands count: {islands.Count}");
@@ -134,10 +141,10 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (EditorRaycastHelper.RaycastAgainstScene(out ExtendedRaycastHit extendedHit))
         {
-            if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, skinnedMeshRenderer.gameObject))
+            if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, duplicatedSkinnedMeshRenderer.gameObject))
             {   
                 int triangleIndex = extendedHit.triangleIndex;
-                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(skinnedMeshRenderer, triangleIndex, islands);
+                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(duplicatedSkinnedMeshRenderer, triangleIndex, islands);
                 if (index != previousIslandIndex)
                 {
                     HighlightIslandEdges(index);
@@ -147,8 +154,6 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else
         {
-            //RemoveHighlight();
-            //Island_Index.Clear();
             previousIslandIndex = -1;
             HighlightIslandEdges();
         }
@@ -156,7 +161,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnSceneGUI(SceneView sceneView)
     {
-        if (!isRaycastEnabled || skinnedMeshRenderer == null) return;
+        if (!isRaycastEnabled || duplicatedSkinnedMeshRenderer == null) return;
 
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         
@@ -180,7 +185,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void HighlightIslandEdges()
     {
         HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+        highlightManager.HighlightEdges(edgesToHighlight, duplicatedSkinnedMeshRenderer);
     }
 
     private void HighlightIslandEdges(int islandIndex)
@@ -191,13 +196,13 @@ public class ModuleCreatorIsland : EditorWindow
         {
             edgesToHighlight.Add((edge.Item1, edge.Item2));
         }
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+        highlightManager.HighlightEdges(edgesToHighlight, duplicatedSkinnedMeshRenderer);
     }
 
     private void SaveModule(List<int> vertices)
     {
         stopwatch.Restart();
-        Mesh newMesh = MeshDeletionUtility.DeleteMesh(skinnedMeshRenderer, vertices);
+        Mesh newMesh = MeshDeletionUtility.DeleteMesh(duplicatedSkinnedMeshRenderer, vertices);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
 
@@ -210,7 +215,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         Settings.newmesh = newMesh;
         stopwatch.Restart();
-        new ModuleCreator(Settings).CheckAndCopyBones(skinnedMeshRenderer.gameObject);
+        new ModuleCreator(Settings).CheckAndCopyBones(duplicatedSkinnedMeshRenderer.gameObject);
         stopwatch.Stop();
     }
 
@@ -252,5 +257,46 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         EditorGUILayout.Space();
+    }
+
+    private void DuplicateAndSetup()
+    {   
+        GameObject originalParent = skinnedMeshRenderer.transform.parent.gameObject;
+        Transform[] AllChildren = GetAllChildren(originalParent);
+        int skin_index = Array.IndexOf(AllChildren, skinnedMeshRenderer.transform);
+
+        GameObject duplicatedParent = Instantiate(originalParent, originalParent.transform.position + new Vector3(0, 0, -10), originalParent.transform.rotation);
+        Transform[] duplicatedAllChildren = GetAllChildren(duplicatedParent);
+        duplicatedSkinnedMeshRenderer = duplicatedAllChildren[skin_index].gameObject.GetComponent<SkinnedMeshRenderer>();
+        Selection.activeGameObject = duplicatedSkinnedMeshRenderer.gameObject;
+
+        SkinnedMeshRenderer[] allSkinnedMeshes = duplicatedParent.GetComponentsInChildren<SkinnedMeshRenderer>();
+        foreach (var skinnedMesh in allSkinnedMeshes)
+        {
+            if (skinnedMesh != duplicatedSkinnedMeshRenderer)
+            {
+                //skinnedMesh.enabled = false;
+                DestroyImmediate(skinnedMesh.gameObject);
+            }
+        }
+    }
+
+    private static Transform[] GetAllChildren(GameObject parent)
+    {
+        Transform[] children = parent.GetComponentsInChildren<Transform>(true);
+        return children;
+    }
+
+    private void DisableOtherSkinnedMeshes()
+    {
+    }
+
+    private void RestoreOriginalSkinnedMeshes()
+    {
+        SkinnedMeshRenderer[] allSkinnedMeshes = FindObjectsOfType<SkinnedMeshRenderer>();
+        foreach (var skinnedMesh in allSkinnedMeshes)
+        {
+            skinnedMesh.enabled = true;
+        }
     }
 }
