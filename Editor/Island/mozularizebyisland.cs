@@ -48,7 +48,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.RepaintAll();
         if (highlightManager != null)
         {
-            DestroyImmediate(highlightManager.gameObject);
+            DestroyImmediate(highlightManager);
         }
         //RestoreOriginalSkinnedMeshes();
     }
