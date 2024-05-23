@@ -43,7 +43,7 @@ public class MeshDeletionUtility
     {
         return MarkVerticesForDegeneration(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
     }
-    
+
     // DeleteMesh関連のコード
     private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
     {
@@ -68,7 +68,7 @@ public class MeshDeletionUtility
         Dictionary<int, int> indexMap = new(newVerticesCount);
 
         stopwatch.Stop();
-        UnityEngine.Debug.Log("Initialization: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.Log("Initialization: " + stopwatch.ElapsedMilliseconds + " ms");
 
         stopwatch.Start();
 
@@ -99,7 +99,7 @@ public class MeshDeletionUtility
         }
 
         stopwatch.Stop();
-        UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
 
         Mesh newMesh = existingMesh ? existingMesh : new Mesh();
         newMesh.Clear();
@@ -121,7 +121,7 @@ public class MeshDeletionUtility
         newMesh.bindposes = originalMesh.bindposes;
         stopwatch.Stop();
 
-        UnityEngine.Debug.Log("Copy Process: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.Log("Copy Process: " + stopwatch.ElapsedMilliseconds + " ms");
 
         return newMesh;
     }
@@ -253,13 +253,43 @@ public class MeshDeletionUtility
         CopyBoneWeights(originalMesh, newMesh);
         CopyBindposes(originalMesh, newMesh);
         CopyColors(originalMesh, newMesh);
-        DegenerateTriangles(originalMesh, newMesh, vertexIndexes);
+        if (keepVertices)
+        {
+            DegenerateTrianglesKeeping(originalMesh, newMesh, vertexIndexes);
+        }
+        else
+        {
+            DegenerateTriangles(originalMesh, newMesh, vertexIndexes);
+        }
         CopyBlendShapesForDegeneration(originalMesh, newMesh, vertexIndexes);
 
         stopwatch.Stop();
-        UnityEngine.Debug.Log("Mark for Degeneration: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.Log("Mark for Degeneration: " + stopwatch.ElapsedMilliseconds + " ms");
 
         return newMesh;
+    }
+
+    private static void DegenerateTrianglesKeeping(Mesh originalMesh, Mesh newMesh, List<int> keepVerticesIndexes)
+    {
+        HashSet<int> keepVerticesSet = new HashSet<int>(keepVerticesIndexes);
+        int subMeshCount = originalMesh.subMeshCount;
+        newMesh.subMeshCount = subMeshCount;
+
+        for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
+        {
+            int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
+            for (int i = 0; i < originalTriangles.Length; i += 3)
+            {
+                if (!keepVerticesSet.Contains(originalTriangles[i]) || 
+                    !keepVerticesSet.Contains(originalTriangles[i + 1]) || 
+                    !keepVerticesSet.Contains(originalTriangles[i + 2]))
+                {
+                    // Make this a degenerate triangle
+                    originalTriangles[i] = originalTriangles[i + 1] = originalTriangles[i + 2] = originalTriangles[i];
+                }
+            }
+            newMesh.SetTriangles(originalTriangles, subMeshIndex);
+        }
     }
 
     private static void CopyNormals(Mesh originalMesh, Mesh newMesh)

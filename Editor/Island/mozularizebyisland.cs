@@ -1,9 +1,8 @@
-using UnityEditor;
-using UnityEngine;
 using System.Collections.Generic;
-using System;
 using System.Diagnostics;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
 
 public class ModuleCreatorIsland : EditorWindow
 {
@@ -26,6 +25,13 @@ public class ModuleCreatorIsland : EditorWindow
     private double lastUpdateTime = 0;
 
     private Mesh previewmesh;
+    private GameObject customViewObject;
+    private Mesh customViewMesh;
+
+    private SceneView defaultsceneView;
+    private SkinnedMeshRenderer customRenderer;
+
+    private SceneView customsceneView;
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
@@ -41,21 +47,22 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBoneColider = false
         };
         
-        // OnEnableメソッド内でMeshのインスタンスを初期化
         if (previewmesh == null)
         {
             previewmesh = new Mesh();
         }
 
+
         SceneView.duringSceneGui += OnSceneGUI;
-        RemoveHighlight();
         isRaycastEnabled = false;
 
-        // duplicatedSkinnedMeshRendererやhighlightManagerのインスタンスも初期化する必要があるかを確認
         if (skinnedMeshRenderer != null)
         {
             duplicatedSkinnedMeshRenderer = Instantiate(skinnedMeshRenderer);
         }
+
+        defaultsceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
+        processend();
 
     }
 
@@ -63,15 +70,26 @@ public class ModuleCreatorIsland : EditorWindow
     {
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
+        processend();
+    }
+
+    private void processend()
+    {
         if (highlightManager != null)
         {
             DestroyImmediate(highlightManager);
         }
         if (duplicatedSkinnedMeshRenderer != null)
         {
-            DestroyImmediate(duplicatedSkinnedMeshRenderer.gameObject);
+            DestroyImmediate(duplicatedSkinnedMeshRenderer.transform.parent.gameObject);
+        }
+        if (customRenderer != null)
+        {
+            DestroyImmediate(customRenderer.transform.parent.gameObject);
         }
         isRaycastEnabled = false;
+        RemoveHighlight();
+        CloseCustomSceneView();
     }
     
     private void OnGUI()
@@ -100,30 +118,24 @@ public class ModuleCreatorIsland : EditorWindow
             if (GUILayout.Button("Create Module"))
             {
                 CreateModule();
-                UnityEngine.GameObject.DestroyImmediate(duplicatedSkinnedMeshRenderer.transform.parent.gameObject);
-                focusMesh(skinnedMeshRenderer);
+                FocusCustomViewObject(defaultsceneView, skinnedMeshRenderer);
+                processend();
             }
             GUI.enabled = true;
         }
     }
 
-    private void focusMesh(SkinnedMeshRenderer skinnedMeshRenderer)
+    private static void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
     {
-        Bounds bounds = skinnedMeshRenderer.bounds;
+        Bounds bounds = customRenderer.bounds;
 
-        SceneView sceneView = SceneView.lastActiveSceneView;
-
-        // 必要に応じて距離の調整
-        //float cameraDistance = bounds.size.magnitude * 0.1f; // 近づけたい距離を設定
         float cameraDistance = 0.3f;
-        Vector3 direction = sceneView.camera.transform.forward; // カメラの向き
-
-        // カメラ位置を計算
+        //UnityEngine.Debug.Log(sceneView);
+        Vector3 direction = sceneView.camera.transform.forward;
         Vector3 newCameraPosition = bounds.center - direction * cameraDistance;
 
         sceneView.LookAt(bounds.center, sceneView.rotation, cameraDistance);
 
-        // シーンビューを再描画して更新
         sceneView.Repaint();
     }
 
@@ -139,13 +151,14 @@ public class ModuleCreatorIsland : EditorWindow
     private void ToggleRaycast()
     {
         isRaycastEnabled = !isRaycastEnabled;
-        if (!isRaycastEnabled)
+        if (isRaycastEnabled)
         {
-            RemoveHighlight();
+            EnsureHighlightManagerExists();
+            OpenCustomSceneView();
         }
         else
         {
-            EnsureHighlightManagerExists();
+            RemoveHighlight();
         }
     }
 
@@ -168,7 +181,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         isRaycastEnabled = false;
         Island_Index.Clear();
-        RemoveHighlight();
+        processend();
     }
 
     private void RemoveHighlight()
@@ -206,7 +219,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (!isRaycastEnabled || duplicatedSkinnedMeshRenderer == null) return;
 
-        HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+        //HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
 
         double currentTime = EditorApplication.timeSinceStartup;
         if (currentTime - lastUpdateTime >= raycastInterval)
@@ -223,22 +236,22 @@ public class ModuleCreatorIsland : EditorWindow
 
                 Stopwatch stopwatch = new Stopwatch();
 
-                // Create the list of vertices to remove
                 stopwatch.Start();
                 var verticesToremove = islands[previousIslandIndex].Vertices.ToList();
                 stopwatch.Stop();
-                UnityEngine.Debug.Log("verticesToRemove: " + stopwatch.ElapsedMilliseconds + " ms");
+                //UnityEngine.Debug.Log("verticesToRemove: " + stopwatch.ElapsedMilliseconds + " ms");
 
-                // Modify the sharedMesh using the specified method
                 stopwatch.Start();
                 previewmesh = MeshDeletionUtility.RemoveVerticesUsingDegenerateTriangles(duplicatedSkinnedMeshRenderer, verticesToremove);
                 stopwatch.Stop();
-                UnityEngine.Debug.Log("updatedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
-                // Update the SkinnedMeshRenderer with the updated mesh
+                //UnityEngine.Debug.Log("updatedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
+
                 stopwatch.Start();
                 duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
                 stopwatch.Stop();
-                UnityEngine.Debug.Log("sharedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
+                //UnityEngine.Debug.Log("sharedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
+
+                UpdateCustomViewMesh(previousIslandIndex);
             }
             Repaint();
         }
@@ -287,7 +300,6 @@ public class ModuleCreatorIsland : EditorWindow
 
         EditorGUILayout.Space();
 
-        // PhysBone Options
         _Settings.IncludePhysBone = EditorGUILayout.Toggle("PhysBone ", _Settings.IncludePhysBone);
 
         GUI.enabled = _Settings.IncludePhysBone;
@@ -296,7 +308,6 @@ public class ModuleCreatorIsland : EditorWindow
 
         EditorGUILayout.Space();
 
-        // Advanced Options
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options");
         if (showAdvancedOptions)
         {
@@ -323,6 +334,8 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {
+        defaultsceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
+
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
             IncludePhysBone = false,
@@ -330,24 +343,59 @@ public class ModuleCreatorIsland : EditorWindow
         };
         duplicatedSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(skinnedMeshRenderer.gameObject);
 
-        // Update the sharedMesh to a copy of the original to avoid modifying the original mesh
         Mesh originalMesh = duplicatedSkinnedMeshRenderer.sharedMesh;
         previewmesh = Instantiate(originalMesh);
         duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
 
-        focusMesh(duplicatedSkinnedMeshRenderer);
-    
+        FocusCustomViewObject(defaultsceneView, duplicatedSkinnedMeshRenderer);
     }
 
-    public static void OpenCustomSceneView()
+    private void CloseCustomSceneView()
     {
-        // Create and set up the SceneView
-        SceneView sceneView = CreateInstance<SceneView>();
-        sceneView.Show();
-        
-        // Setup default camera parameters
-        //sceneView.camera.transform.position = new Vector3(0, 1, -10);
-        //sceneView.camera.transform.rotation = Quaternion.Euler(0, 0, 0);
-        //sceneView.Focus();
+        //UnityEngine.Debug.Log("aaa?");
+        if (customsceneView != null)
+        {
+            customsceneView.Close();
+            customsceneView = null;
+            //UnityEngine.Debug.Log("aaa");
+        }
+
+        if (customViewObject != null)
+        {
+            DestroyImmediate(customViewObject);
+            customViewObject = null;
+        }
     }
+
+    public void OpenCustomSceneView()
+    {
+        customsceneView = CreateInstance<SceneView>();
+        customsceneView.title = "Custom Mesh View";
+        customsceneView.Show();
+
+        if (duplicatedSkinnedMeshRenderer != null)
+        {
+            customViewObject = Instantiate(duplicatedSkinnedMeshRenderer.transform.parent.gameObject, duplicatedSkinnedMeshRenderer.transform.parent.transform.position + Vector3.right * 10, Quaternion.identity);
+            customRenderer = customViewObject.GetComponentInChildren<SkinnedMeshRenderer>();
+
+            var emptyVerticesList = new List<int>(); // Start with an empty list to disable all vertices initially
+            customViewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(duplicatedSkinnedMeshRenderer, emptyVerticesList);
+            customRenderer.sharedMesh = customViewMesh;
+
+            // Focus the camera on the customViewObject's bounds
+            FocusCustomViewObject(customsceneView, customRenderer);
+        }
+    }
+
+    private void UpdateCustomViewMesh(int islandIndex)
+    {
+        var allVertices = new List<int>(Island_Index.SelectMany(index => islands[index].Vertices));
+
+        customViewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(skinnedMeshRenderer, allVertices);
+
+        customRenderer.sharedMesh = customViewMesh;
+
+        SceneView.RepaintAll();
+}
+
 }
