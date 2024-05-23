@@ -25,7 +25,7 @@ public class ModuleCreatorIsland : EditorWindow
     private const double raycastInterval = 0.01;
     private double lastUpdateTime = 0;
 
-    private Mesh previewmesh = new Mesh();
+    private Mesh previewmesh;
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
@@ -40,9 +40,23 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBone = false,
             IncludePhysBoneColider = false
         };
+        
+        // OnEnableメソッド内でMeshのインスタンスを初期化
+        if (previewmesh == null)
+        {
+            previewmesh = new Mesh();
+        }
+
         SceneView.duringSceneGui += OnSceneGUI;
         RemoveHighlight();
         isRaycastEnabled = false;
+
+        // duplicatedSkinnedMeshRendererやhighlightManagerのインスタンスも初期化する必要があるかを確認
+        if (skinnedMeshRenderer != null)
+        {
+            duplicatedSkinnedMeshRenderer = Instantiate(skinnedMeshRenderer);
+        }
+
     }
 
     private void OnDisable()
@@ -53,9 +67,13 @@ public class ModuleCreatorIsland : EditorWindow
         {
             DestroyImmediate(highlightManager);
         }
+        if (duplicatedSkinnedMeshRenderer != null)
+        {
+            DestroyImmediate(duplicatedSkinnedMeshRenderer.gameObject);
+        }
         isRaycastEnabled = false;
     }
-
+    
     private void OnGUI()
     {
         skinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
@@ -82,9 +100,31 @@ public class ModuleCreatorIsland : EditorWindow
             if (GUILayout.Button("Create Module"))
             {
                 CreateModule();
+                UnityEngine.GameObject.DestroyImmediate(duplicatedSkinnedMeshRenderer.transform.parent.gameObject);
+                focusMesh(skinnedMeshRenderer);
             }
             GUI.enabled = true;
         }
+    }
+
+    private void focusMesh(SkinnedMeshRenderer skinnedMeshRenderer)
+    {
+        Bounds bounds = skinnedMeshRenderer.bounds;
+
+        SceneView sceneView = SceneView.lastActiveSceneView;
+
+        // 必要に応じて距離の調整
+        //float cameraDistance = bounds.size.magnitude * 0.1f; // 近づけたい距離を設定
+        float cameraDistance = 0.3f;
+        Vector3 direction = sceneView.camera.transform.forward; // カメラの向き
+
+        // カメラ位置を計算
+        Vector3 newCameraPosition = bounds.center - direction * cameraDistance;
+
+        sceneView.LookAt(bounds.center, sceneView.rotation, cameraDistance);
+
+        // シーンビューを再描画して更新
+        sceneView.Repaint();
     }
 
     private void EnsureHighlightManagerExists()
@@ -294,24 +334,20 @@ public class ModuleCreatorIsland : EditorWindow
         Mesh originalMesh = duplicatedSkinnedMeshRenderer.sharedMesh;
         previewmesh = Instantiate(originalMesh);
         duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
-        
-        Bounds bounds = duplicatedSkinnedMeshRenderer.bounds;
 
-        SceneView sceneView = SceneView.lastActiveSceneView;
-
-        // 必要に応じて距離の調整
-        //float cameraDistance = bounds.size.magnitude * 0.1f; // 近づけたい距離を設定
-        float cameraDistance = 0.3f;
-        Vector3 direction = sceneView.camera.transform.forward; // カメラの向き
-
-        // カメラ位置を計算
-        Vector3 newCameraPosition = bounds.center - direction * cameraDistance;
-
-        sceneView.LookAt(bounds.center, sceneView.rotation, cameraDistance);
-
-        // シーンビューを再描画して更新
-        sceneView.Repaint();
-
+        focusMesh(duplicatedSkinnedMeshRenderer);
+    
     }
 
+    public static void OpenCustomSceneView()
+    {
+        // Create and set up the SceneView
+        SceneView sceneView = CreateInstance<SceneView>();
+        sceneView.Show();
+        
+        // Setup default camera parameters
+        //sceneView.camera.transform.position = new Vector3(0, 1, -10);
+        //sceneView.camera.transform.rotation = Quaternion.Euler(0, 0, 0);
+        //sceneView.Focus();
+    }
 }

@@ -31,9 +31,19 @@ public class MeshDeletionUtility
 
     public static Mesh RemoveVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes, Mesh existingMesh)
     {
-        return MarkVerticesForDegeneration(skinnedMeshRenderer, removeVerticesIndexes, existingMesh);
+        return MarkVerticesForDegeneration(skinnedMeshRenderer, removeVerticesIndexes, existingMesh, false);
     }
 
+    public static Mesh KeepVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes)
+    {
+        return KeepVerticesUsingDegenerateTriangles(skinnedMeshRenderer, keepVerticesIndexes, null);
+    }
+
+    public static Mesh KeepVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes, Mesh existingMesh)
+    {
+        return MarkVerticesForDegeneration(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
+    }
+    
     // DeleteMesh関連のコード
     private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
     {
@@ -204,7 +214,7 @@ public class MeshDeletionUtility
     }
 
     // RemoveVerticesUsingDegenerateTriangles専用の関数
-    private static Mesh MarkVerticesForDegeneration(SkinnedMeshRenderer skinnedMeshRenderer, List<int> removeVerticesIndexes, Mesh existingMesh)
+    private static Mesh MarkVerticesForDegeneration(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndexes, Mesh existingMesh, bool keepVertices)
     {
         Stopwatch stopwatch = new Stopwatch();
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
@@ -213,9 +223,23 @@ public class MeshDeletionUtility
 
         Vector3[] vertices = originalMesh.vertices;
 
-        foreach (int index in removeVerticesIndexes)
+        if (keepVertices)
         {
-            vertices[index] = Vector3.zero; // Example position to collapse triangles
+            HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (!vertexIndexesSet.Contains(i))
+                {
+                    vertices[i] = Vector3.zero; // Collapse triangles for vertices not in the keep list
+                }
+            }
+        }
+        else
+        {
+            foreach (int index in vertexIndexes)
+            {
+                vertices[index] = Vector3.zero; // Collapse triangles for vertices in the remove list
+            }
         }
 
         Mesh newMesh = existingMesh ? existingMesh : new Mesh();
@@ -229,8 +253,8 @@ public class MeshDeletionUtility
         CopyBoneWeights(originalMesh, newMesh);
         CopyBindposes(originalMesh, newMesh);
         CopyColors(originalMesh, newMesh);
-        DegenerateTriangles(originalMesh, newMesh, removeVerticesIndexes);
-        CopyBlendShapesForDegeneration(originalMesh, newMesh, removeVerticesIndexes);
+        DegenerateTriangles(originalMesh, newMesh, vertexIndexes);
+        CopyBlendShapesForDegeneration(originalMesh, newMesh, vertexIndexes);
 
         stopwatch.Stop();
         UnityEngine.Debug.Log("Mark for Degeneration: " + stopwatch.ElapsedMilliseconds + " ms");
