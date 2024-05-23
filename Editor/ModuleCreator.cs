@@ -33,10 +33,10 @@ public class ModuleCreator
         {
             Stopwatch stopwatch = new Stopwatch();
             
-            stopwatch.Start();
+            //stopwatch.Start();
             (GameObject root, int skin_index) = CheckObjects(sourceObject);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             (GameObject new_root, string variantPath) = CopyRootObject(root, sourceObject.name);

@@ -60,7 +60,7 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 CalculateIslands();
             }
-
+    
             if (GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
             {
                 ToggleRaycast();
@@ -132,14 +132,25 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void PerformRaycast()
     {
-        if (EditorRaycastHelper.RaycastAgainstScene(out RaycastHit hit))
+        if (EditorRaycastHelper.RaycastAgainstScene(out ExtendedRaycastHit extendedHit))
         {
-            int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(skinnedMeshRenderer, hit.triangleIndex, islands);
-            if (index != previousIslandIndex)
-            {
-                HighlightIslandEdges(index);
-                previousIslandIndex = index;
+            if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, skinnedMeshRenderer.gameObject))
+            {   
+                int triangleIndex = extendedHit.triangleIndex;
+                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(skinnedMeshRenderer, triangleIndex, islands);
+                if (index != previousIslandIndex)
+                {
+                    HighlightIslandEdges(index);
+                    previousIslandIndex = index;
+                }
             }
+        }
+        else
+        {
+            //RemoveHighlight();
+            //Island_Index.Clear();
+            previousIslandIndex = -1;
+            HighlightIslandEdges();
         }
     }
 
@@ -158,12 +169,18 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
         {
-            if (!Island_Index.Contains(previousIslandIndex))
+            if (!Island_Index.Contains(previousIslandIndex) && previousIslandIndex != -1)
             {
                 Island_Index.Add(previousIslandIndex);
             }
             Repaint();
         }
+    }
+
+    private void HighlightIslandEdges()
+    {
+        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
     }
 
     private void HighlightIslandEdges(int islandIndex)

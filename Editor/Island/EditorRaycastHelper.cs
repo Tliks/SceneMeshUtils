@@ -2,6 +2,20 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+public struct ExtendedRaycastHit
+{
+    public RaycastHit raycastHit;
+    public Transform transform;
+    public int triangleIndex;
+
+    public ExtendedRaycastHit(RaycastHit raycastHit, Transform transform, int triangleIndex)
+    {
+        this.raycastHit = raycastHit;
+        this.transform = transform;
+        this.triangleIndex = triangleIndex;
+    }
+}
+
 public static class EditorRaycastHelper
 {
     private static readonly MethodInfo intersectRayMeshMethod = typeof(HandleUtility).GetMethod("IntersectRayMesh",
@@ -9,21 +23,18 @@ public static class EditorRaycastHelper
 
     private static GameObject lastGameObjectUnderCursor;
 
-    public static bool RaycastAgainstScene(out RaycastHit hit)
+    public static bool RaycastAgainstScene(out ExtendedRaycastHit extendedHit)
     {
         if (Event.current == null)
         {
-            hit = new RaycastHit();
+            extendedHit = new ExtendedRaycastHit();
             return false;
         }
         Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 
-        // First, try raycasting against scene geometry with or without colliders (it doesn't matter)
-        // Credit: https://forum.unity.com/threads/editor-raycast-against-scene-meshes-without-collider-editor-select-object-using-gui-coordinate.485502
         GameObject gameObjectUnderCursor;
         switch (Event.current.type)
         {
-            // HandleUtility.PickGameObject doesn't work with some EventTypes in OnSceneGUI
             case EventType.Layout:
             case EventType.Repaint:
             case EventType.ExecuteCommand:
@@ -39,20 +50,20 @@ public static class EditorRaycastHelper
             Mesh meshUnderCursor = null;
             if (gameObjectUnderCursor.TryGetComponent(out MeshFilter meshFilter))
                 meshUnderCursor = meshFilter.sharedMesh;
-            if (!meshUnderCursor &&
+            if (!meshUnderCursor && 
                 gameObjectUnderCursor.TryGetComponent(out SkinnedMeshRenderer skinnedMeshRenderer))
                 meshUnderCursor = skinnedMeshRenderer.sharedMesh;
 
             if (meshUnderCursor)
             {
-                // Remember this GameObject so that it can be used inside problematic EventTypes, as well
                 lastGameObjectUnderCursor = gameObjectUnderCursor;
 
                 object[] rayMeshParameters = new object[]
-                    {ray, meshUnderCursor, gameObjectUnderCursor.transform.localToWorldMatrix, null};
+                    { ray, meshUnderCursor, gameObjectUnderCursor.transform.localToWorldMatrix, null };
                 if ((bool) intersectRayMeshMethod.Invoke(null, rayMeshParameters))
                 {
-                    hit = (RaycastHit) rayMeshParameters[3];
+                    RaycastHit tempHit = (RaycastHit) rayMeshParameters[3];
+                    extendedHit = new ExtendedRaycastHit(tempHit, gameObjectUnderCursor.transform, tempHit.triangleIndex);
                     return true;
                 }
             }
@@ -60,15 +71,19 @@ public static class EditorRaycastHelper
                 lastGameObjectUnderCursor = null;
         }
 
-        // Raycast against scene geometry with colliders
         object raycastResult = HandleUtility.RaySnap(ray);
-        if (raycastResult != null && raycastResult is RaycastHit)
+        if (raycastResult != null && raycastResult is RaycastHit tempHit2)
         {
-            hit = (RaycastHit) raycastResult;
+            extendedHit = new ExtendedRaycastHit(tempHit2, tempHit2.transform, tempHit2.triangleIndex);
             return true;
         }
 
-        hit = new RaycastHit();
+        extendedHit = new ExtendedRaycastHit();
         return false;
+    }
+
+    public static bool IsHitObjectSpecified(ExtendedRaycastHit extendedHit, GameObject specifiedObject)
+    {
+        return extendedHit.transform != null && extendedHit.transform.gameObject == specifiedObject;
     }
 }
