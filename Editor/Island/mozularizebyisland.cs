@@ -15,7 +15,6 @@ public class ModuleCreatorIsland : EditorWindow
     private bool isRaycastEnabled = false;
 
     private List<Island> islands = new List<Island>();
-    private Dictionary<int, Mesh> islandMeshes = new Dictionary<int, Mesh>();
     private int previousIslandIndex = -1;
     private SkinnedMeshRenderer duplicatedSkinnedMeshRenderer;
     private HighlightEdgesManager highlightManager;
@@ -41,7 +40,7 @@ public class ModuleCreatorIsland : EditorWindow
         window.InitializeFromMenuItem();
     }
 
-    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, 49)]
+    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
         var window = GetWindow<ModuleCreatorIsland>("Module Creator");
@@ -60,6 +59,9 @@ public class ModuleCreatorIsland : EditorWindow
     // Separate initialization for Window menu item
     private void InitializeFromMenuItem()
     {
+        skinnedMeshRenderer= null;
+        islands.Clear();
+        previewmesh.Clear();
         isGameObjectContext = false;
         Repaint();
     }
@@ -67,6 +69,9 @@ public class ModuleCreatorIsland : EditorWindow
     // Separate initialization for GameObject menu item
     private void InitializeFromGameObject()
     {
+        skinnedMeshRenderer= null;
+        islands.Clear();
+        previewmesh.Clear();
         isGameObjectContext = true;
         Repaint();
     }
@@ -82,13 +87,13 @@ public class ModuleCreatorIsland : EditorWindow
                 DuplicateAndSetup();
             }
 
-            if (GUILayout.Button("Calculate Islands"))
+            if (duplicatedSkinnedMeshRenderer && GUILayout.Button("Calculate Islands"))
             {
                 CalculateIslands();
             }
         }
         
-        if (GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
+        if (islands.Count > 0 && GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
         {
             ToggleRaycast();
         }
@@ -296,7 +301,7 @@ public class ModuleCreatorIsland : EditorWindow
                 stopwatch.Stop();
                 //UnityEngine.Debug.Log("sharedMesh: " + stopwatch.ElapsedMilliseconds + " ms");
 
-                UpdateCustomViewMesh(previousIslandIndex);
+                UpdateCustomViewMesh();
             }
             Repaint();
         }
@@ -415,7 +420,7 @@ public class ModuleCreatorIsland : EditorWindow
     public void OpenCustomSceneView()
     {
         customsceneView = CreateInstance<SceneView>();
-        customsceneView.title = "Custom Mesh View";
+        customsceneView.title = "Selected Mesh PureView";
         customsceneView.Show();
 
         if (duplicatedSkinnedMeshRenderer != null)
@@ -432,7 +437,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    private void UpdateCustomViewMesh(int islandIndex)
+    private void UpdateCustomViewMesh()
     {
         var allVertices = new List<int>(Island_Index.SelectMany(index => islands[index].Vertices));
 
