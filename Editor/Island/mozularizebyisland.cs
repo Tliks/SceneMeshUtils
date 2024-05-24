@@ -32,11 +32,88 @@ public class ModuleCreatorIsland : EditorWindow
     private SkinnedMeshRenderer customRenderer;
 
     private SceneView customsceneView;
+    private bool isGameObjectContext = false;
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
     {
-        GetWindow<ModuleCreatorIsland>("Module Creator");
+        var window = GetWindow<ModuleCreatorIsland>("Module Creator");
+        window.InitializeFromMenuItem();
+    }
+
+    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, 49)]
+    public static void ShowWindowFromGameObject()
+    {
+        var window = GetWindow<ModuleCreatorIsland>("Module Creator");
+        if (Selection.activeGameObject != null)
+        {
+            window.skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+            if (window.skinnedMeshRenderer != null)
+            {
+                window.AutoSetup();
+                window.InitializeFromGameObject();
+            }
+        }
+    }
+
+
+    // Separate initialization for Window menu item
+    private void InitializeFromMenuItem()
+    {
+        isGameObjectContext = false;
+        Repaint();
+    }
+
+    // Separate initialization for GameObject menu item
+    private void InitializeFromGameObject()
+    {
+        isGameObjectContext = true;
+        Repaint();
+    }
+
+    private void OnGUI()
+    {
+        if (!isGameObjectContext)
+        {
+            skinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
+
+            if (skinnedMeshRenderer && GUILayout.Button("Duplicate and Setup Skinned Mesh"))
+            {
+                DuplicateAndSetup();
+            }
+
+            if (GUILayout.Button("Calculate Islands"))
+            {
+                CalculateIslands();
+            }
+        }
+        
+        if (GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
+        {
+            ToggleRaycast();
+        }
+
+        porcess_options();
+
+        GUI.enabled = skinnedMeshRenderer != null && islands.Count > 0;
+        if (GUILayout.Button("Create Module"))
+        {
+            CreateModule();
+            FocusCustomViewObject(defaultsceneView, skinnedMeshRenderer);
+            processend();
+            if (isGameObjectContext) Close();
+        }
+        GUI.enabled = true;
+    }
+
+    private void AutoSetup()
+    {
+        DuplicateAndSetup();
+        CalculateIslands();
+        if (!isRaycastEnabled)
+        {
+            ToggleRaycast();
+        }
     }
 
     private void OnEnable()
@@ -93,39 +170,6 @@ public class ModuleCreatorIsland : EditorWindow
         CloseCustomSceneView();
     }
     
-    private void OnGUI()
-    {
-        skinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", skinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
-        if (skinnedMeshRenderer)
-        {
-            if (GUILayout.Button("Duplicate and Setup Skinned Mesh"))
-            {
-                DuplicateAndSetup();
-            }
-
-            if (GUILayout.Button("Calculate Islands"))
-            {
-                CalculateIslands();
-            }
-    
-            if (GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
-            {
-                ToggleRaycast();
-            }
-
-            porcess_options();
-
-            GUI.enabled = skinnedMeshRenderer != null && islands.Count > 0;
-            if (GUILayout.Button("Create Module"))
-            {
-                CreateModule();
-                FocusCustomViewObject(defaultsceneView, skinnedMeshRenderer);
-                processend();
-            }
-            GUI.enabled = true;
-        }
-    }
-
     private static void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
     {
         Bounds bounds = customRenderer.bounds;
@@ -297,7 +341,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void porcess_options()
     {   
-        EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));
+        //EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));
 
         EditorGUILayout.Space();
 
