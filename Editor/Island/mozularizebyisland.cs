@@ -49,8 +49,8 @@ public class ModuleCreatorIsland : EditorWindow
             window.skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
             if (window.skinnedMeshRenderer != null)
             {
-                window.AutoSetup();
                 window.InitializeFromGameObject();
+                window.AutoSetup();
             }
         }
     }
@@ -69,7 +69,6 @@ public class ModuleCreatorIsland : EditorWindow
     // Separate initialization for GameObject menu item
     private void InitializeFromGameObject()
     {
-        skinnedMeshRenderer= null;
         islands.Clear();
         previewmesh.Clear();
         isGameObjectContext = true;
@@ -100,7 +99,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         porcess_options();
 
-        GUI.enabled = skinnedMeshRenderer != null && islands.Count > 0;
+        GUI.enabled = skinnedMeshRenderer != null && Island_Index.Count > 0;
         if (GUILayout.Button("Create Module"))
         {
             CreateModule();
@@ -115,10 +114,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         DuplicateAndSetup();
         CalculateIslands();
-        if (!isRaycastEnabled)
-        {
-            ToggleRaycast();
-        }
+        ToggleRaycast();
     }
 
     private void OnEnable()
@@ -175,19 +171,34 @@ public class ModuleCreatorIsland : EditorWindow
         CloseCustomSceneView();
     }
     
-    private static void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
+    private void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
     {
-        Bounds bounds = customRenderer.bounds;
+        Mesh mesh = customRenderer.sharedMesh;
+        Vector3 middleVertex = Vector3.zero;
 
-        float cameraDistance = 0.3f;
-        //UnityEngine.Debug.Log(sceneView);
-        Vector3 direction = sceneView.camera.transform.forward;
-        Vector3 newCameraPosition = bounds.center - direction * cameraDistance;
+        if (mesh != null)
+        {
+            // 頂点座標を取得
+            Vector3[] vertices = mesh.vertices;
 
-        sceneView.LookAt(bounds.center, sceneView.rotation, cameraDistance);
+            // スキニングの影響を考慮して頂点を移動
+            stopwatch.Restart();
+            middleVertex = vertices
+                .Select(v => customRenderer.transform.TransformPoint(v))
+                .Aggregate((acc, v) => acc + v) / vertices.Length;
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"middleVertex: {stopwatch.ElapsedMilliseconds} ms");
+        }
 
-        sceneView.Repaint();
-    }
+    float cameraDistance = 0.2f;
+    Vector3 direction = sceneView.camera.transform.forward;
+    Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
+
+    UnityEngine.Debug.Log(middleVertex);
+    sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
+
+    sceneView.Repaint();
+}
 
     private void EnsureHighlightManagerExists()
     {
@@ -204,7 +215,6 @@ public class ModuleCreatorIsland : EditorWindow
         if (isRaycastEnabled)
         {
             EnsureHighlightManagerExists();
-            OpenCustomSceneView();
         }
         else
         {
@@ -267,6 +277,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnSceneGUI(SceneView sceneView)
     {
+        //FocusCustomSceneView(customsceneView);
         if (!isRaycastEnabled || duplicatedSkinnedMeshRenderer == null) return;
 
         //HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
@@ -304,8 +315,12 @@ public class ModuleCreatorIsland : EditorWindow
                 UpdateCustomViewMesh();
             }
             Repaint();
+            //FocusCustomSceneView(customsceneView);   
         }
+        //HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+
     }
+
 
     private void HighlightIslandEdges()
     {
@@ -398,6 +413,8 @@ public class ModuleCreatorIsland : EditorWindow
         duplicatedSkinnedMeshRenderer.sharedMesh = previewmesh;
 
         FocusCustomViewObject(defaultsceneView, duplicatedSkinnedMeshRenderer);
+
+        OpenCustomSceneView();
     }
 
     private void CloseCustomSceneView()
@@ -422,18 +439,19 @@ public class ModuleCreatorIsland : EditorWindow
         customsceneView = CreateInstance<SceneView>();
         customsceneView.title = "Selected Mesh PureView";
         customsceneView.Show();
+        //customsceneView.Focus();
 
         if (duplicatedSkinnedMeshRenderer != null)
         {
             customViewObject = Instantiate(duplicatedSkinnedMeshRenderer.transform.parent.gameObject, duplicatedSkinnedMeshRenderer.transform.parent.transform.position + Vector3.right * 10, Quaternion.identity);
             customRenderer = customViewObject.GetComponentInChildren<SkinnedMeshRenderer>();
+            FocusCustomViewObject(customsceneView, customRenderer);
 
             var emptyVerticesList = new List<int>(); // Start with an empty list to disable all vertices initially
             customViewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(duplicatedSkinnedMeshRenderer, emptyVerticesList);
             customRenderer.sharedMesh = customViewMesh;
 
             // Focus the camera on the customViewObject's bounds
-            FocusCustomViewObject(customsceneView, customRenderer);
         }
     }
 
