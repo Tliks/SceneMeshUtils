@@ -145,6 +145,7 @@ public class ModuleCreatorIsland : EditorWindow
         GUI.enabled = OriginskinnedMeshRenderer != null && Island_Index.Count > 0;
         if (GUILayout.Button("Create Module"))
         {
+            UnityEngine.Debug.Log(encodedString);
             CreateModule();
             FocusCustomViewObject(defaultsceneView, OriginskinnedMeshRenderer);
             processend();
