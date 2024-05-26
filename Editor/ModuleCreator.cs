@@ -39,9 +39,9 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
-            (GameObject new_root, string variantPath) = CopyRootObject(root, sourceObject.name);
+            (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+            UnityEngine.Debug.Log("SaveRootObject: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             CleanUpHierarchy(new_root, skin_index);
@@ -91,9 +91,9 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
-            GameObject new_root = JustCopy(root, sourceObject.name);
+            GameObject new_root = CopyObjects(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("JustCopy: " + stopwatch.ElapsedMilliseconds + " ms");
+            UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
@@ -186,7 +186,7 @@ public class ModuleCreator
 
     }
 
-    private (GameObject, string) CopyRootObject(GameObject root_object, string source_name)
+    private (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
     {
         string variantPath = GenerateVariantPath(root_object, source_name);
 
@@ -221,10 +221,9 @@ public class ModuleCreator
         }
     }
 
-    private GameObject JustCopy(GameObject root_object, string source_name)
+    private GameObject CopyObjects(GameObject root_object, string source_name)
     {
-        GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object, root_object.transform.position + new Vector3(0, 0, -10), root_object.transform.rotation);
-        duplicatedParent.name = source_name + " preview";
+        GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object);
         return duplicatedParent;
     }
 
