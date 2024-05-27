@@ -192,6 +192,8 @@ public class ModuleCreatorIsland : EditorWindow
         {
             string encodedString = IntArrayConverter.Encode(selected_Island_Index.Prepend(islands.Count).ToArray());
             UnityEngine.Debug.Log(encodedString);
+            string encodedStringg = IntArrayConverter.Encodeg(selected_Island_Index.Prepend(islands.Count).ToArray());
+            UnityEngine.Debug.Log(encodedStringg);
             CreateModule();
             FocusCustomViewObject(unselectedsceneView, OriginskinnedMeshRenderer);
             processend();

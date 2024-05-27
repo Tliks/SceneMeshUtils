@@ -1,6 +1,10 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using System;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
 
 public class IntArrayConverter
 {
@@ -55,5 +59,41 @@ public class IntArrayConverter
         }
 
         return decompressed.ToArray();
+    }
+
+    public static string Encodeg(int[] data)
+    {
+        // int配列をバイト配列に変換
+        byte[] byteArray = data.SelectMany(BitConverter.GetBytes).ToArray();
+        
+        using (var memoryStream = new MemoryStream())
+        {
+            using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
+            {
+                gzipStream.Write(byteArray, 0, byteArray.Length);
+            }
+            return Convert.ToBase64String(memoryStream.ToArray());
+        }
+    }
+
+    public static int[] Decodeg(string encodedData)
+    {
+        byte[] compressedData = Convert.FromBase64String(encodedData);
+        
+        using (var compressedStream = new MemoryStream(compressedData))
+        using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+        using (var resultStream = new MemoryStream())
+        {
+            gzipStream.CopyTo(resultStream);
+            byte[] decompressedData = resultStream.ToArray();
+            
+            // バイト配列をint配列へ変換
+            int[] result = new int[decompressedData.Length / sizeof(int)];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = BitConverter.ToInt32(decompressedData, i * sizeof(int));
+            }
+            return result;
+        }
     }
 }
