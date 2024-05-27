@@ -1,52 +1,59 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 
 public class IntArrayConverter
 {
-    public static string Encode(int[] input)
+    public static string Encode(int[] data)
     {
-        if (input == null || input.Length == 0)
+        List<byte> compressed = new List<byte>();
+        foreach (int number in data)
         {
-            return null;
+            bool hasNext = true;
+            int value = number;
+            while (hasNext)
+            {
+                byte chunk = (byte)(value & 0x7F); // 7bit取り出す
+                value >>= 7; // 次の7bit準備
+                if (value > 0)
+                {
+                    chunk |= 0x80; // 次がある場合、先頭1bitをセット
+                }
+                else
+                {
+                    hasNext = false; // 次がない場合終了
+                }
+                compressed.Add(chunk);
+            }
         }
-
-        StringBuilder sb = new StringBuilder();
-        foreach (int i in input)
-        {
-            sb.Append(i).Append(",");
-        }
-
-        if (sb.Length > 0)
-        {
-            sb.Length--;
-        }
-
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
+        return Convert.ToBase64String(compressed.ToArray());
     }
 
-    public static int[] Decode(string input)
+
+    public static int[] Decode(string compressedData)
     {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return null;
-        }
+        byte[] compressedBytes = Convert.FromBase64String(compressedData);
+        List<int> decompressed = new List<int>();
+        int value = 0;
+        int shift = 0;
 
-        try
+        foreach (byte chunk in compressedBytes)
         {
-            string decodedString = Encoding.UTF8.GetString(Convert.FromBase64String(input));
-            string[] split = decodedString.Split(',');
-
-            int[] result = new int[split.Length];
-            for (int i = 0; i < split.Length; i++)
+            value |= (chunk & 0x7F) << shift; // 7bit復元
+            if ((chunk & 0x80) == 0)
             {
-                result[i] = int.Parse(split[i]);
+                // 次がない場合、完全な数値を追加
+                decompressed.Add(value);
+                value = 0; // 次の数値のためにリセット
+                shift = 0; // シフトもリセット
             }
+            else
+            {
+                // 次がある場合、シフトを増やす
+                shift += 7;
+            }
+        }
 
-            return result;
-        }
-        catch
-        {
-            return null;
-        }
+        return decompressed.ToArray();
     }
 }
