@@ -9,27 +9,15 @@ public class UnionFind
     private int[] parent;
     private int[] rank;
 
-    public UnionFind(int size, Vector3[] vertices, bool mergeSamePosition)
+    public UnionFind(int size)
     {
         parent = new int[size];
         rank = new int[size];
-        Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>();
 
         for (int i = 0; i < size; i++)
         {
             parent[i] = i;
             rank[i] = 0;
-            if (mergeSamePosition)
-            {
-                if (vertexMap.ContainsKey(vertices[i]))
-                {
-                    Unite(i, vertexMap[vertices[i]]);
-                }
-                else
-                {
-                    vertexMap[vertices[i]] = i;
-                }
-            }
         }
     }
 
@@ -93,10 +81,25 @@ public static class MeshIslandUtility
         int[] triangles = mesh.triangles;
         Vector3[] vertices = mesh.vertices;
 
-        UnionFind unionFind = mergeSamePosition 
-        ? new UnionFind(vertices.Length, vertices, true)
-        : new UnionFind(vertices.Length, vertices, false);
-        
+        UnionFind unionFind = new UnionFind(vertices.Length);
+
+        Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>();
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            if (mergeSamePosition)
+            {
+                if (vertexMap.ContainsKey(vertices[i]))
+                {
+                    unionFind.Unite(i, vertexMap[vertices[i]]);
+                }
+                else
+                {
+                    vertexMap[vertices[i]] = i;
+                }
+            }
+        }
+
         Dictionary<(int, int), int> edgeCount = new Dictionary<(int, int), int>();
         Dictionary<int, List<int>> vertexEdges = new Dictionary<int, List<int>>();
 
