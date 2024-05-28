@@ -205,7 +205,7 @@ public class ModuleCreatorIsland : EditorWindow
 // Render Island Hash Field
     private void RenderIslandHashField()
     {
-        GUILayout.Label("Island Hash:", EditorStyles.boldLabel);
+        GUILayout.Label("Encoded islands:", EditorStyles.boldLabel);
         string newValue = EditorGUILayout.TextField(textFieldValue);
 
         if (newValue != textFieldValue)
@@ -426,7 +426,8 @@ public class ModuleCreatorIsland : EditorWindow
             }
         }
         else
-        {
+        {   
+            if (extendedHit.raycastHit.point != Vector3.zero) UnityEngine.Debug.Log(extendedHit.raycastHit.point);
             unselectedpreviousIslandIndex = -1;
             selectedpreviousIslandIndex = -1;
             HighlightIslandEdges(UnselectedSkinnedMeshRenderer);
@@ -545,11 +546,17 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.Space();
     }
 
+    public void ResetAllBlendShapes(SkinnedMeshRenderer skinnedMeshRenderer)
+    {
+        int blendShapeCount = skinnedMeshRenderer.sharedMesh.blendShapeCount;
+        for (int i = 0; i < blendShapeCount; i++)
+        {
+            skinnedMeshRenderer.SetBlendShapeWeight(i, 0f);
+        }
+    }
+
     private void DuplicateAndSetup()
     {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-
         unselectedsceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
 
         ModuleCreatorSettings settings = new ModuleCreatorSettings
@@ -558,18 +565,13 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBoneColider = false
         };
         UnselectedSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
-        
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("Time taken for Module Creation: " + stopwatch.ElapsedMilliseconds + " ms");
-        stopwatch.Restart();
 
+        ResetAllBlendShapes(UnselectedSkinnedMeshRenderer);
         unselectedmeshObject = UnselectedSkinnedMeshRenderer.transform.parent.gameObject;
-        unselectedmeshObject.transform.position = OriginskinnedMeshRenderer.gameObject.transform.position + new Vector3(0, 0, -5);
+        unselectedmeshObject.transform.position = OriginskinnedMeshRenderer.transform.parent.position + new Vector3(0, 0, -5);
         unselectedmeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
-        
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("Time taken for setting transform: " + stopwatch.ElapsedMilliseconds + " ms");
-        stopwatch.Restart();
+
+        UnselectedSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
 
         unselectedmeshObject.name = "Unelected Mesh Preview";
 
@@ -577,20 +579,28 @@ public class ModuleCreatorIsland : EditorWindow
         Unselectemesh = Instantiate(originalMesh);
         UnselectedSkinnedMeshRenderer.sharedMesh = Unselectemesh;
 
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("Time taken for mesh instantiation: " + stopwatch.ElapsedMilliseconds + " ms");
-        stopwatch.Restart();
-
         FocusCustomViewObject(unselectedsceneView, UnselectedSkinnedMeshRenderer);
 
-        stopwatch.Stop();
-        UnityEngine.Debug.Log("Time taken for focusing: " + stopwatch.ElapsedMilliseconds + " ms");
-        stopwatch.Restart();
-
         OpenCustomSceneView();
+    }
 
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("Time taken for opening custom scene view: " + stopwatch.ElapsedMilliseconds + " ms");
+    public void OpenCustomSceneView()
+    {
+        selectedsceneView = CreateInstance<SceneView>();
+        selectedsceneView.titleContent = new GUIContent("Selected Mesh Preview");
+        selectedsceneView.Show();
+
+        if (UnselectedSkinnedMeshRenderer != null)
+        {
+            selectedmeshObject = Instantiate(unselectedmeshObject, unselectedmeshObject.transform.position + Vector3.right * 10, Quaternion.identity);
+            SelectedSkinnedMeshRenderer = selectedmeshObject.GetComponentInChildren<SkinnedMeshRenderer>();
+
+            FocusCustomViewObject(selectedsceneView, SelectedSkinnedMeshRenderer);
+
+            var emptyVerticesList = new List<int>();
+            SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
+            SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
+        }
     }
 
     private void CloseCustomSceneView()
@@ -610,44 +620,6 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    public void OpenCustomSceneView()
-    {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
-
-        selectedsceneView = CreateInstance<SceneView>();
-        selectedsceneView.titleContent = new GUIContent("Selected Mesh Preview");
-        selectedsceneView.Show();
-
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("SceneView creation and show time: " + stopwatch.ElapsedMilliseconds + " ms");
-
-        if (UnselectedSkinnedMeshRenderer != null)
-        {
-            stopwatch.Restart();
-
-            selectedmeshObject = Instantiate(unselectedmeshObject, unselectedmeshObject.transform.position + Vector3.right * 10, Quaternion.identity);
-            //selectedmeshObject.name = "Selected Mesh Preview";
-            SelectedSkinnedMeshRenderer = selectedmeshObject.GetComponentInChildren<SkinnedMeshRenderer>();
-            
-            stopwatch.Stop();
-            UnityEngine.Debug.Log("Mesh object instantiation and setup time: " + stopwatch.ElapsedMilliseconds + " ms");
-
-            stopwatch.Restart();
-            FocusCustomViewObject(selectedsceneView, SelectedSkinnedMeshRenderer);
-            stopwatch.Stop();
-            //UnityEngine.Debug.Log("FocusCustomViewObject execution time: " + stopwatch.ElapsedMilliseconds + " ms");
-
-            stopwatch.Restart();
-            var emptyVerticesList = new List<int>(); // Start with an empty list to disable all vertices initially
-            SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
-            SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
-            stopwatch.Stop();
-            UnityEngine.Debug.Log("KeepVerticesUsingDegenerateTriangles and mesh assignment time: " + stopwatch.ElapsedMilliseconds + " ms");
-
-            // Focus the camera on the customViewObject's bounds
-        }
-    }
 
     private void UpdateMesh()
     {

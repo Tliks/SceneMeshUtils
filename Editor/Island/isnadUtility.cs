@@ -61,14 +61,10 @@ public class Island
     public HashSet<(int, int)> BoundaryVertices { get; }
     public HashSet<(int, int)> AllEdges { get; }
 
-    public Island(List<int> vertices, Vector2 startUV, Vector2 endUV, int index, float area, HashSet<(int, int)> boundaryVertices, HashSet<(int, int)> allEdges)
+    public Island(List<int> vertices, int index, HashSet<(int, int)> allEdges)
     {
         Vertices = vertices;
-        StartUV = startUV;
-        EndUV = endUV;
         Index = index;
-        Area = area;
-        BoundaryVertices = boundaryVertices;
         AllEdges = allEdges;
     }
 }
@@ -134,8 +130,7 @@ public static class MeshIslandUtility
         foreach (var kvp in islandDict)
         {
             var allEdges = GetAllEdges(kvp.Value, vertexEdges);
-            var boundaryVertices = GetBoundaryVertices(kvp.Value, edgeCount, vertexEdges);
-            var island = CreateIsland(kvp.Value, mesh.uv, index, boundaryVertices, allEdges);
+            Island island = new Island(kvp.Value, index, allEdges);
             islands.Add(island);
             index++;
         }
@@ -167,29 +162,6 @@ public static class MeshIslandUtility
         vertexEdges[v2].Add(v1);
     }
 
-    private static HashSet<(int, int)> GetBoundaryVertices(List<int> vertices, Dictionary<(int, int), int> edgeCount, Dictionary<int, List<int>> vertexEdges)
-    {
-        HashSet<int> boundaryVertices = new HashSet<int>();
-        HashSet<(int, int)> boundaryEdges = new HashSet<(int, int)>();
-
-        foreach (int v in vertices)
-        {
-            if (vertexEdges.ContainsKey(v))
-            {
-                foreach (var adjacent in vertexEdges[v])
-                {
-                    var edge = v < adjacent ? (v, adjacent) : (adjacent, v);
-                    if (edgeCount[edge] == 1)
-                    {
-                        boundaryVertices.Add(v);
-                        boundaryVertices.Add(adjacent);
-                        boundaryEdges.Add(edge);
-                    }
-                }
-            }
-        }
-        return boundaryEdges;
-    }
 
     private static HashSet<(int, int)> GetAllEdges(List<int> vertices, Dictionary<int, List<int>> vertexEdges)
     {
@@ -210,29 +182,6 @@ public static class MeshIslandUtility
         return allEdges;
     }
 
-    private static Island CreateIsland(List<int> vertices, Vector2[] uv, int index, HashSet<(int, int)> boundaryVertices, HashSet<(int, int)> allEdges)
-    {
-        float minX = float.MaxValue, minY = float.MaxValue;
-        float maxX = float.MinValue, maxY = float.MinValue;
-
-        foreach (int vertexIndex in vertices)
-        {
-            Vector2 uvCoord = uv[vertexIndex];
-            if (uvCoord.x < minX) minX = uvCoord.x;
-            if (uvCoord.y < minY) minY = uvCoord.y;
-            if (uvCoord.x > maxX) maxX = uvCoord.x;
-            if (uvCoord.y > maxY) maxY = uvCoord.y;
-        }
-
-        Vector2 startUV = new Vector2(minX, minY);
-        Vector2 endUV = new Vector2(maxX, maxY);
-
-        float width = Mathf.Abs(endUV.x - startUV.x);
-        float height = Mathf.Abs(endUV.y - startUV.y);
-        float area = width * height;
-
-        return new Island(vertices, startUV, endUV, index, area, boundaryVertices, allEdges);
-    }
 
     public static int GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<Island> islands)
     {

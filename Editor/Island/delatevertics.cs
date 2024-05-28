@@ -41,7 +41,7 @@ public class MeshDeletionUtility
 
     public static Mesh KeepVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes, Mesh existingMesh)
     {
-        return MarkVerticesForDegeneration(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
+        return MarkVerticesForDegenerationbeta(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
     }
 
     // DeleteMesh関連のコード
@@ -220,9 +220,11 @@ public class MeshDeletionUtility
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
         stopwatch.Start();
-
         Vector3[] vertices = originalMesh.vertices;
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Extracting vertices: " + stopwatch.ElapsedMilliseconds + " ms");
 
+        stopwatch.Restart();
         if (keepVertices)
         {
             HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
@@ -241,10 +243,16 @@ public class MeshDeletionUtility
                 vertices[index] = Vector3.zero; // Collapse triangles for vertices in the remove list
             }
         }
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Processing vertices: " + stopwatch.ElapsedMilliseconds + " ms");
 
+        stopwatch.Restart();
         Mesh newMesh = existingMesh ? existingMesh : new Mesh();
         newMesh.Clear();
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Initializing new mesh: " + stopwatch.ElapsedMilliseconds + " ms");
 
+        stopwatch.Restart();
         newMesh.vertices = vertices;
 
         CopyNormals(originalMesh, newMesh);
@@ -253,22 +261,60 @@ public class MeshDeletionUtility
         CopyBoneWeights(originalMesh, newMesh);
         CopyBindposes(originalMesh, newMesh);
         CopyColors(originalMesh, newMesh);
+        newMesh.triangles = originalMesh.triangles;
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Copying mesh data: " + stopwatch.ElapsedMilliseconds + " ms");
+
+        stopwatch.Restart();
         if (keepVertices)
         {
-            DegenerateTrianglesKeeping(originalMesh, newMesh, vertexIndexes);
+            // DegenerateTrianglesKeeping(originalMesh, newMesh, vertexIndexes);
         }
         else
         {
-            DegenerateTriangles(originalMesh, newMesh, vertexIndexes);
+            // DegenerateTriangles(originalMesh, newMesh, vertexIndexes);
         }
-        CopyBlendShapesForDegeneration(originalMesh, newMesh, vertexIndexes);
-
+        //CopyBlendShapesForDegeneration(originalMesh, newMesh, vertexIndexes);
         stopwatch.Stop();
-        //UnityEngine.Debug.Log("Mark for Degeneration: " + stopwatch.ElapsedMilliseconds + " ms");
+        UnityEngine.Debug.Log("Handling degenerations: " + stopwatch.ElapsedMilliseconds + " ms");
 
         return newMesh;
     }
 
+    private static Mesh MarkVerticesForDegenerationbeta(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndexes, Mesh existingMesh, bool keepVertices)
+    {
+        Stopwatch stopwatch = new Stopwatch();
+        Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
+        Mesh newMesh = Object.Instantiate(originalMesh);
+        
+        stopwatch.Start();
+        Vector3[] vertices = newMesh.vertices;
+        
+        if (keepVertices)
+        {
+            HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (!vertexIndexesSet.Contains(i))
+                {
+                    vertices[i] = Vector3.zero; // Collapse triangles for vertices not in the keep list
+                }
+            }
+        }
+        else
+        {
+            foreach (int index in vertexIndexes)
+            {
+                vertices[index] = Vector3.zero; // Collapse triangles for vertices in the remove list
+            }
+        }
+        newMesh.vertices = vertices;
+        stopwatch.Stop();
+        UnityEngine.Debug.Log("Processing vertices: " + stopwatch.ElapsedMilliseconds + " ms");
+
+        return newMesh;
+    }
+    
     private static void DegenerateTrianglesKeeping(Mesh originalMesh, Mesh newMesh, List<int> keepVerticesIndexes)
     {
         HashSet<int> keepVerticesSet = new HashSet<int>(keepVerticesIndexes);

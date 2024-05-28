@@ -52,7 +52,11 @@ public static class EditorRaycastHelper
                 meshUnderCursor = meshFilter.sharedMesh;
             if (!meshUnderCursor && 
                 gameObjectUnderCursor.TryGetComponent(out SkinnedMeshRenderer skinnedMeshRenderer))
-                meshUnderCursor = skinnedMeshRenderer.sharedMesh;
+            {
+                Mesh bakedMesh = new Mesh();
+                skinnedMeshRenderer.BakeMesh(bakedMesh);
+                meshUnderCursor = bakedMesh;
+            }
 
             if (meshUnderCursor)
             {
@@ -81,7 +85,6 @@ public static class EditorRaycastHelper
         extendedHit = new ExtendedRaycastHit();
         return false;
     }
-
     public static bool IsHitObjectSpecified(ExtendedRaycastHit extendedHit, GameObject specifiedObject)
     {
         return extendedHit.transform != null && extendedHit.transform.gameObject == specifiedObject;
