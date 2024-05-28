@@ -13,6 +13,7 @@ public class UnionFind
     {
         parent = new int[size];
         rank = new int[size];
+
         for (int i = 0; i < size; i++)
         {
             parent[i] = i;
@@ -74,13 +75,31 @@ public class Island
 
 public static class MeshIslandUtility
 {
-    public static List<Island> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
+    public static List<Island> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer, bool mergeSamePosition = true)
     {
         Mesh mesh = skinnedMeshRenderer.sharedMesh;
         int[] triangles = mesh.triangles;
         Vector3[] vertices = mesh.vertices;
 
         UnionFind unionFind = new UnionFind(vertices.Length);
+
+        Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>();
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            if (mergeSamePosition)
+            {
+                if (vertexMap.ContainsKey(vertices[i]))
+                {
+                    unionFind.Unite(i, vertexMap[vertices[i]]);
+                }
+                else
+                {
+                    vertexMap[vertices[i]] = i;
+                }
+            }
+        }
+
         Dictionary<(int, int), int> edgeCount = new Dictionary<(int, int), int>();
         Dictionary<int, List<int>> vertexEdges = new Dictionary<int, List<int>>();
 

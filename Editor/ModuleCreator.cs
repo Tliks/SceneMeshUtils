@@ -39,9 +39,9 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
-            (GameObject new_root, string variantPath) = CopyRootObject(root, sourceObject.name);
+            (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+            UnityEngine.Debug.Log("SaveRootObject: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             CleanUpHierarchy(new_root, skin_index);
@@ -76,6 +76,46 @@ public class ModuleCreator
             UnityEngine.Debug.LogError(ex.StackTrace);
             UnityEngine.Debug.LogError(ex);
         }
+    }
+
+    public SkinnedMeshRenderer PreciewMesh(GameObject sourceObject)
+    {
+        SkinnedMeshRenderer skinnedMeshRenderer = null;;
+        try
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            
+            //stopwatch.Start();
+            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            GameObject new_root = CopyObjects(root, sourceObject.name);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            Selection.activeGameObject = new_root;
+
+        }
+
+        catch (InvalidOperationException ex)
+        {
+            UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError(ex.StackTrace);
+            UnityEngine.Debug.LogError(ex);
+        }
+
+        return skinnedMeshRenderer;
+
     }
 
     private (GameObject, int) CheckObjects(GameObject targetObject)
@@ -146,7 +186,7 @@ public class ModuleCreator
 
     }
 
-    private (GameObject, string) CopyRootObject(GameObject root_object, string source_name)
+    private (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
     {
         string variantPath = GenerateVariantPath(root_object, source_name);
 
@@ -181,7 +221,13 @@ public class ModuleCreator
         }
     }
 
-    private void CleanUpHierarchy(GameObject new_root, int skin_index)
+    private GameObject CopyObjects(GameObject root_object, string source_name)
+    {
+        GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object);
+        return duplicatedParent;
+    }
+
+    private SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index)
     {   
         HashSet<GameObject> objectsToSave = new HashSet<GameObject>();
 
@@ -212,6 +258,8 @@ public class ModuleCreator
         }
 
         CheckAndDeleteRecursive(new_root, objectsToSave);
+
+        return skinnedMeshRenderer;
     }
 
     private HashSet<GameObject> GetWeightedBones(SkinnedMeshRenderer skinnedMeshRenderer)
