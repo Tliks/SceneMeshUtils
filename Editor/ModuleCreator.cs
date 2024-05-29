@@ -41,7 +41,7 @@ public class ModuleCreator
             stopwatch.Start();
             (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("SaveRootObject: " + stopwatch.ElapsedMilliseconds + " ms");
+            UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             CleanUpHierarchy(new_root, skin_index);
