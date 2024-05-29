@@ -477,9 +477,23 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    private void OnSceneGUI(SceneView sceneView)
+    private void DontActiveSKin()
     {
-        if (!isRaycastEnabled || UnselectedSkinnedMeshRenderer == null) return;
+        if (Event.current != null && Selection.activeGameObject != null)
+        {
+            GameObject currentActiveObject = Selection.activeGameObject;
+            if (currentActiveObject == SelectedSkinnedMeshRenderer.gameObject || currentActiveObject == UnselectedSkinnedMeshRenderer.gameObject)
+            {
+                Selection.activeGameObject = null;
+            }
+        }
+    }
+
+    private void OnSceneGUI(SceneView sceneView)
+    {   
+        if (!isRaycastEnabled || UnselectedSkinnedMeshRenderer == null || SelectedSkinnedMeshRenderer == null) return;
+
+        DontActiveSKin();
 
         double currentTime = EditorApplication.timeSinceStartup;
         if (currentTime - lastUpdateTime >= raycastInterval)
