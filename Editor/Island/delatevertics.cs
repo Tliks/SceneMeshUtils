@@ -297,7 +297,7 @@ public class MeshDeletionUtility
             {
                 if (!vertexIndexesSet.Contains(i))
                 {
-                    vertices[i] = Vector3.zero; // Collapse triangles for vertices not in the keep list
+                    vertices[i] = Vector3.zero;
                 }
             }
         }
@@ -305,7 +305,7 @@ public class MeshDeletionUtility
         {
             foreach (int index in vertexIndexes)
             {
-                vertices[index] = Vector3.zero; // Collapse triangles for vertices in the remove list
+                vertices[index] = Vector3.zero;
             }
         }
         newMesh.vertices = vertices;
