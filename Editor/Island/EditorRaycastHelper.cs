@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -57,7 +58,8 @@ public static class EditorRaycastHelper
                 skinnedMeshRenderer.BakeMesh(bakedMesh);
                 meshUnderCursor = bakedMesh;
             }
-
+            
+            /*
             if (meshUnderCursor)
             {
                 lastGameObjectUnderCursor = gameObjectUnderCursor;
@@ -68,11 +70,13 @@ public static class EditorRaycastHelper
                 {
                     RaycastHit tempHit = (RaycastHit) rayMeshParameters[3];
                     extendedHit = new ExtendedRaycastHit(tempHit, gameObjectUnderCursor.transform, tempHit.triangleIndex);
+                    Debug.Log("bb");
                     return true;
                 }
             }
             else
                 lastGameObjectUnderCursor = null;
+            */
         }
 
         object raycastResult = HandleUtility.RaySnap(ray);
