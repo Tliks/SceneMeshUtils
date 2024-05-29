@@ -239,7 +239,7 @@ public class ModuleCreatorIsland : EditorWindow
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
         stopwatch.Stop();
-        UnityEngine.Debug.Log($"Save {moduleName}: {stopwatch.ElapsedMilliseconds} ms");
+        UnityEngine.Debug.Log($"Create/Save Asset: {stopwatch.ElapsedMilliseconds} ms");
 
         _Settings.newmesh = newMesh;
         stopwatch.Restart();
@@ -391,14 +391,14 @@ public class ModuleCreatorIsland : EditorWindow
     }
 
 
-    private MeshCollider AddCollider(SkinnedMeshRenderer skinnedMeshRenderer)
+    private MeshCollider AddCollider(SkinnedMeshRenderer skinnedMeshRenderer, List<int> Island_Index)
     {
         MeshCollider meshCollider;
         meshCollider = skinnedMeshRenderer.GetComponent<MeshCollider>();
         if (meshCollider == null)
         {
             meshCollider = skinnedMeshRenderer.gameObject.AddComponent<MeshCollider>();
-            meshCollider.sharedMesh = skinnedMeshRenderer.sharedMesh;
+            if (Island_Index.Count > 0) meshCollider.sharedMesh = skinnedMeshRenderer.sharedMesh;
 
         }
         return meshCollider;
@@ -423,8 +423,8 @@ public class ModuleCreatorIsland : EditorWindow
         isRaycastEnabled = !isRaycastEnabled;
         if (isRaycastEnabled)
         {
-            unselectedmeshCollider = AddCollider(UnselectedSkinnedMeshRenderer);
-            selectedmeshCollider = AddCollider(SelectedSkinnedMeshRenderer);
+            unselectedmeshCollider = AddCollider(UnselectedSkinnedMeshRenderer, unselected_Island_Index);
+            selectedmeshCollider = AddCollider(SelectedSkinnedMeshRenderer, selected_Island_Index);
             EnsureHighlightManagerExists();
         }
         else
@@ -624,8 +624,8 @@ public class ModuleCreatorIsland : EditorWindow
 
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
-            IncludePhysBone = true,
-            IncludePhysBoneColider = true
+            IncludePhysBone = false,
+            IncludePhysBoneColider = false
         };
         UnselectedSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
 
@@ -693,8 +693,8 @@ public class ModuleCreatorIsland : EditorWindow
         UnselectedSkinnedMeshRenderer.sharedMesh = Unselectemesh;
         SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
 
-        unselectedmeshCollider.sharedMesh = Unselectemesh;
-        selectedmeshCollider.sharedMesh = SelectedMesh;
+        if (unselected_Island_Index.Count > 0) unselectedmeshCollider.sharedMesh = Unselectemesh;
+        if (selected_Island_Index.Count > 0) selectedmeshCollider.sharedMesh = SelectedMesh;
         Repaint();
     }
 

@@ -46,7 +46,7 @@ public class ModuleCreator
             stopwatch.Start();
             CleanUpHierarchy(new_root, skin_index);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             PrefabUtility.SavePrefabAsset(new_root);
@@ -93,12 +93,12 @@ public class ModuleCreator
             stopwatch.Start();
             GameObject new_root = CopyObjects(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
 
             Selection.activeGameObject = new_root;
 
@@ -265,44 +265,38 @@ public class ModuleCreator
     private HashSet<GameObject> GetWeightedBones(SkinnedMeshRenderer skinnedMeshRenderer)
     {
         BoneWeight[] boneWeights = skinnedMeshRenderer.sharedMesh.boneWeights;
+        Transform[] bones = skinnedMeshRenderer.bones;
         HashSet<GameObject> weightedBones = new HashSet<GameObject>();
-        bool hasNullBone = false;
 
         foreach (BoneWeight boneWeight in boneWeights)
         {
             if (boneWeight.weight0 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex0];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex0];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight1 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex1];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex1];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight2 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex2];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex2];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight3 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex3];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex3];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
-        }
-
-        if (hasNullBone)
-        {
-            //Debug.LogWarning()
-            throw new InvalidOperationException("Some bones weighting mesh could not be found");
         }
 
         return weightedBones;

@@ -310,7 +310,7 @@ public class MeshDeletionUtility
         }
         newMesh.vertices = vertices;
         stopwatch.Stop();
-        UnityEngine.Debug.Log("Processing vertices: " + stopwatch.ElapsedMilliseconds + " ms");
+        //UnityEngine.Debug.Log("Processing vertices: " + stopwatch.ElapsedMilliseconds + " ms");
 
         return newMesh;
     }
