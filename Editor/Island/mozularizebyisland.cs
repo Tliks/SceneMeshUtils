@@ -239,7 +239,7 @@ public class ModuleCreatorIsland : EditorWindow
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
         stopwatch.Stop();
-        UnityEngine.Debug.Log($"Create/Save Asset: {stopwatch.ElapsedMilliseconds} ms");
+        UnityEngine.Debug.Log($"Save newMesh: {stopwatch.ElapsedMilliseconds} ms");
 
         _Settings.newmesh = newMesh;
         stopwatch.Restart();
