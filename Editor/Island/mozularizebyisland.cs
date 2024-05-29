@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ModuleCreatorIsland : EditorWindow
 {
@@ -39,6 +40,9 @@ public class ModuleCreatorIsland : EditorWindow
     private static string textFieldValue = "-1";
 
     public bool mergeSamePosition = true;
+    private MeshCollider unselectedmeshCollider;
+    private MeshCollider selectedmeshCollider;
+
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
@@ -384,7 +388,26 @@ public class ModuleCreatorIsland : EditorWindow
     sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
 
     sceneView.Repaint();
-}
+    }
+
+
+    private MeshCollider AddCollider(SkinnedMeshRenderer skinnedMeshRenderer)
+    {
+        MeshCollider meshCollider;
+        meshCollider = skinnedMeshRenderer.GetComponent<MeshCollider>();
+        if (meshCollider == null)
+        {
+            meshCollider = skinnedMeshRenderer.gameObject.AddComponent<MeshCollider>();
+            meshCollider.sharedMesh = skinnedMeshRenderer.sharedMesh;
+
+        }
+        return meshCollider;
+    }
+
+    private void DelateCollider(MeshCollider meshCollider)
+    {
+        DestroyImmediate(meshCollider);
+    }
 
     private void EnsureHighlightManagerExists()
     {
@@ -400,10 +423,14 @@ public class ModuleCreatorIsland : EditorWindow
         isRaycastEnabled = !isRaycastEnabled;
         if (isRaycastEnabled)
         {
+            unselectedmeshCollider = AddCollider(UnselectedSkinnedMeshRenderer);
+            selectedmeshCollider = AddCollider(SelectedSkinnedMeshRenderer);
             EnsureHighlightManagerExists();
         }
         else
         {
+            DelateCollider(unselectedmeshCollider);
+            DelateCollider(selectedmeshCollider);
             RemoveHighlight();
         }
     }
@@ -659,12 +686,15 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateMesh()
     {
-        UnityEngine.Debug.Log($"update");
+        //UnityEngine.Debug.Log($"update");
         Unselectemesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(unselected_Island_Index));
         SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
 
         UnselectedSkinnedMeshRenderer.sharedMesh = Unselectemesh;
         SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
+
+        unselectedmeshCollider.sharedMesh = Unselectemesh;
+        selectedmeshCollider.sharedMesh = SelectedMesh;
         Repaint();
     }
 
