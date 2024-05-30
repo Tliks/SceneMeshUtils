@@ -9,7 +9,7 @@ public class ModuleCreatorWindow : EditorWindow
 
     private bool showAdvancedOptions = false;
 
-    [MenuItem("GameObject/Module Creator/Create Module", false, MENU_PRIORITY)]
+    [MenuItem("GameObject/Module Creator/Modularize Mesh", false, MENU_PRIORITY)]
     private static void CreateModule(MenuCommand menuCommand)
     {
         GameObject sourceObject = menuCommand.context as GameObject;
@@ -20,7 +20,7 @@ public class ModuleCreatorWindow : EditorWindow
         moduleCreator.CheckAndCopyBones(sourceObject);
     }
 
-    [MenuItem("Window/Module Creator")]
+    [MenuItem("Window/Module Creator/Modularize Mesh")]
     public static void ShowWindow()
     {
         GetWindow<ModuleCreatorWindow>("Module Creator");

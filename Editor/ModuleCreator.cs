@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Dynamics.PhysBone.Components;
+using System.Diagnostics;
 
 public class ModuleCreatorSettings
 {
@@ -14,6 +15,7 @@ public class ModuleCreatorSettings
     public bool RemainAllPBTransforms = false;
     public bool IncludeIgnoreTransforms = false;
     public GameObject RootObject = null;
+    public Mesh newmesh=null;
 }
 
 public class ModuleCreator
@@ -29,28 +31,91 @@ public class ModuleCreator
     {   
         try
         {
-            (GameObject root, int skin_index) = CheckObjects(sourceObject);
-
-            (GameObject new_root, string variantPath) = CopyRootObject(root, sourceObject.name);
-
-            CleanUpHierarchy(new_root, skin_index);
-
-            PrefabUtility.SavePrefabAsset(new_root);
-
-            PrefabUtility.InstantiatePrefab(new_root);
+            Stopwatch stopwatch = new Stopwatch();
             
-            Debug.Log("Saved prefab to " + variantPath);
+            //stopwatch.Start();
+            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            CleanUpHierarchy(new_root, skin_index);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            PrefabUtility.SavePrefabAsset(new_root);
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("SavePrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            float BaseX = root.transform.position.x;
+            float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
+            GameObject instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
+            Vector3 newPosition = instance.transform.position;
+            newPosition.x = randomX;
+            //instance.transform.position = newPosition;
+
+            //Selection.objects.Append(instance);
+
+            Selection.activeGameObject = instance;
+
+            UnityEngine.Debug.Log("Saved prefab to " + variantPath);
         }
 
         catch (InvalidOperationException ex)
         {
-            Debug.LogError("[Module Creator] " + ex.Message);
+            UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
         }
         catch (Exception ex)
         {
-            Debug.LogError(ex.StackTrace);
-            Debug.LogError(ex);
+            UnityEngine.Debug.LogError(ex.StackTrace);
+            UnityEngine.Debug.LogError(ex);
         }
+    }
+
+    public SkinnedMeshRenderer PreciewMesh(GameObject sourceObject)
+    {
+        SkinnedMeshRenderer skinnedMeshRenderer = null;;
+        try
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            
+            //stopwatch.Start();
+            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            GameObject new_root = CopyObjects(root, sourceObject.name);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            stopwatch.Start();
+            skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
+            stopwatch.Stop();
+            //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+
+            Selection.activeGameObject = new_root;
+
+        }
+
+        catch (InvalidOperationException ex)
+        {
+            UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError(ex.StackTrace);
+            UnityEngine.Debug.LogError(ex);
+        }
+
+        return skinnedMeshRenderer;
+
     }
 
     private (GameObject, int) CheckObjects(GameObject targetObject)
@@ -115,13 +180,13 @@ public class ModuleCreator
             if (hips == null)
             {
                 //throw new InvalidOperationException("Hips not found under the root object.");
-                Debug.LogWarning("Hips could not be found. Merge Armature/Setup Outfit may not work properly.");
+                UnityEngine.Debug.LogWarning("Hips could not be found. Merge Armature/Setup Outfit may not work properly.");
             }
         }
 
     }
 
-    private (GameObject, string) CopyRootObject(GameObject root_object, string source_name)
+    private (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
     {
         string variantPath = GenerateVariantPath(root_object, source_name);
 
@@ -156,7 +221,13 @@ public class ModuleCreator
         }
     }
 
-    private void CleanUpHierarchy(GameObject new_root, int skin_index)
+    private GameObject CopyObjects(GameObject root_object, string source_name)
+    {
+        GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object);
+        return duplicatedParent;
+    }
+
+    private SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index)
     {   
         HashSet<GameObject> objectsToSave = new HashSet<GameObject>();
 
@@ -166,6 +237,7 @@ public class ModuleCreator
         objectsToSave.Add(skin);
 
         SkinnedMeshRenderer skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
+        if (Settings.newmesh) skinnedMeshRenderer.sharedMesh = Settings.newmesh;
 
         // SkinnedMeshRendererのrootBoneとanchor overrideに設定されているオブジェクトを追加
         Transform rootBone = skinnedMeshRenderer.rootBone;
@@ -175,7 +247,7 @@ public class ModuleCreator
 
         // ウェイトをつけているオブジェクトを追加
         HashSet<GameObject> weightedBones = GetWeightedBones(skinnedMeshRenderer);
-        Debug.Log($"Bones weighting {skin.name}: {weightedBones.Count}/{skinnedMeshRenderer.bones.Length}");
+        UnityEngine.Debug.Log($"Bones weighting {skin.name}: {weightedBones.Count}/{skinnedMeshRenderer.bones.Length}");
         objectsToSave.UnionWith(weightedBones);
 
         // PhysBoneに関連するオブジェクトを追加
@@ -186,49 +258,45 @@ public class ModuleCreator
         }
 
         CheckAndDeleteRecursive(new_root, objectsToSave);
+
+        return skinnedMeshRenderer;
     }
 
     private HashSet<GameObject> GetWeightedBones(SkinnedMeshRenderer skinnedMeshRenderer)
     {
         BoneWeight[] boneWeights = skinnedMeshRenderer.sharedMesh.boneWeights;
+        Transform[] bones = skinnedMeshRenderer.bones;
         HashSet<GameObject> weightedBones = new HashSet<GameObject>();
-        bool hasNullBone = false;
 
         foreach (BoneWeight boneWeight in boneWeights)
         {
             if (boneWeight.weight0 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex0];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex0];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight1 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex1];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex1];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight2 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex2];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex2];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
 
             if (boneWeight.weight3 > 0)
             {
-                Transform boneTransform = skinnedMeshRenderer.bones[boneWeight.boneIndex3];
-                if (boneTransform == null) hasNullBone = true;
-                else weightedBones.Add(boneTransform.gameObject);
+                Transform boneTransform = bones[boneWeight.boneIndex3];
+                if (boneTransform == null) throw new InvalidOperationException("Some bones weighting mesh could not be found");
+                weightedBones.Add(boneTransform.gameObject);
             }
-        }
-
-        if (hasNullBone)
-        {
-            //Debug.LogWarning()
-            throw new InvalidOperationException("Some bones weighting mesh could not be found");
         }
 
         return weightedBones;
