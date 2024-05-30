@@ -261,6 +261,7 @@ public class ModuleCreatorIsland : EditorWindow
                 unselected_Island_Index = unselected_Island_Index.Except(selected_Island_Index).ToList();
                 UpdateMesh();
                 textFieldValue = newValue;
+                GUI.FocusControl(""); 
             }
             else
             {
@@ -279,6 +280,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (encodedString != textFieldValue)
         {
             textFieldValue = encodedString;
+            GUI.FocusControl(""); 
         }
     }
 
@@ -537,12 +539,14 @@ public class ModuleCreatorIsland : EditorWindow
                 selected_Island_Index.Add(unselectedpreviousIslandIndex);
                 unselected_Island_Index.Remove(unselectedpreviousIslandIndex);
                 UpdateMesh();
+                //selectedsceneView.Focus();
             }
             else if (!unselected_Island_Index.Contains(selectedpreviousIslandIndex) && selectedpreviousIslandIndex != -1)
             {
                 unselected_Island_Index.Add(selectedpreviousIslandIndex);
                 selected_Island_Index.Remove(selectedpreviousIslandIndex);
                 UpdateMesh();
+                //unselectedsceneView.Focus();
             }
         }
     }
@@ -634,9 +638,13 @@ public class ModuleCreatorIsland : EditorWindow
         unselectedmeshObject.transform.position = OriginskinnedMeshRenderer.transform.parent.position + new Vector3(0, 0, -5);
         unselectedmeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
 
-        UnselectedSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
+       UnselectedSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
 
         unselectedmeshObject.name = "Unelected Mesh Preview";
+
+        Mesh bakedMesh = new Mesh();
+        UnselectedSkinnedMeshRenderer.BakeMesh(bakedMesh);
+        //UnselectedSkinnedMeshRenderer.sharedMesh = bakedMesh;
 
         //Mesh originalMesh = UnselectedSkinnedMeshRenderer.sharedMesh;
         //Unselectemesh = Instantiate(originalMesh);
@@ -649,9 +657,10 @@ public class ModuleCreatorIsland : EditorWindow
 
     public void OpenCustomSceneView()
     {
-        selectedsceneView = CreateInstance<SceneView>();
+        selectedsceneView = CreateWindow<SceneView>();
         selectedsceneView.titleContent = new GUIContent("Selected Mesh Preview");
-        selectedsceneView.Show();
+        //unselectedsceneView.Show();
+        //unselectedsceneView.Focus();
 
         if (UnselectedSkinnedMeshRenderer != null)
         {
