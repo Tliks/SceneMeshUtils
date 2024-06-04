@@ -10,90 +10,55 @@ public class IntArrayConverter
 {
     public static string Encode(int[] data)
     {
-        List<byte> compressed = new List<byte>();
-        foreach (int number in data)
+        // 差分エンコーディング
+        int[] diffEncoded = new int[data.Length];
+        diffEncoded[0] = data[0];
+        for (int i = 1; i < data.Length; i++)
         {
-            bool hasNext = true;
-            int value = number;
-            while (hasNext)
-            {
-                byte chunk = (byte)(value & 0x7F); // 7bit取り出す
-                value >>= 7; // 次の7bit準備
-                if (value > 0)
-                {
-                    chunk |= 0x80; // 次がある場合、先頭1bitをセット
-                }
-                else
-                {
-                    hasNext = false; // 次がない場合終了
-                }
-                compressed.Add(chunk);
-            }
+            diffEncoded[i] = data[i] - data[i - 1];
         }
+
+        // ランレングス圧縮
+        List<byte> compressed = new List<byte>();
+        for (int i = 0; i < diffEncoded.Length; i++)
+        {
+            int value = diffEncoded[i];
+            int runLength = 1;
+            while (i + 1 < diffEncoded.Length && diffEncoded[i + 1] == value)
+            {
+                runLength++;
+                i++;
+            }
+
+            compressed.Add((byte)value); // 差分値を格納
+            compressed.Add((byte)runLength); // ランレングスを格納
+        }
+
         return Convert.ToBase64String(compressed.ToArray());
     }
-
 
     public static int[] Decode(string compressedData)
     {
         byte[] compressedBytes = Convert.FromBase64String(compressedData);
         List<int> decompressed = new List<int>();
-        int value = 0;
-        int shift = 0;
-
-        foreach (byte chunk in compressedBytes)
+        for (int i = 0; i < compressedBytes.Length; i += 2)
         {
-            value |= (chunk & 0x7F) << shift; // 7bit復元
-            if ((chunk & 0x80) == 0)
+            int value = compressedBytes[i];
+            int runLength = compressedBytes[i + 1];
+            for (int j = 0; j < runLength; j++)
             {
-                // 次がない場合、完全な数値を追加
                 decompressed.Add(value);
-                value = 0; // 次の数値のためにリセット
-                shift = 0; // シフトもリセット
-            }
-            else
-            {
-                // 次がある場合、シフトを増やす
-                shift += 7;
             }
         }
 
-        return decompressed.ToArray();
-    }
-
-    public static string Encodeg(int[] data)
-    {
-        // int配列をバイト配列に変換
-        byte[] byteArray = data.SelectMany(BitConverter.GetBytes).ToArray();
-        
-        using (var memoryStream = new MemoryStream())
+        // 差分復元
+        int[] original = new int[decompressed.Count];
+        original[0] = decompressed[0];
+        for (int i = 1; i < decompressed.Count; i++)
         {
-            using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress))
-            {
-                gzipStream.Write(byteArray, 0, byteArray.Length);
-            }
-            return Convert.ToBase64String(memoryStream.ToArray());
+            original[i] = original[i - 1] + decompressed[i];
         }
-    }
 
-    public static int[] Decodeg(string encodedData)
-    {
-        byte[] compressedData = Convert.FromBase64String(encodedData);
-        
-        using (var compressedStream = new MemoryStream(compressedData))
-        using (var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-        using (var resultStream = new MemoryStream())
-        {
-            gzipStream.CopyTo(resultStream);
-            byte[] decompressedData = resultStream.ToArray();
-            
-            // バイト配列をint配列へ変換
-            int[] result = new int[decompressedData.Length / sizeof(int)];
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i] = BitConverter.ToInt32(decompressedData, i * sizeof(int));
-            }
-            return result;
-        }
+        return original;
     }
 }
