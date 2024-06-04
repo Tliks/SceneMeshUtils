@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class ModuleCreatorIsland : EditorWindow
 {
@@ -12,16 +11,10 @@ public class ModuleCreatorIsland : EditorWindow
     private List<int> selected_Island_Index = new List<int>();
 
     public SkinnedMeshRenderer OriginskinnedMeshRenderer;
-    private SkinnedMeshRenderer UnselectedSkinnedMeshRenderer;
-    private SkinnedMeshRenderer SelectedSkinnedMeshRenderer;
-    private Mesh Unselectemesh;
-    private Mesh SelectedMesh;
-    private GameObject selectedmeshObject;
-    private GameObject unselectedmeshObject;
-    private SceneView unselectedsceneView;
-    private SceneView selectedsceneView;
-    private int unselectedpreviousIslandIndex = -1;
-    private int selectedpreviousIslandIndex = -1;
+    private SkinnedMeshRenderer PreviewSkinnedMeshRenderer;
+    private Mesh PreviewMesh;
+    private GameObject PreviewMeshObject;
+    private int PreviousIslandIndex = -1;
 
     private static ModuleCreatorSettings _Settings;
 
@@ -40,14 +33,12 @@ public class ModuleCreatorIsland : EditorWindow
     private static string textFieldValue = "-1";
 
     public bool mergeSamePosition = true;
-    private MeshCollider unselectedmeshCollider;
-    private MeshCollider selectedmeshCollider;
-
+    private MeshCollider PreviewMeshCollider;
+    private bool isPreviewSelected = false;
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
     {
-        
         var existingWindow = GetWindow<ModuleCreatorIsland>("Module Creator", false);
         if (existingWindow != null)
         {
@@ -60,13 +51,6 @@ public class ModuleCreatorIsland : EditorWindow
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
-        /*
-        var existingWindow = GetWindow<ModuleCreatorIsland>("Module Creator", false);
-        if (existingWindow != null)
-        {
-            existingWindow.Close();
-        }
-        */
         var window = GetWindow<ModuleCreatorIsland>("Module Creator");
         if (Selection.activeGameObject != null)
         {
@@ -98,7 +82,6 @@ public class ModuleCreatorIsland : EditorWindow
     private void ResetState()
     {
         islands.Clear();
-        Unselectemesh.Clear();
         unselected_Island_Index.Clear();
         selected_Island_Index.Clear();
     }
@@ -113,14 +96,25 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         RenderRaycastButton();
+        
         RenderSelectionButtons();
         RenderIslandHashField();
 
         porcess_options();
 
+        RenderPreviewSelectedToggle();
         RenderCreateModuleButtons();
     }
 
+    private void RenderPreviewSelectedToggle()
+    {
+        if (GUILayout.Button(isPreviewSelected ? "UnPreview Output" : "Preview Output"))
+        {
+            isPreviewSelected = !isPreviewSelected;
+            UpdateMesh();
+        }
+    }
+    
     private void RenderGUI()
     {
         SkinnedMeshRenderer newskinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", OriginskinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
@@ -130,7 +124,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else
         {
-            FocusCustomViewObject(unselectedsceneView, OriginskinnedMeshRenderer);
+            FocusCustomViewObject(OriginskinnedMeshRenderer);
             processend();
             OriginskinnedMeshRenderer = newskinnedMeshRenderer;
         }
@@ -147,7 +141,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         GUI.enabled = true;
 
-        GUI.enabled = UnselectedSkinnedMeshRenderer != null;
+        GUI.enabled = PreviewSkinnedMeshRenderer != null;
         if (GUILayout.Button("Calculate Islands"))
         {
             CalculateIslands();
@@ -320,16 +314,15 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBoneColider = true
         };
         
-        if (Unselectemesh == null)
+        if (PreviewMesh == null)
         {
-            Unselectemesh = new Mesh();
+            PreviewMesh = new Mesh();
         }
 
 
         SceneView.duringSceneGui += OnSceneGUI;
         isRaycastEnabled = false;
 
-        unselectedsceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
         processend();
 
     }
@@ -339,7 +332,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
         processend();
-        FocusCustomViewObject(unselectedsceneView, OriginskinnedMeshRenderer);
+        FocusCustomViewObject(OriginskinnedMeshRenderer);
     }
 
     private void processend()
@@ -348,13 +341,9 @@ public class ModuleCreatorIsland : EditorWindow
         {
             DestroyImmediate(highlightManager);
         }
-        if (UnselectedSkinnedMeshRenderer != null)
+        if (PreviewSkinnedMeshRenderer != null)
         {
-            DestroyImmediate(unselectedmeshObject);
-        }
-        if (SelectedSkinnedMeshRenderer != null)
-        {
-            DestroyImmediate(selectedmeshObject);
+            DestroyImmediate(PreviewMeshObject);
         }
         isRaycastEnabled = false;
         RemoveHighlight();
@@ -362,7 +351,7 @@ public class ModuleCreatorIsland : EditorWindow
         //Close();
     }
     
-    private void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
+    private void FocusCustomViewObject(SkinnedMeshRenderer customRenderer)
     {
         if (!customRenderer) return;
         Mesh mesh = customRenderer.sharedMesh;
@@ -382,14 +371,14 @@ public class ModuleCreatorIsland : EditorWindow
             //UnityEngine.Debug.Log($"middleVertex: {stopwatch.ElapsedMilliseconds} ms");
         }
 
-    float cameraDistance = 0.3f;
-    Vector3 direction = sceneView.camera.transform.forward;
-    Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
+        float cameraDistance = 0.3f;
+        Vector3 direction = SceneView.lastActiveSceneView.camera.transform.forward;
+        Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
 
-    //UnityEngine.Debug.Log(middleVertex);
-    sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
+        //UnityEngine.Debug.Log(middleVertex);
+        SceneView.lastActiveSceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
 
-    sceneView.Repaint();
+        SceneView.lastActiveSceneView.Repaint();
     }
 
 
@@ -415,8 +404,8 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (highlightManager == null)
         {
-            highlightManager = UnselectedSkinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
-            highlightManager.SkinnedMeshRenderer = UnselectedSkinnedMeshRenderer;
+            highlightManager = PreviewSkinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
+            highlightManager.SkinnedMeshRenderer = PreviewSkinnedMeshRenderer;
         }
     }
 
@@ -425,22 +414,22 @@ public class ModuleCreatorIsland : EditorWindow
         isRaycastEnabled = !isRaycastEnabled;
         if (isRaycastEnabled)
         {
-            unselectedmeshCollider = AddCollider(UnselectedSkinnedMeshRenderer, unselected_Island_Index);
-            selectedmeshCollider = AddCollider(SelectedSkinnedMeshRenderer, selected_Island_Index);
+            PreviewMeshCollider = AddCollider(PreviewSkinnedMeshRenderer, unselected_Island_Index);
             EnsureHighlightManagerExists();
+            UpdateMesh(); // コライダーのメッシュを更新
         }
         else
         {
-            DelateCollider(unselectedmeshCollider);
-            DelateCollider(selectedmeshCollider);
+            DelateCollider(PreviewMeshCollider);
             RemoveHighlight();
         }
     }
 
+
     private void CalculateIslands()
     {
         stopwatch.Restart();
-        islands = MeshIslandUtility.GetIslands(UnselectedSkinnedMeshRenderer, mergeSamePosition);
+        islands = MeshIslandUtility.GetIslands(PreviewSkinnedMeshRenderer, mergeSamePosition);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         UnityEngine.Debug.Log($"Islands count: {islands.Count}");
@@ -461,48 +450,21 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (EditorRaycastHelper.RaycastAgainstScene(out ExtendedRaycastHit extendedHit))
         {
-            if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, UnselectedSkinnedMeshRenderer.gameObject))
+            if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, PreviewSkinnedMeshRenderer.gameObject))
             {   
                 int triangleIndex = extendedHit.triangleIndex;
-                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(UnselectedSkinnedMeshRenderer, triangleIndex, islands);
-                if (index != unselectedpreviousIslandIndex)
+                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(PreviewSkinnedMeshRenderer, triangleIndex, islands);
+                if (index != PreviousIslandIndex)
                 {
-                    HighlightIslandEdges(UnselectedSkinnedMeshRenderer, index);
-                    unselectedpreviousIslandIndex = index;
+                    PreviousIslandIndex = index;
+                    HighlightIslandEdges(PreviewSkinnedMeshRenderer, index);
                 }
             }
-            
-            else if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, SelectedSkinnedMeshRenderer.gameObject))
-            {
-                int triangleIndex = extendedHit.triangleIndex;
-                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(UnselectedSkinnedMeshRenderer, triangleIndex, islands);
-                if (index != selectedpreviousIslandIndex)
-                {
-                    HighlightIslandEdges(SelectedSkinnedMeshRenderer, index);
-                    selectedpreviousIslandIndex = index;
-                }
-            }
-
-            else if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, OriginskinnedMeshRenderer.gameObject))
-            {
-                int triangleIndex = extendedHit.triangleIndex;
-                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(OriginskinnedMeshRenderer, triangleIndex, islands);
-                if (index != selectedpreviousIslandIndex)
-                {
-                    HighlightIslandEdges(OriginskinnedMeshRenderer, index);
-                    selectedpreviousIslandIndex = index;
-                }
-            }
-
         }
         else
         {   
-            //if (extendedHit.raycastHit.point != Vector3.zero) UnityEngine.Debug.Log(extendedHit.raycastHit.point);
-            //if (extendedHit.raycastHit.point == Vector3.zero) UnityEngine.Debug.Log(extendedHit.raycastHit.point);
-            unselectedpreviousIslandIndex = -1;
-            selectedpreviousIslandIndex = -1;
-            HighlightIslandEdges(UnselectedSkinnedMeshRenderer);
-            HighlightIslandEdges(SelectedSkinnedMeshRenderer);
+            PreviousIslandIndex = -1;
+            HighlightIslandEdges(PreviewSkinnedMeshRenderer);
         }
     }
 
@@ -511,7 +473,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (Event.current != null && Selection.activeGameObject != null)
         {
             GameObject currentActiveObject = Selection.activeGameObject;
-            if (currentActiveObject == SelectedSkinnedMeshRenderer.gameObject || currentActiveObject == UnselectedSkinnedMeshRenderer.gameObject)
+            if (currentActiveObject == PreviewSkinnedMeshRenderer.gameObject)
             {
                 Selection.activeGameObject = null;
             }
@@ -520,7 +482,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnSceneGUI(SceneView sceneView)
     {   
-        if (!isRaycastEnabled || UnselectedSkinnedMeshRenderer == null || SelectedSkinnedMeshRenderer == null) return;
+        if (!isRaycastEnabled || PreviewSkinnedMeshRenderer == null) return;
 
         DontActiveSKin();
 
@@ -534,18 +496,18 @@ public class ModuleCreatorIsland : EditorWindow
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
         {
             //unselected
-            if (!selected_Island_Index.Contains(unselectedpreviousIslandIndex) && unselectedpreviousIslandIndex != -1)
+            if (!selected_Island_Index.Contains(PreviousIslandIndex) && PreviousIslandIndex != -1)
             {
-                selected_Island_Index.Add(unselectedpreviousIslandIndex);
-                unselected_Island_Index.Remove(unselectedpreviousIslandIndex);
-                UpdateMesh();
+                selected_Island_Index.Add(PreviousIslandIndex);
+                unselected_Island_Index.Remove(PreviousIslandIndex);
+                UpdateMesh(); // メッシュとコライダーを更新
                 //selectedsceneView.Focus();
             }
-            else if (!unselected_Island_Index.Contains(selectedpreviousIslandIndex) && selectedpreviousIslandIndex != -1)
+            else if (!unselected_Island_Index.Contains(PreviousIslandIndex) && PreviousIslandIndex != -1)
             {
-                unselected_Island_Index.Add(selectedpreviousIslandIndex);
-                selected_Island_Index.Remove(selectedpreviousIslandIndex);
-                UpdateMesh();
+                unselected_Island_Index.Add(PreviousIslandIndex);
+                selected_Island_Index.Remove(PreviousIslandIndex);
+                UpdateMesh(); // メッシュとコライダーを更新
                 //unselectedsceneView.Focus();
             }
         }
@@ -624,87 +586,58 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {
-        unselectedsceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
-
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
             IncludePhysBone = false,
             IncludePhysBoneColider = false
         };
-        UnselectedSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
+        PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
 
-        ResetAllBlendShapes(UnselectedSkinnedMeshRenderer);
-        unselectedmeshObject = UnselectedSkinnedMeshRenderer.transform.parent.gameObject;
-        unselectedmeshObject.transform.position = OriginskinnedMeshRenderer.transform.parent.position + new Vector3(0, 0, -5);
-        unselectedmeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
+        ResetAllBlendShapes(PreviewSkinnedMeshRenderer);
+        PreviewMeshObject = PreviewSkinnedMeshRenderer.transform.parent.gameObject;
+        PreviewMeshObject.transform.position = OriginskinnedMeshRenderer.transform.parent.position + new Vector3(0, 0, -5);
+        PreviewMeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
 
-       UnselectedSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
+        PreviewSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
 
-        unselectedmeshObject.name = "Unelected Mesh Preview";
+        PreviewMeshObject.name = "Preview Mesh";
 
         Mesh bakedMesh = new Mesh();
-        UnselectedSkinnedMeshRenderer.BakeMesh(bakedMesh);
-        //UnselectedSkinnedMeshRenderer.sharedMesh = bakedMesh;
+        PreviewSkinnedMeshRenderer.BakeMesh(bakedMesh);
+        //PreviewSkinnedMeshRenderer.sharedMesh = bakedMesh;
 
-        //Mesh originalMesh = UnselectedSkinnedMeshRenderer.sharedMesh;
-        //Unselectemesh = Instantiate(originalMesh);
-        //UnselectedSkinnedMeshRenderer.sharedMesh = Unselectemesh;
+        //Mesh originalMesh = PreviewSkinnedMeshRenderer.sharedMesh;
+        //PreviewMesh = Instantiate(originalMesh);
+        //PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
 
-        FocusCustomViewObject(unselectedsceneView, UnselectedSkinnedMeshRenderer);
-
-        OpenCustomSceneView();
-    }
-
-    public void OpenCustomSceneView()
-    {
-        selectedsceneView = CreateWindow<SceneView>();
-        selectedsceneView.titleContent = new GUIContent("Selected Mesh Preview");
-        //unselectedsceneView.Show();
-        //unselectedsceneView.Focus();
-
-        if (UnselectedSkinnedMeshRenderer != null)
-        {
-            selectedmeshObject = Instantiate(unselectedmeshObject, unselectedmeshObject.transform.position + Vector3.right * 10, Quaternion.identity);
-            SelectedSkinnedMeshRenderer = selectedmeshObject.GetComponentInChildren<SkinnedMeshRenderer>();
-
-            FocusCustomViewObject(selectedsceneView, SelectedSkinnedMeshRenderer);
-
-            var emptyVerticesList = new List<int>();
-            SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
-            SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
-        }
+        FocusCustomViewObject(PreviewSkinnedMeshRenderer);
     }
 
     private void CloseCustomSceneView()
     {
-        //UnityEngine.Debug.Log("aaa?");
-        if (selectedsceneView != null)
+        if (PreviewMeshObject != null)
         {
-            selectedsceneView.Close();
-            selectedsceneView = null;
-            //UnityEngine.Debug.Log("aaa");
-        }
-
-        if (selectedmeshObject != null)
-        {
-            DestroyImmediate(selectedmeshObject);
-            selectedmeshObject = null;
+            DestroyImmediate(PreviewMeshObject);
+            PreviewMeshObject = null;
         }
     }
-
 
     private void UpdateMesh()
     {
         //UnityEngine.Debug.Log($"update");
-        Unselectemesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(unselected_Island_Index));
-        SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
+        if (isPreviewSelected)
+        {
+            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
+            if (selected_Island_Index.Count > 0) PreviewMeshCollider.sharedMesh = PreviewMesh;
+        }
+        else
+        {
+            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(unselected_Island_Index));
+            if (unselected_Island_Index.Count > 0) PreviewMeshCollider.sharedMesh = PreviewMesh;
+        }
 
-        UnselectedSkinnedMeshRenderer.sharedMesh = Unselectemesh;
-        SelectedSkinnedMeshRenderer.sharedMesh = SelectedMesh;
+        PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
 
-        if (unselected_Island_Index.Count > 0) unselectedmeshCollider.sharedMesh = Unselectemesh;
-        if (selected_Island_Index.Count > 0) selectedmeshCollider.sharedMesh = SelectedMesh;
         Repaint();
     }
-
 }
