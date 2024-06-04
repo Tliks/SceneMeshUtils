@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ModuleCreatorIsland : EditorWindow
 {
-    private List<Island> islands = new List<Island>();
+    private List<MergedIsland> islands = new List<MergedIsland>();
     private List<int> unselected_Island_Index = new List<int>();
     private List<int> selected_Island_Index = new List<int>();
 
@@ -96,7 +96,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         RenderRaycastButton();
-        
+        mergeSamePosition = EditorGUILayout.Toggle("MergeSamePosition", mergeSamePosition);
         RenderSelectionButtons();
         RenderIslandHashField();
 
@@ -128,8 +128,6 @@ public class ModuleCreatorIsland : EditorWindow
             processend();
             OriginskinnedMeshRenderer = newskinnedMeshRenderer;
         }
-
-        mergeSamePosition = EditorGUILayout.Toggle("MergeSamePosition", mergeSamePosition);
     }
 
     private void RenderSetupButtons()
@@ -214,7 +212,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         if (islandIndices.Count > 0)
         {
-            var allVertices = new HashSet<int>(islandIndices.SelectMany(index => islands[index].Vertices));
+            var allVertices = new HashSet<int>(islandIndices.SelectMany(index => islands[index].ChildIslands.SelectMany(island => island.Vertices)).Distinct());
             SaveModule(allVertices.ToList(), moduleName);
         }
         
@@ -429,7 +427,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void CalculateIslands()
     {
         stopwatch.Restart();
-        islands = MeshIslandUtility.GetIslands(PreviewSkinnedMeshRenderer, mergeSamePosition);
+        islands = MeshIslandUtility.GetIslands(PreviewSkinnedMeshRenderer);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         UnityEngine.Debug.Log($"Islands count: {islands.Count}");
@@ -451,24 +449,22 @@ public class ModuleCreatorIsland : EditorWindow
         if (EditorRaycastHelper.RaycastAgainstScene(out ExtendedRaycastHit extendedHit))
         {
             if (EditorRaycastHelper.IsHitObjectSpecified(extendedHit, PreviewSkinnedMeshRenderer.gameObject))
-            {   
+            {
                 int triangleIndex = extendedHit.triangleIndex;
-                int index = MeshIslandUtility.GetIslandIndexFromTriangleIndex(PreviewSkinnedMeshRenderer, triangleIndex, islands);
-                if (index != PreviousIslandIndex)
+                int[] indices = MeshIslandUtility.GetIslandIndexFromTriangleIndex(PreviewSkinnedMeshRenderer, triangleIndex, islands, mergeSamePosition);
+                if (indices.Length > 0 && indices[0] != PreviousIslandIndex)
                 {
-                    PreviousIslandIndex = index;
-                    HighlightIslandEdges(PreviewSkinnedMeshRenderer, index);
+                    PreviousIslandIndex = indices.Length > 0 ? indices[0] : -1;
+                    HighlightIslandEdges(PreviewSkinnedMeshRenderer, indices);
                 }
             }
         }
         else
-        {   
+        {
             PreviousIslandIndex = -1;
             HighlightIslandEdges(PreviewSkinnedMeshRenderer);
-        }
     }
-
-    private void DontActiveSKin()
+}        private void DontActiveSKin()
     {
         if (Event.current != null && Selection.activeGameObject != null)
         {
@@ -515,7 +511,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private List<int> GetVerticesFromIndices(List<int> indices)
     {
-        return indices.SelectMany(index => islands[index].Vertices).Distinct().ToList();
+        return indices.SelectMany(index => islands[index].ChildIslands.SelectMany(island => island.Vertices)).Distinct().ToList();
     }
 
 
@@ -525,18 +521,28 @@ public class ModuleCreatorIsland : EditorWindow
         highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
     }
 
-    private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, int islandIndex)
+private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, int[] islandIndices)
+{
+    HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+
+    foreach (int childIndex in islandIndices)
     {
-        Island island = islands[islandIndex];
-        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        foreach (var edge in island.AllEdges)
+        foreach (var mergedIsland in islands)
         {
-            edgesToHighlight.Add((edge.Item1, edge.Item2));
+            Island island = mergedIsland.ChildIslands.FirstOrDefault(i => i.UnmergedStartIndex == childIndex);
+            if (island != null)
+            {
+                foreach (var edge in island.AllEdges)
+                {
+                    edgesToHighlight.Add((edge.Item1, edge.Item2));
+                }
+                break; // 1つ見つけたらループ抜けて次のchildIndexへ
+            }
         }
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
     }
 
-
+    highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+}
     private void porcess_options()
     {   
         //EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));

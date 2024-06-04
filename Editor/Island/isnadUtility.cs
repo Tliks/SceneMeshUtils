@@ -51,105 +51,119 @@ public class UnionFind
     }
 }
 
+public class MergedIsland
+{
+    public List<Island> ChildIslands { get; }
+    public int MergedIndex { get; }
+
+    public MergedIsland()
+    {
+        ChildIslands = new List<Island>();
+    }
+}
+
 public class Island
 {
     public List<int> Vertices { get; }
-    public Vector2 StartUV { get; }
-    public Vector2 EndUV { get; }
-    public float Area { get; }
-    public int Index { get; }
-    public HashSet<(int, int)> BoundaryVertices { get; }
+    public int UnmergedStartIndex { get; }
     public HashSet<(int, int)> AllEdges { get; }
 
-    public Island(List<int> vertices, int index, HashSet<(int, int)> allEdges)
+    public Island(List<int> vertices, int unmergedStartIndex, HashSet<(int, int)> allEdges)
     {
         Vertices = vertices;
-        Index = index;
+        UnmergedStartIndex = unmergedStartIndex;
         AllEdges = allEdges;
     }
 }
 
 public static class MeshIslandUtility
 {
-    public static List<Island> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer, bool mergeSamePosition = true)
+public static List<MergedIsland> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
+{
+    Mesh mesh = skinnedMeshRenderer.sharedMesh;
+    int[] triangles = mesh.triangles;
+    Vector3[] vertices = mesh.vertices;
+
+    UnionFind unionFind = new UnionFind(vertices.Length);
+    Dictionary<int, List<int>> vertexEdges = new Dictionary<int, List<int>>();
+
+    for (int i = 0; i < triangles.Length; i += 3)
     {
-        Mesh mesh = skinnedMeshRenderer.sharedMesh;
-        int[] triangles = mesh.triangles;
-        Vector3[] vertices = mesh.vertices;
+        int v1 = triangles[i];
+        int v2 = triangles[i + 1];
+        int v3 = triangles[i + 2];
 
-        UnionFind unionFind = new UnionFind(vertices.Length);
+        unionFind.Unite(v1, v2);
+        unionFind.Unite(v2, v3);
+        unionFind.Unite(v3, v1);
 
-        Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>();
-
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            if (mergeSamePosition)
-            {
-                if (vertexMap.ContainsKey(vertices[i]))
-                {
-                    unionFind.Unite(i, vertexMap[vertices[i]]);
-                }
-                else
-                {
-                    vertexMap[vertices[i]] = i;
-                }
-            }
-        }
-
-        Dictionary<(int, int), int> edgeCount = new Dictionary<(int, int), int>();
-        Dictionary<int, List<int>> vertexEdges = new Dictionary<int, List<int>>();
-
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            int v1 = triangles[i];
-            int v2 = triangles[i + 1];
-            int v3 = triangles[i + 2];
-
-            unionFind.Unite(v1, v2);
-            unionFind.Unite(v2, v3);
-            unionFind.Unite(v3, v1);
-
-            AddEdge(edgeCount, vertexEdges, v1, v2);
-            AddEdge(edgeCount, vertexEdges, v2, v3);
-            AddEdge(edgeCount, vertexEdges, v3, v1);
-        }
-
-        Dictionary<int, List<int>> islandDict = new Dictionary<int, List<int>>();
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            int root = unionFind.Find(i);
-            if (!islandDict.ContainsKey(root))
-            {
-                islandDict[root] = new List<int>();
-            }
-            islandDict[root].Add(i);
-        }
-
-        List<Island> islands = new List<Island>();
-        int index = 0;
-        foreach (var kvp in islandDict)
-        {
-            var allEdges = GetAllEdges(kvp.Value, vertexEdges);
-            Island island = new Island(kvp.Value, index, allEdges);
-            islands.Add(island);
-            index++;
-        }
-
-        return islands;
+        AddEdge(vertexEdges, v1, v2);
+        AddEdge(vertexEdges, v2, v3);
+        AddEdge(vertexEdges, v3, v1);
     }
 
-    private static void AddEdge(Dictionary<(int, int), int> edgeCount, Dictionary<int, List<int>> vertexEdges, int v1, int v2)
+    Dictionary<int, List<int>> islandDict = new Dictionary<int, List<int>>();
+    for (int i = 0; i < vertices.Length; i++)
     {
-        var sortedEdge = v1 < v2 ? (v1, v2) : (v2, v1);
-        if (edgeCount.ContainsKey(sortedEdge))
+        int root = unionFind.Find(i);
+        if (!islandDict.ContainsKey(root))
         {
-            edgeCount[sortedEdge]++;
+            islandDict[root] = new List<int>();
         }
-        else
-        {
-            edgeCount[sortedEdge] = 1;
-        }
+        islandDict[root].Add(i);
+    }
 
+    Dictionary<Vector3, List<int>> vertexMap = new Dictionary<Vector3, List<int>>();
+
+    for (int i = 0; i < vertices.Length; i++)
+    {
+        if (!vertexMap.ContainsKey(vertices[i]))
+        {
+            vertexMap[vertices[i]] = new List<int>();
+        }
+        vertexMap[vertices[i]].Add(i);
+    }
+
+
+    foreach (var kvp in vertexMap)
+    {
+        var indices = kvp.Value;
+        int rootIndex = unionFind.Find(indices[0]);
+        for (int i = 1; i < indices.Count; i++)
+        {
+            unionFind.Unite(rootIndex, indices[i]);
+        }
+    }
+
+    Dictionary<int, List<List<int>>> mergedIslandDict = new Dictionary<int, List<List<int>>>();
+    foreach (var kvp in islandDict)
+    {
+        int mergedRoot = unionFind.Find(kvp.Key);
+        if (!mergedIslandDict.ContainsKey(mergedRoot))
+        {
+            mergedIslandDict[mergedRoot] = new List<List<int>>();
+        }
+        mergedIslandDict[mergedRoot].Add(kvp.Value);
+    }
+
+    List<MergedIsland> mergedIslands = new List<MergedIsland>();
+    foreach (var kvp in mergedIslandDict)
+    {
+        MergedIsland mergedIsland = new MergedIsland();
+        foreach (var unmergedIslands in kvp.Value)
+        {
+            List<int> allVertices = unmergedIslands.Distinct().ToList();
+            var allEdges = GetAllEdges(allVertices, vertexEdges);
+            Island island = new Island(unmergedIslands, unmergedIslands[0], allEdges);
+            mergedIsland.ChildIslands.Add(island);
+        }
+        mergedIslands.Add(mergedIsland);
+    }
+    return mergedIslands;
+}
+
+    private static void AddEdge(Dictionary<int, List<int>> vertexEdges, int v1, int v2)
+    {
         if (!vertexEdges.ContainsKey(v1))
         {
             vertexEdges[v1] = new List<int>();
@@ -162,11 +176,9 @@ public static class MeshIslandUtility
         vertexEdges[v2].Add(v1);
     }
 
-
     private static HashSet<(int, int)> GetAllEdges(List<int> vertices, Dictionary<int, List<int>> vertexEdges)
     {
         HashSet<(int, int)> allEdges = new HashSet<(int, int)>();
-        
         foreach (int v in vertices)
         {
             if (vertexEdges.ContainsKey(v))
@@ -178,31 +190,50 @@ public static class MeshIslandUtility
                 }
             }
         }
-
         return allEdges;
     }
 
 
-    public static int GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<Island> islands)
+public static int[] GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<MergedIsland> mergedIslands, bool mergeSamePosition)
+{
+    Mesh mesh = skinnedMeshRenderer.sharedMesh;
+    int[] triangles = mesh.triangles;
+
+    if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3) // 修正: 三角形のインデックスチェック
     {
-        Mesh mesh = skinnedMeshRenderer.sharedMesh;
-        int[] triangles = mesh.triangles;
+        throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
+    }
 
-        if (triangleIndex < 0 || triangleIndex >= triangles.Length)
+    int vertexIndex = triangles[triangleIndex * 3]; // 修正前の正しいコードに戻す
+
+    List<int> foundIndices = new List<int>();
+    foreach (var mergedIsland in mergedIslands)
+    {
+        foreach (var island in mergedIsland.ChildIslands)
         {
-            throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
-        }
-
-        int vertexIndex = triangles[triangleIndex* 3];
-
-        for (int i = 0; i < islands.Count; i++)
-        {
-            if (islands[i].Vertices.Contains(vertexIndex))
+            if (island.Vertices.Contains(vertexIndex))
             {
-                return i;
+                if (mergeSamePosition)
+                {
+                    foreach (var samePosIsland in mergedIsland.ChildIslands)
+                    {
+                        foundIndices.Add(samePosIsland.UnmergedStartIndex);
+                    }
+                    break; // 外側のループも脱出するためにラベル付きbreakを使用
+                }
+                else
+                {
+                    foundIndices.Add(island.UnmergedStartIndex);
+                }
             }
         }
-
-        throw new InvalidOperationException("Triangle index does not belong to any island.");
+        if (mergeSamePosition && foundIndices.Count > 0) break; // 外側のループも脱出する条件
     }
-}
+
+    if (foundIndices.Count == 0) // デバッグ用のログを追加
+    {
+        Debug.LogWarning($"No island found for vertexIndex: {vertexIndex}");
+    }
+
+    return foundIndices.ToArray();
+}}
