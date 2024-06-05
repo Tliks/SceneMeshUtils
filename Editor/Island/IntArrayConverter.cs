@@ -5,7 +5,6 @@ public class IntArrayConverter
 {
     public static string Encode(int[] data)
     {
-        // 負の値が含まれているかチェック
         if (Array.Exists(data, element => element < 0))
         {
             throw new ArgumentException("負の値はエンコードできません。");
@@ -61,7 +60,6 @@ public class IntArrayConverter
             }
         }
 
-        // 差分復元
         if (decompressed.Count == 0)
         {
             throw new ArgumentException("圧縮データの形式が正しくありません。");

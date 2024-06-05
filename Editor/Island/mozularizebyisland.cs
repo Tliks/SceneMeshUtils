@@ -5,11 +5,13 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+
 public class ModuleCreatorIsland : EditorWindow
 {
+    
     private List<List<Island>> islands = new List<List<Island>>();
-    private List<int> unselected_Island_Indcies = new List<int>();
-    private List<int> selected_Island_Indcies = new List<int>();
+    [SerializeField] private List<int> unselected_Island_Indcies = new List<int>();
+    [SerializeField] private List<int> selected_Island_Indcies = new List<int>();
 
     public SkinnedMeshRenderer OriginskinnedMeshRenderer;
     private SkinnedMeshRenderer PreviewSkinnedMeshRenderer;
@@ -67,6 +69,11 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
+    private void SaveUndoState()
+    {
+        Undo.RecordObject(this, "State Change");
+    }
+
     // Initialization Methods
     private void InitializeFromMenuItem()
     {
@@ -90,7 +97,6 @@ public class ModuleCreatorIsland : EditorWindow
         selected_Island_Indcies.Clear();
     }
 
-// GUI Rendering Method
     private void OnGUI()
     {
         if (!isGameObjectContext)
@@ -100,6 +106,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         RenderRaycastButton();
+        RenderUndoRedoButtons();
         RenderSelectionButtons();
         mergeSamePosition = !EditorGUILayout.Toggle("Split More", !mergeSamePosition);
 
@@ -112,6 +119,41 @@ public class ModuleCreatorIsland : EditorWindow
 
         RenderPreviewSelectedToggle();
         RenderCreateModuleButtons();
+    }
+
+    private void RenderUndoRedoButtons()
+    {
+        GUILayout.BeginHorizontal();
+
+        bool performUndo = false;
+        bool performRedo = false;
+
+        try
+        {
+            if (GUILayout.Button("Undo (Ctrl+Z)"))
+            {
+                performUndo = true;
+            }
+
+            if (GUILayout.Button("Redo (Ctrl+Y)"))
+            {
+                performRedo = true;
+            }
+        }
+        finally
+        {
+            GUILayout.EndHorizontal();
+        }
+
+        if (performUndo)
+        {
+            Undo.PerformUndo();
+        }
+
+        if (performRedo)
+        {
+            Undo.PerformRedo();
+        }
     }
 
     private void RenderPreviewSelectedToggle()
@@ -204,15 +246,15 @@ public class ModuleCreatorIsland : EditorWindow
         // Create Selected Islands Module
         if (GUILayout.Button("Create Selected Module"))
         {
-            CreateModule(selected_Island_Indcies, "SelectedIslandsModule");
+            CreateModule(selected_Island_Indcies);
             if (isGameObjectContext) Close();
         }
 
         // Create Both Modules
         if (GUILayout.Button("Create Both Modules"))
         {
-            CreateModule(selected_Island_Indcies, "SelectedIslandsModule");
-            CreateModule(unselected_Island_Indcies, "UnselectedIslandsModule");
+            CreateModule(selected_Island_Indcies);
+            CreateModule(unselected_Island_Indcies);
             processend();
             if (isGameObjectContext) Close();
         }
@@ -222,26 +264,26 @@ public class ModuleCreatorIsland : EditorWindow
         GUI.enabled = true;
     }
 
-    private void CreateModule(List<int> islandIndices, string moduleName)
+    private void CreateModule(List<int> islandIndices)
     {
+        SaveUndoState();
         if (islandIndices.Count > 0)
         {
-            var allVertices = GetVerticesFromIndices(selected_Island_Indcies);;
-            SaveModule(allVertices.ToList(), moduleName);
+            var allVertices = GetVerticesFromIndices(selected_Island_Indcies);
+            SaveModule(allVertices.ToList());
         }
-        
+
         isRaycastEnabled = false;
     }
-
-    private void SaveModule(List<int> vertices, string moduleName)
+    private void SaveModule(List<int> vertices)
     {
         stopwatch.Restart();
         Mesh newMesh = MeshDeletionUtility.DeleteMeshByKeepVertices(OriginskinnedMeshRenderer, vertices);
         stopwatch.Stop();
-        UnityEngine.Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
+        //UnityEngine.Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
 
         stopwatch.Restart();
-        string path = AssetDatabase.GenerateUniqueAssetPath($"Assets/Mesh/{moduleName}.asset");
+        string path = GenerateVariantPath(OriginskinnedMeshRenderer.transform.parent.gameObject, "newMesh");
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
         stopwatch.Stop();
@@ -251,6 +293,36 @@ public class ModuleCreatorIsland : EditorWindow
         stopwatch.Restart();
         new ModuleCreator(_Settings).CheckAndCopyBones(OriginskinnedMeshRenderer.gameObject);
         stopwatch.Stop();
+
+        string GenerateVariantPath(GameObject root_object, string source_name)
+        {
+            string base_path = $"Assets/ModuleCreator";
+            if (!AssetDatabase.IsValidFolder(base_path))
+            {
+                AssetDatabase.CreateFolder("Assets", "ModuleCreator");
+                AssetDatabase.Refresh();
+            }
+            
+            string folderPath = $"{base_path}/{root_object.name}";
+            if (!AssetDatabase.IsValidFolder(folderPath))
+            {
+                AssetDatabase.CreateFolder(base_path, root_object.name);
+                AssetDatabase.Refresh();
+            }
+
+            string folderPath1 = $"{folderPath}/Mesh";
+            if (!AssetDatabase.IsValidFolder(folderPath1))
+            {
+                AssetDatabase.CreateFolder(folderPath, "Mesh");
+                AssetDatabase.Refresh();
+            }
+
+            string fileName = source_name;
+            string fileExtension = "asset";
+            
+            return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);
+        }
+
     }
 
     private void RenderIslandHashField()
@@ -291,16 +363,17 @@ public class ModuleCreatorIsland : EditorWindow
             GUI.FocusControl(""); 
         }
     }
-
     private void SelectAllIslands()
     {
-        selected_Island_Indcies = Enumerable.Range(0, total_islands_index).ToList(); 
+        SaveUndoState();
+        selected_Island_Indcies = Enumerable.Range(0, total_islands_index).ToList();
         unselected_Island_Indcies.Clear();
         UpdateMesh();
     }
 
     private void UnselectAllIslands()
     {
+        SaveUndoState();
         unselected_Island_Indcies = Enumerable.Range(0, total_islands_index).ToList();
         selected_Island_Indcies.Clear();
         UpdateMesh();
@@ -308,6 +381,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void ReverseAllIslands()
     {
+        SaveUndoState();
         var temp = new List<int>(selected_Island_Indcies);
         selected_Island_Indcies = new List<int>(unselected_Island_Indcies);
         unselected_Island_Indcies = temp;
@@ -338,7 +412,7 @@ public class ModuleCreatorIsland : EditorWindow
         isRaycastEnabled = false;
 
         processend();
-
+        Undo.undoRedoPerformed += OnUndoRedo;
     }
 
     private void OnDisable()
@@ -347,6 +421,13 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.RepaintAll();
         processend();
         FocusCustomViewObject(OriginskinnedMeshRenderer);
+        Undo.undoRedoPerformed -= OnUndoRedo;
+    }
+
+    private void OnUndoRedo()
+    {
+        UpdateMesh();
+        Repaint();
     }
 
     private void processend()
@@ -426,6 +507,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void ToggleRaycast()
     {
+        SaveUndoState();
         isRaycastEnabled = !isRaycastEnabled;
         if (isRaycastEnabled)
         {
@@ -439,7 +521,6 @@ public class ModuleCreatorIsland : EditorWindow
             RemoveHighlight();
         }
     }
-
 
     private void CalculateIslands()
     {
@@ -515,7 +596,8 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
-        {
+        {   
+            SaveUndoState();
             foreach (var index in PreviousIslandIndices)
             {
                 //unselected
@@ -532,6 +614,21 @@ public class ModuleCreatorIsland : EditorWindow
             }
             UpdateMesh();
         }
+
+        if (Event.current.type == EventType.KeyDown && (Event.current.control || Event.current.command))
+        {
+            if (Event.current.keyCode == KeyCode.Z) // Ctrl/Cmd + Z
+            {
+                Undo.PerformUndo();
+                Event.current.Use();
+            }
+            else if (Event.current.keyCode == KeyCode.Y) // Ctrl/Cmd + Y
+            {
+                Undo.PerformRedo();
+                Event.current.Use();
+            }
+        }
+
     }
 
 private List<int> GetVerticesFromIndices(List<int> indices)
