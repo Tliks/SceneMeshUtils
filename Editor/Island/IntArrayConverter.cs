@@ -1,24 +1,29 @@
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
 
 public class IntArrayConverter
 {
     public static string Encode(int[] data)
     {
+        // 負の値が含まれているかチェック
+        if (Array.Exists(data, element => element < 0))
+        {
+            throw new ArgumentException("負の値はエンコードできません。");
+        }
+
         // 差分エンコーディング
         int[] diffEncoded = new int[data.Length];
         diffEncoded[0] = data[0];
         for (int i = 1; i < data.Length; i++)
         {
-            diffEncoded[i] = data[i] - data[i - 1];
+            int diff = data[i] - data[i - 1];
+            if (diff < 0)
+            {
+                throw new ArgumentException("負の差分はエンコードできません。");
+            }
+            diffEncoded[i] = diff;
         }
 
-        // ランレングス圧縮
         List<byte> compressed = new List<byte>();
         for (int i = 0; i < diffEncoded.Length; i++)
         {
@@ -30,8 +35,8 @@ public class IntArrayConverter
                 i++;
             }
 
-            compressed.Add((byte)value); // 差分値を格納
-            compressed.Add((byte)runLength); // ランレングスを格納
+            compressed.Add((byte)value);
+            compressed.Add((byte)runLength);
         }
 
         return Convert.ToBase64String(compressed.ToArray());
@@ -40,6 +45,11 @@ public class IntArrayConverter
     public static int[] Decode(string compressedData)
     {
         byte[] compressedBytes = Convert.FromBase64String(compressedData);
+        if (compressedBytes.Length % 2 != 0)
+        {
+            throw new ArgumentException("圧縮データの形式が正しくありません。");
+        }
+
         List<int> decompressed = new List<int>();
         for (int i = 0; i < compressedBytes.Length; i += 2)
         {
@@ -52,6 +62,11 @@ public class IntArrayConverter
         }
 
         // 差分復元
+        if (decompressed.Count == 0)
+        {
+            throw new ArgumentException("圧縮データの形式が正しくありません。");
+        }
+
         int[] original = new int[decompressed.Count];
         original[0] = decompressed[0];
         for (int i = 1; i < decompressed.Count; i++)
