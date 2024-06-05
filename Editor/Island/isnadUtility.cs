@@ -1,8 +1,6 @@
 using UnityEngine;
-using UnityEditor;
 using System.Collections.Generic;
 using System;
-using System.Linq;
 
 public class UnionFind
 {
@@ -51,34 +49,23 @@ public class UnionFind
     }
 }
 
-public class MergedIsland
-{
-    public List<Island> ChildIslands { get; }
-    public int MergedIndex { get; }
-
-    public MergedIsland()
-    {
-        ChildIslands = new List<Island>();
-    }
-}
-
 public class Island
 {
     public List<int> Vertices { get; }
-    public int UnmergedStartIndex { get; }
+    public int Index { get; }
     public HashSet<(int, int)> AllEdges { get; }
 
-    public Island(List<int> vertices, int unmergedStartIndex, HashSet<(int, int)> allEdges)
+    public Island(List<int> vertices, int index, HashSet<(int, int)> allEdges)
     {
         Vertices = vertices;
-        UnmergedStartIndex = unmergedStartIndex;
+        Index = index;
         AllEdges = allEdges;
     }
 }
 
 public static class MeshIslandUtility
 {
-public static List<MergedIsland> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
+public static List<List<Island>> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
 {
     Mesh mesh = skinnedMeshRenderer.sharedMesh;
     int[] triangles = mesh.triangles;
@@ -124,7 +111,6 @@ public static List<MergedIsland> GetIslands(SkinnedMeshRenderer skinnedMeshRende
         vertexMap[vertices[i]].Add(i);
     }
 
-
     foreach (var kvp in vertexMap)
     {
         var indices = kvp.Value;
@@ -146,16 +132,16 @@ public static List<MergedIsland> GetIslands(SkinnedMeshRenderer skinnedMeshRende
         mergedIslandDict[mergedRoot].Add(kvp.Value);
     }
 
-    List<MergedIsland> mergedIslands = new List<MergedIsland>();
+    List<List<Island>> mergedIslands = new List<List<Island>>();
+    int index = 0;
     foreach (var kvp in mergedIslandDict)
     {
-        MergedIsland mergedIsland = new MergedIsland();
-        foreach (var unmergedIslands in kvp.Value)
+        List<Island> mergedIsland = new List<Island>();
+        foreach (List<int> allVertices in kvp.Value)
         {
-            List<int> allVertices = unmergedIslands.Distinct().ToList();
             var allEdges = GetAllEdges(allVertices, vertexEdges);
-            Island island = new Island(unmergedIslands, unmergedIslands[0], allEdges);
-            mergedIsland.ChildIslands.Add(island);
+            Island island = new Island(allVertices, index++, allEdges);
+            mergedIsland.Add(island);
         }
         mergedIslands.Add(mergedIsland);
     }
@@ -194,46 +180,46 @@ public static List<MergedIsland> GetIslands(SkinnedMeshRenderer skinnedMeshRende
     }
 
 
-public static int[] GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<MergedIsland> mergedIslands, bool mergeSamePosition)
+public static List<int> GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)
 {
     Mesh mesh = skinnedMeshRenderer.sharedMesh;
     int[] triangles = mesh.triangles;
 
-    if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3) // 修正: 三角形のインデックスチェック
+    if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
     {
         throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
     }
 
-    int vertexIndex = triangles[triangleIndex * 3]; // 修正前の正しいコードに戻す
+    int vertexIndex = triangles[triangleIndex * 3];
 
     List<int> foundIndices = new List<int>();
     foreach (var mergedIsland in mergedIslands)
     {
-        foreach (var island in mergedIsland.ChildIslands)
+        foreach (var island in mergedIsland)
         {
             if (island.Vertices.Contains(vertexIndex))
             {
                 if (mergeSamePosition)
                 {
-                    foreach (var samePosIsland in mergedIsland.ChildIslands)
+                    foreach (var samePosIsland in mergedIsland)
                     {
-                        foundIndices.Add(samePosIsland.UnmergedStartIndex);
+                        foundIndices.Add(samePosIsland.Index);
                     }
-                    break; // 外側のループも脱出するためにラベル付きbreakを使用
                 }
                 else
                 {
-                    foundIndices.Add(island.UnmergedStartIndex);
+                    foundIndices.Add(island.Index);
                 }
+                break;
             }
         }
-        if (mergeSamePosition && foundIndices.Count > 0) break; // 外側のループも脱出する条件
+        if (foundIndices.Count > 0) break;
     }
 
-    if (foundIndices.Count == 0) // デバッグ用のログを追加
+    if (foundIndices.Count == 0)
     {
         Debug.LogWarning($"No island found for vertexIndex: {vertexIndex}");
     }
 
-    return foundIndices.ToArray();
+    return foundIndices;
 }}
