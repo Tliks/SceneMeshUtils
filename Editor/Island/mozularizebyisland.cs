@@ -70,6 +70,12 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
+    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
+    private static bool ValidateShowWindowFromGameObject()
+    {
+        return Selection.activeGameObject != null && Selection.activeGameObject.transform.parent != null;
+    }
+
     private void SaveUndoState()
     {
         Undo.RecordObject(this, "State Change");

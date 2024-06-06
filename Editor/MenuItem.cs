@@ -20,6 +20,12 @@ public class ModuleCreatorWindow : EditorWindow
         moduleCreator.CheckAndCopyBones(sourceObject);
     }
 
+    [MenuItem("GameObject/Module Creator/Modularize Mesh", true)]
+    private static bool ValidateCreateModule()
+    {
+        return Selection.activeGameObject != null && Selection.activeGameObject.transform.parent != null;
+    }
+
     [MenuItem("Window/Module Creator/Modularize Mesh")]
     public static void ShowWindow()
     {
