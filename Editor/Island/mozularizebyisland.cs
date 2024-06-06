@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -158,7 +159,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void RenderPreviewSelectedToggle()
     {
-        if (GUILayout.Button(isPreviewSelected ? "Stop Preview" : "Preview"))
+        if (GUILayout.Button(isPreviewSelected ? "Preview Unselected" : "Preview Selected"))
         {
             isPreviewSelected = !isPreviewSelected;
             UpdateMesh();
@@ -240,15 +241,20 @@ public class ModuleCreatorIsland : EditorWindow
     private void RenderCreateModuleButtons()
     {
         GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
-
-        GUILayout.BeginHorizontal();
         
         // Create Selected Islands Module
-        if (GUILayout.Button("Create Selected Module"))
+        if (GUILayout.Button("Create Module"))
         {
             CreateModule(selected_Island_Indcies);
             if (isGameObjectContext) Close();
         }
+
+        GUI.enabled = true;
+    }
+
+    private void RenderCreateBothModuleButtons()
+    {
+        GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
 
         // Create Both Modules
         if (GUILayout.Button("Create Both Modules"))
@@ -259,8 +265,6 @@ public class ModuleCreatorIsland : EditorWindow
             if (isGameObjectContext) Close();
         }
 
-        GUILayout.EndHorizontal();
-
         GUI.enabled = true;
     }
 
@@ -269,7 +273,7 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
         if (islandIndices.Count > 0)
         {
-            var allVertices = GetVerticesFromIndices(selected_Island_Indcies);
+            var allVertices = GetVerticesFromIndices(islandIndices);
             SaveModule(allVertices.ToList());
         }
 
@@ -560,7 +564,10 @@ public class ModuleCreatorIsland : EditorWindow
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;
-                    HighlightIslandEdges(PreviewSkinnedMeshRenderer, indices);
+                    if (isPreviewSelected)
+                        HighlightIslandEdges(PreviewSkinnedMeshRenderer, UnityEngine.Color.red, indices);
+                    else
+                        HighlightIslandEdges(PreviewSkinnedMeshRenderer, UnityEngine.Color.cyan, indices);
                 }
             }
         }
@@ -659,10 +666,10 @@ private List<int> GetVerticesFromIndices(List<int> indices)
    private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer)
     {
         HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer, UnityEngine.Color.cyan);
     }
 
-private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, List<int> islandIndices)
+private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, UnityEngine.Color color, List<int> islandIndices)
 {
     HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
 
@@ -682,7 +689,7 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, List<
         }
     }
 
-    highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer);
+    highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer, color);
 }
     private void porcess_options()
     {   
@@ -701,6 +708,8 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, List<
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options");
         if (showAdvancedOptions)
         {
+            RenderCreateBothModuleButtons();
+
             GUI.enabled = _Settings.IncludePhysBone;
             GUIContent content_at = new GUIContent("Additional Transforms", "Output Additional PhysBones Affected Transforms for exact PhysBone movement");
             _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);

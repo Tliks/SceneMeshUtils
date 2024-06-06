@@ -6,13 +6,14 @@ public class HighlightEdgesManager : MonoBehaviour
     [HideInInspector]
     public SkinnedMeshRenderer SkinnedMeshRenderer;
     [HideInInspector]
-    public Color highlightColor = Color.cyan;
+    public Color HighlightColor ;
     //public Color highlightColor = new Color(255f / 255f, 50f / 255f, 0f / 255f, 1f);
 
     private HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
 
-    public void HighlightEdges(HashSet<(int, int)> edges, SkinnedMeshRenderer skinnedMeshRenderer)
+    public void HighlightEdges(HashSet<(int, int)> edges, SkinnedMeshRenderer skinnedMeshRenderer, Color highlightColor)
     {
+        HighlightColor = highlightColor;
         edgesToHighlight = edges;
         SkinnedMeshRenderer = skinnedMeshRenderer;
     }
@@ -25,7 +26,7 @@ public class HighlightEdgesManager : MonoBehaviour
 
         Vector3[] vertices = mesh.vertices;
 
-        Gizmos.color = highlightColor;
+        Gizmos.color = HighlightColor;
         foreach (var edge in edgesToHighlight)
         {
             DrawEdge(vertices, edge.Item1, edge.Item2);
