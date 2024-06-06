@@ -522,6 +522,7 @@ private void RenderPreviewSelectedToggle()
             PreviewMeshCollider = AddCollider(PreviewSkinnedMeshRenderer, unselected_Island_Indcies);
             EnsureHighlightManagerExists();
             UpdateMesh(); // コライダーのメッシュを更新
+            SceneView.lastActiveSceneView.drawGizmos = true;
         }
         else
         {
