@@ -106,19 +106,17 @@ public class ModuleCreatorIsland : EditorWindow
             RenderSetupButtons();
         }
 
-        RenderRaycastButton();
-        RenderUndoRedoButtons();
-        RenderSelectionButtons();
-        mergeSamePosition = !EditorGUILayout.Toggle("Split More", !mergeSamePosition);
-
         EditorGUILayout.Space();
         RenderVertexCount();
-        RenderIslandHashField();
         EditorGUILayout.Space();
+
+        RenderRaycastButton();
+        RenderSelectionButtons();
 
         porcess_options();
 
         RenderPreviewSelectedToggle();
+        EditorGUILayout.Space();
         RenderCreateModuleButtons();
     }
 
@@ -157,15 +155,21 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    private void RenderPreviewSelectedToggle()
+private void RenderPreviewSelectedToggle()
+{
+    GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+    labelStyle.fontSize = 15; // 文字のサイズを大きくする
+    //labelStyle.fontStyle = UnityEngine.FontStyle.Bold; // ボールドにして明瞭にする
+
+    GUILayout.Label("Preview Mode: " + (isPreviewSelected ? "Selected" : "Unselected"), labelStyle);
+
+    if (GUILayout.Button("Switch Preview Mode"))
     {
-        if (GUILayout.Button(isPreviewSelected ? "Preview Unselected" : "Preview Selected"))
-        {
-            isPreviewSelected = !isPreviewSelected;
-            UpdateMesh();
-        }
+        isPreviewSelected = !isPreviewSelected;
+        UpdateMesh();
     }
-    
+}
+
     private void RenderGUI()
     {
         SkinnedMeshRenderer newskinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", OriginskinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
@@ -596,7 +600,7 @@ public class ModuleCreatorIsland : EditorWindow
         DontActiveSKin();
 
         double currentTime = EditorApplication.timeSinceStartup;
-        if (currentTime - lastUpdateTime >= raycastInterval)
+        if (isRaycastEnabled && currentTime - lastUpdateTime >= raycastInterval)
         {
             lastUpdateTime = currentTime;
             PerformRaycast();
@@ -697,6 +701,8 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
 
         EditorGUILayout.Space();
 
+        mergeSamePosition = !EditorGUILayout.Toggle("Split More", !mergeSamePosition);
+
         _Settings.IncludePhysBone = EditorGUILayout.Toggle("PhysBone ", _Settings.IncludePhysBone);
 
         GUI.enabled = _Settings.IncludePhysBone;
@@ -708,7 +714,6 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options");
         if (showAdvancedOptions)
         {
-            RenderCreateBothModuleButtons();
 
             GUI.enabled = _Settings.IncludePhysBone;
             GUIContent content_at = new GUIContent("Additional Transforms", "Output Additional PhysBones Affected Transforms for exact PhysBone movement");
@@ -726,6 +731,11 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
 
             GUIContent content_sr = new GUIContent("Specify Root Object", "The default root object is the parent object of the specified skinned mesh renderer object");
             _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
+
+            RenderIslandHashField();
+            RenderUndoRedoButtons();
+            RenderCreateBothModuleButtons();
+
         }
 
         EditorGUILayout.Space();
