@@ -161,7 +161,7 @@ private void RenderPreviewSelectedToggle()
     labelStyle.fontSize = 15; // 文字のサイズを大きくする
     //labelStyle.fontStyle = UnityEngine.FontStyle.Bold; // ボールドにして明瞭にする
 
-    GUILayout.Label("Preview Mode: " + (isPreviewSelected ? "Selected" : "Unselected"), labelStyle);
+    GUILayout.Label("Preview Mode: " + (isPreviewSelected ? "Selected Mesh" : "Unselected Mesh"), labelStyle);
 
     if (GUILayout.Button("Switch Preview Mode"))
     {
