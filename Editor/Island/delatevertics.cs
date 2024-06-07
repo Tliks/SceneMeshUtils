@@ -9,14 +9,14 @@ public class MeshDeletionUtility
         return DeleteMesh(skinnedMeshRenderer, keepVerticesIndexes, null, true);
     }
 
-    public static Mesh KeepVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes)
+    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh mesh, List<int> keepVerticesIndexes)
     {
-        return KeepVerticesUsingDegenerateTriangles(skinnedMeshRenderer, keepVerticesIndexes, null);
+        return KeepVerticesUsingDegenerateTriangles(mesh, keepVerticesIndexes, null);
     }
 
-    public static Mesh KeepVerticesUsingDegenerateTriangles(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes, Mesh existingMesh)
+    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh mesh, List<int> keepVerticesIndexes, Mesh existingMesh)
     {
-        return MarkVerticesForDegenerationbeta(skinnedMeshRenderer, keepVerticesIndexes, existingMesh, true);
+        return MarkVerticesForDegenerationbeta(mesh, keepVerticesIndexes, existingMesh, true);
     }
 
     private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
@@ -187,10 +187,9 @@ public class MeshDeletionUtility
         }
     }
 
-    private static Mesh MarkVerticesForDegenerationbeta(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndexes, Mesh existingMesh, bool keepVertices)
+    private static Mesh MarkVerticesForDegenerationbeta(Mesh originalMesh, List<int> vertexIndexes, Mesh existingMesh, bool keepVertices)
     {
         Stopwatch stopwatch = new Stopwatch();
-        Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
         Mesh newMesh = Object.Instantiate(originalMesh);
         
         stopwatch.Start();
@@ -220,5 +219,34 @@ public class MeshDeletionUtility
 
         return newMesh;
     }
+
+public static Mesh GenerateBacksideMesh(SkinnedMeshRenderer skinnedMeshRenderer)
+{
+    Mesh mesh = skinnedMeshRenderer.sharedMesh;
+    Mesh newMesh = Object.Instantiate(mesh);
+
+    int[] triangles = mesh.triangles;    
+    int triCount = triangles.Length;
+
+    int[] newTriangles = new int[triCount * 2];
+
+    // Copy original triangles
+    for (int i = 0; i < triCount; i += 3)
+    {
+        newTriangles[i] = triangles[i];
+        newTriangles[i + 1] = triangles[i + 1];
+        newTriangles[i + 2] = triangles[i + 2];
+
+        // Generate backface triangles (reverse winding order for backface)
+        newTriangles[i + triCount] = triangles[i];
+        newTriangles[i + triCount + 1] = triangles[i + 2];
+        newTriangles[i + triCount + 2] = triangles[i + 1];
+    }
+
+    newMesh.triangles = newTriangles;
     
-}
+    newMesh.RecalculateBounds();
+    newMesh.RecalculateNormals();
+
+    return newMesh;
+}}

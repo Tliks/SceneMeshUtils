@@ -16,6 +16,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     public SkinnedMeshRenderer OriginskinnedMeshRenderer;
     private SkinnedMeshRenderer PreviewSkinnedMeshRenderer;
+    private Mesh BacksideMesh;
     private Mesh PreviewMesh;
     private GameObject PreviewMeshObject;
     private List<int> PreviousIslandIndices = new List<int>();
@@ -539,7 +540,7 @@ private void RenderPreviewSelectedToggle()
     private void CalculateIslands()
     {
         stopwatch.Restart();
-        islands = MeshIslandUtility.GetIslands(PreviewSkinnedMeshRenderer);
+        islands = MeshIslandUtility.GetIslands(BacksideMesh);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         total_islands_index = GetTotalElementCount(islands);
@@ -570,7 +571,7 @@ private void RenderPreviewSelectedToggle()
             if (SceneRaycastUtility.IsHitObject(PreviewSkinnedMeshRenderer.gameObject, extendedHit))
             {
                 int triangleIndex = extendedHit.hitTriangleIndex;
-                List<int> indices = MeshIslandUtility.GetIslandIndexFromTriangleIndex(PreviewSkinnedMeshRenderer, triangleIndex, islands, mergeSamePosition);
+                List<int> indices = MeshIslandUtility.GetIslandIndexFromTriangleIndex(BacksideMesh, triangleIndex, islands, mergeSamePosition);
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;
@@ -764,6 +765,9 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
             IncludePhysBoneColider = false
         };
         PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
+        BacksideMesh = MeshDeletionUtility.GenerateBacksideMesh(PreviewSkinnedMeshRenderer);
+
+        //SourceMesh = PreviewSkinnedMeshRenderer.sharedMesh;
 
         ResetAllBlendShapes(PreviewSkinnedMeshRenderer);
         PreviewMeshObject = PreviewSkinnedMeshRenderer.transform.parent.gameObject;
@@ -801,17 +805,23 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
         Selected_Vertices = GetVerticesFromIndices(selected_Island_Indcies);
         if (isPreviewSelected)
         {
-            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, Selected_Vertices);
-            if (selected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = PreviewMesh;
+            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Selected_Vertices);
+            PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
+
+            Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Selected_Vertices);
+            if (selected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = ColliderMesh;
         }
         else
         {
             List<int> Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
-            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, Vertices);
-            if (unselected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = PreviewMesh;
+
+            PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Vertices);
+            PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
+
+            Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Vertices);
+            if (unselected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = ColliderMesh;
         }
 
-        PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
 
         Repaint();
     }

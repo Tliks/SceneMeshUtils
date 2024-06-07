@@ -65,9 +65,8 @@ public class Island
 
 public static class MeshIslandUtility
 {
-public static List<List<Island>> GetIslands(SkinnedMeshRenderer skinnedMeshRenderer)
+public static List<List<Island>> GetIslands(Mesh mesh)
 {
-    Mesh mesh = skinnedMeshRenderer.sharedMesh;
     int[] triangles = mesh.triangles;
     Vector3[] vertices = mesh.vertices;
 
@@ -180,9 +179,8 @@ public static List<List<Island>> GetIslands(SkinnedMeshRenderer skinnedMeshRende
     }
 
 
-public static List<int> GetIslandIndexFromTriangleIndex(SkinnedMeshRenderer skinnedMeshRenderer, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)
+public static List<int> GetIslandIndexFromTriangleIndex(Mesh mesh, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)
 {
-    Mesh mesh = skinnedMeshRenderer.sharedMesh;
     int[] triangles = mesh.triangles;
 
     if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
