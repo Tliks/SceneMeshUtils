@@ -601,8 +601,9 @@ private void RenderPreviewSelectedToggle()
     }
 
     private void OnSceneGUI(SceneView sceneView)
-    {
-        if (!isRaycastEnabled || PreviewSkinnedMeshRenderer == null) return;
+    {   
+        if(PreviewSkinnedMeshRenderer == null) Close();
+        if (selectionMode == SelectionMode.None) return;
 
         DontActiveSKin();
 
