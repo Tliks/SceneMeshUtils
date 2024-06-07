@@ -3,10 +3,8 @@ using UnityEngine;
 
 public class HighlightEdgesManager : MonoBehaviour
 {
-    [HideInInspector]
-    public SkinnedMeshRenderer SkinnedMeshRenderer;
-    [HideInInspector]
-    public Color HighlightColor ;
+    private SkinnedMeshRenderer SkinnedMeshRenderer;
+    private Color HighlightColor;
     //public Color highlightColor = new Color(255f / 255f, 50f / 255f, 0f / 255f, 1f);
 
     private HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();

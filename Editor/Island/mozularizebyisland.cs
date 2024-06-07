@@ -515,7 +515,6 @@ private void RenderPreviewSelectedToggle()
         if (highlightManager == null)
         {
             highlightManager = PreviewSkinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
-            highlightManager.SkinnedMeshRenderer = PreviewSkinnedMeshRenderer;
         }
     }
 
@@ -768,11 +767,11 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
 
         ResetAllBlendShapes(PreviewSkinnedMeshRenderer);
         PreviewMeshObject = PreviewSkinnedMeshRenderer.transform.parent.gameObject;
-        PreviewMeshObject.transform.position = OriginskinnedMeshRenderer.transform.parent.position + new Vector3(0, 0, -5);
-        PreviewMeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
+        PreviewMeshObject.transform.position = PreviewMeshObject.transform.position + new Vector3(0, 0, -5);
+        //PreviewMeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
 
-        PreviewSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
-        PreviewSkinnedMeshRenderer.gameObject.transform.localScale = new Vector3(1, 1, 1);
+        //PreviewSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
+        //PreviewSkinnedMeshRenderer.gameObject.transform.localScale = new Vector3(1, 1, 1);
         
         PreviewMeshObject.name = "Preview Mesh";
 
