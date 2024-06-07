@@ -659,6 +659,11 @@ private void RenderPreviewSelectedToggle()
             }
         }
 
+        if (selectionMode == SelectionMode.Multiple)
+        {
+            //未実装
+        }
+
     }
 
     void HandleUndoRedoEvent()
