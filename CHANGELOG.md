@@ -13,6 +13,25 @@
 
 ### Security
 
+## [1.0.0-beta.3] - 2024-6-07
+### Changed
+- Changed to disable menuitem for non-executable objects
+- Changed the implementation to perform collision detection using raycast even for the mesh on the back side.
+
+### fixed
+- An issue where the highlighted positions of vertices may not be appropriate.
+- An ossue where editorwindow remains even if previewmesh is deleted
+
+## [1.0.0-beta.2] - 2024-6-06
+### Changed
+- Changed to force enable gizmo
+- Changed layout of EditorWindow
+- Changed highlight color to red on selected mesh mode
+
+## [1.0.0-beta.1] - 2024-6-05
+### Added
+- initial release for v1.0.0
+
 ## [0.4.1] - 2024-05-18
 ### Changed
 - Change log message to appropriate format
