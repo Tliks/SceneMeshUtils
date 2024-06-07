@@ -28,7 +28,8 @@ public class ModuleCreatorIsland : EditorWindow
     private const double raycastInterval = 0.01;
 
     private bool showAdvancedOptions = false;
-    private bool isRaycastEnabled = false;
+    private enum SelectionMode { None, Single, Multiple }
+    private SelectionMode selectionMode = SelectionMode.None;
     private bool isGameObjectContext = false;
 
     private HighlightEdgesManager highlightManager;
@@ -47,11 +48,6 @@ public class ModuleCreatorIsland : EditorWindow
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
     public static void ShowWindow()
     {
-        var existingWindow = GetWindow<ModuleCreatorIsland>("Module Creator", false);
-        if (existingWindow != null)
-        {
-            existingWindow.Close();
-        }
         var window = GetWindow<ModuleCreatorIsland>("Module Creator");
         window.InitializeFromMenuItem();
     }
@@ -117,7 +113,7 @@ public class ModuleCreatorIsland : EditorWindow
         RenderVertexCount();
         EditorGUILayout.Space();
 
-        RenderRaycastButton();
+        RenderModeButtons();
         RenderSelectionButtons();
 
         porcess_options();
@@ -209,15 +205,32 @@ private void RenderPreviewSelectedToggle()
         GUI.enabled = true;
     }
 
-    private void RenderRaycastButton()
-    {   
-        GUI.enabled = islands.Count > 0;
-        if (GUILayout.Button(isRaycastEnabled ? "Disable Raycast" : "Enable Raycast"))
+    private void RenderModeButtons()
+    {
+        GUI.enabled = selectionMode != SelectionMode.None;
+
+        if (GUILayout.Button(selectionMode == SelectionMode.Single ? "Enable Multiple Selection" :"Enable Single Selection"))
         {
-            ToggleRaycast();
+            ToggleSelectionMode(selectionMode == SelectionMode.Single ? SelectionMode.Multiple : SelectionMode.Single);
         }
+
         GUI.enabled = true;
     }
+
+    private void RenderModeoff()
+    {
+        if (GUILayout.Button(selectionMode == SelectionMode.None ? "Enable Selection" : "Disable Selection"))
+        {
+            if (selectionMode == SelectionMode.None)
+            {
+                ToggleSelectionMode(SelectionMode.Single);
+            }
+            else
+            {
+                ToggleSelectionMode(SelectionMode.None);
+            }
+        }
+}
 
     private void RenderVertexCount()
     {
@@ -288,7 +301,7 @@ private void RenderPreviewSelectedToggle()
             SaveModule(allVertices.ToList());
         }
 
-        isRaycastEnabled = false;
+        selectionMode = SelectionMode.None;
     }
     private void SaveModule(List<int> vertices)
     {
@@ -406,7 +419,7 @@ private void RenderPreviewSelectedToggle()
     {
         DuplicateAndSetup();
         CalculateIslands();
-        ToggleRaycast();
+        ToggleSelectionMode(SelectionMode.Single);
     }
 
     private void OnEnable()
@@ -424,7 +437,7 @@ private void RenderPreviewSelectedToggle()
 
 
         SceneView.duringSceneGui += OnSceneGUI;
-        isRaycastEnabled = false;
+        selectionMode = SelectionMode.None;
 
         processend();
         Undo.undoRedoPerformed += OnUndoRedo;
@@ -455,7 +468,7 @@ private void RenderPreviewSelectedToggle()
         {
             DestroyImmediate(PreviewMeshObject);
         }
-        isRaycastEnabled = false;
+        selectionMode = SelectionMode.None;
         RemoveHighlight();
         CloseCustomSceneView();
         //Close();
@@ -519,21 +532,30 @@ private void RenderPreviewSelectedToggle()
         }
     }
 
-    private void ToggleRaycast()
+    private void ToggleSelectionMode(SelectionMode newMode)
     {
         SaveUndoState();
-        isRaycastEnabled = !isRaycastEnabled;
-        if (isRaycastEnabled)
+        if (selectionMode == newMode)
+        {
+            UnityEngine.Debug.LogWarning("current mode is already specofed mode");
+        }
+        else
+        {
+            selectionMode = newMode;
+        }
+
+        if (selectionMode == SelectionMode.None)
+        {
+            DelateCollider(PreviewMeshCollider);
+            RemoveHighlight();
+        }
+
+        if (selectionMode == SelectionMode.Single)
         {
             PreviewMeshCollider = AddCollider(PreviewSkinnedMeshRenderer, unselected_Island_Indcies);
             EnsureHighlightManagerExists();
             UpdateMesh(); // コライダーのメッシュを更新
             SceneView.lastActiveSceneView.drawGizmos = true;
-        }
-        else
-        {
-            DelateCollider(PreviewMeshCollider);
-            RemoveHighlight();
         }
     }
 
@@ -606,34 +628,41 @@ private void RenderPreviewSelectedToggle()
         if (selectionMode == SelectionMode.None) return;
 
         DontActiveSKin();
+        HandleUndoRedoEvent();
 
-        double currentTime = EditorApplication.timeSinceStartup;
-        if (isRaycastEnabled && currentTime - lastUpdateTime >= raycastInterval)
-        {
-            lastUpdateTime = currentTime;
-            PerformRaycast();
-        }
-
-        if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+        if (selectionMode == SelectionMode.Single)
         {   
-            SaveUndoState();
-            foreach (var index in PreviousIslandIndices)
+            double currentTime = EditorApplication.timeSinceStartup;
+            if (currentTime - lastUpdateTime >= raycastInterval)
             {
-                //unselected
-                if (!isPreviewSelected)
-                {
-                    selected_Island_Indcies.Add(index);
-                    unselected_Island_Indcies.Remove(index);
-                }
-                else
-                {
-                    unselected_Island_Indcies.Add(index);
-                    selected_Island_Indcies.Remove(index);
-                }
+                lastUpdateTime = currentTime;
+                PerformRaycast();
             }
-            UpdateMesh();
+
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
+            {
+                SaveUndoState();
+                foreach (var index in PreviousIslandIndices)
+                {
+                    if (isPreviewSelected)
+                    {
+                        unselected_Island_Indcies.Add(index);
+                        selected_Island_Indcies.Remove(index);
+                    }
+                    else
+                    {
+                        selected_Island_Indcies.Add(index);
+                        unselected_Island_Indcies.Remove(index);
+                    }
+                }
+                UpdateMesh();
+            }
         }
 
+    }
+
+    void HandleUndoRedoEvent()
+    {
         if (Event.current.type == EventType.KeyDown && (Event.current.control || Event.current.command))
         {
             if (Event.current.keyCode == KeyCode.Z) // Ctrl/Cmd + Z
@@ -647,7 +676,6 @@ private void RenderPreviewSelectedToggle()
                 Event.current.Use();
             }
         }
-
     }
 
 private List<int> GetVerticesFromIndices(List<int> indices)
@@ -741,9 +769,9 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
             _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
 
             RenderIslandHashField();
+            RenderModeoff();
             RenderUndoRedoButtons();
             RenderCreateBothModuleButtons();
-
         }
 
         EditorGUILayout.Space();
