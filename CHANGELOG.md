@@ -20,7 +20,7 @@
 
 ### fixed
 - An issue where the highlighted positions of vertices may not be appropriate.
-- An ossue where editorwindow remains even if previewmesh is deleted
+- An issue where editorwindow remains even if previewmesh is deleted
 
 ## [1.0.0-beta.2] - 2024-6-06
 ### Changed
