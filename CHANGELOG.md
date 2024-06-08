@@ -13,6 +13,10 @@
 
 ### Security
 
+## [1.0.0-beta.4] - 2024-6-8
+### Fixed
+- the effect of transform was doubled on collider and highlight meshes.
+
 ## [1.0.0-beta.3] - 2024-6-07
 ### Changed
 - Changed to disable menuitem for non-executable objects

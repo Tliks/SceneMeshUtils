@@ -220,9 +220,8 @@ public class MeshDeletionUtility
         return newMesh;
     }
 
-public static Mesh GenerateBacksideMesh(SkinnedMeshRenderer skinnedMeshRenderer)
+public static Mesh GenerateBacksideMesh(Mesh mesh)
 {
-    Mesh mesh = skinnedMeshRenderer.sharedMesh;
     Mesh newMesh = Object.Instantiate(mesh);
 
     int[] triangles = mesh.triangles;    
