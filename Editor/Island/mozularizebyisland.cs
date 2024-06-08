@@ -16,7 +16,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     public SkinnedMeshRenderer OriginskinnedMeshRenderer;
     private SkinnedMeshRenderer PreviewSkinnedMeshRenderer;
-    private Mesh BacksideMesh;
+    private Mesh bakedMesh;
     private GameObject PreviewMeshObject;
     private List<int> PreviousIslandIndices = new List<int>();
 
@@ -181,7 +181,7 @@ private void RenderPreviewSelectedToggle()
         }
         else
         {
-            FocusCustomViewObject(OriginskinnedMeshRenderer);
+            FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
             processend();
             OriginskinnedMeshRenderer = newskinnedMeshRenderer;
         }
@@ -449,7 +449,7 @@ private void RenderPreviewSelectedToggle()
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
         processend();
-        FocusCustomViewObject(OriginskinnedMeshRenderer);
+        FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
         Undo.undoRedoPerformed -= OnUndoRedo;
     }
 
@@ -475,24 +475,16 @@ private void RenderPreviewSelectedToggle()
         //Close();
     }
     
-    private void FocusCustomViewObject(SkinnedMeshRenderer customRenderer)
+    private void FocusCustomViewObject(Transform transform, Mesh mesh)
     {
-        if (!customRenderer) return;
-        Mesh mesh = customRenderer.sharedMesh;
         Vector3 middleVertex = Vector3.zero;
 
         if (mesh != null)
         {
-            // 頂点座標を取得
             Vector3[] vertices = mesh.vertices;
-
-            // スキニングの影響を考慮して頂点を移動
-            stopwatch.Restart();
             middleVertex = vertices
-                .Select(v => customRenderer.transform.TransformPoint(v))
+                .Select(v => transform.TransformPoint(v))
                 .Aggregate((acc, v) => acc + v) / vertices.Length;
-            stopwatch.Stop();
-            //UnityEngine.Debug.Log($"middleVertex: {stopwatch.ElapsedMilliseconds} ms");
         }
 
         float cameraDistance = 0.3f;
@@ -568,7 +560,7 @@ private void RenderPreviewSelectedToggle()
     private void CalculateIslands()
     {
         stopwatch.Restart();
-        islands = MeshIslandUtility.GetIslands(BacksideMesh);
+        islands = MeshIslandUtility.GetIslands(bakedMesh);
         stopwatch.Stop();
         UnityEngine.Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         total_islands_index = GetTotalElementCount(islands);
@@ -599,23 +591,24 @@ private void RenderPreviewSelectedToggle()
             if (SceneRaycastUtility.IsHitObject(PreviewSkinnedMeshRenderer.gameObject, extendedHit))
             {
                 int triangleIndex = extendedHit.hitTriangleIndex;
-                List<int> indices = MeshIslandUtility.GetIslandIndexFromTriangleIndex(BacksideMesh, triangleIndex, islands, mergeSamePosition);
+                List<int> indices = MeshIslandUtility.GetIslandIndexFromTriangleIndex(bakedMesh, triangleIndex, islands, mergeSamePosition);
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;
                     if (isPreviewSelected)
-                        HighlightIslandEdges(PreviewSkinnedMeshRenderer, UnityEngine.Color.red, indices);
+                        HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices, UnityEngine.Color.red, indices);
                     else
-                        HighlightIslandEdges(PreviewSkinnedMeshRenderer, UnityEngine.Color.cyan, indices);
+                        HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices, UnityEngine.Color.cyan, indices);
                 }
             }
         }
         else
         {
             PreviousIslandIndices.Clear();
-            HighlightIslandEdges(PreviewSkinnedMeshRenderer);
+            HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices);
         }
     }
+
     private void DontActiveSKin()
     {
         if (Event.current != null && Selection.activeGameObject != null)
@@ -714,13 +707,13 @@ private List<int> GetVerticesFromIndices(List<int> indices)
 
     return vertices.Distinct().ToList();
 }
-   private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer)
+   private void HighlightIslandEdges(Transform transform, Vector3[] vertices)
     {
         HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer, UnityEngine.Color.cyan);
+        highlightManager.HighlightEdges(edgesToHighlight, vertices, UnityEngine.Color.cyan, transform);
     }
 
-private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, UnityEngine.Color color, List<int> islandIndices)
+private void HighlightIslandEdges(Transform transform, Vector3[] vertices, UnityEngine.Color color, List<int> islandIndices)
 {
     HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
 
@@ -740,7 +733,7 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
         }
     }
 
-    highlightManager.HighlightEdges(edgesToHighlight, skinnedMeshRenderer, color);
+    highlightManager.HighlightEdges(edgesToHighlight, vertices, color, transform);
 }
     private void porcess_options()
     {   
@@ -806,29 +799,19 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
         };
         PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
 
-        //SourceMesh = PreviewSkinnedMeshRenderer.sharedMesh;
-
         ResetAllBlendShapes(PreviewSkinnedMeshRenderer);
         PreviewMeshObject = PreviewSkinnedMeshRenderer.transform.parent.gameObject;
         PreviewMeshObject.transform.position = PreviewMeshObject.transform.position + new Vector3(0, 0, -5);
-        //PreviewMeshObject.transform.rotation = OriginskinnedMeshRenderer.transform.parent.rotation;
-
-        //PreviewSkinnedMeshRenderer.gameObject.transform.localPosition = Vector3.zero; 
-        //PreviewSkinnedMeshRenderer.gameObject.transform.localScale = new Vector3(1, 1, 1);
-        
         PreviewMeshObject.name = "Preview Mesh";
 
-        //Mesh bakedMesh = new Mesh();
-        //BacksideMesh = new Mesh();
-        //PreviewSkinnedMeshRenderer.BakeMesh(BacksideMesh);
-        BacksideMesh = MeshDeletionUtility.GenerateBacksideMesh(PreviewSkinnedMeshRenderer.sharedMesh);
-        //PreviewSkinnedMeshRenderer.sharedMesh = bakedMesh;
+        Vector3 parentScale = PreviewMeshObject.transform.localScale;
+        PreviewSkinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
 
-        //Mesh originalMesh = PreviewSkinnedMeshRenderer.sharedMesh;
-        //PreviewMesh = Instantiate(originalMesh);
-        //PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
+        bakedMesh = new Mesh(); 
+        PreviewSkinnedMeshRenderer.BakeMesh(bakedMesh);
+        bakedMesh = MeshDeletionUtility.GenerateBacksideMesh(bakedMesh);
 
-        FocusCustomViewObject(PreviewSkinnedMeshRenderer);
+        FocusCustomViewObject(PreviewSkinnedMeshRenderer.transform, bakedMesh);
     }
 
     private void CloseCustomSceneView()
@@ -843,23 +826,29 @@ private void HighlightIslandEdges(SkinnedMeshRenderer skinnedMeshRenderer, Unity
     private void UpdateMesh()
     {
         Selected_Vertices = GetVerticesFromIndices(selected_Island_Indcies);
-        List<int> Unelected_Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
+        List<int> Unselected_Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
 
         if (isPreviewSelected)
         {
             Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Selected_Vertices);
             PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
 
-            Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Selected_Vertices);
-            if (selected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = ColliderMesh;
+            if (Selected_Vertices.Count >= 3){
+                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(bakedMesh, Selected_Vertices);
+                PreviewMeshCollider.sharedMesh = ColliderMesh;
+            }
+            else PreviewMeshCollider.sharedMesh = null;
         }
         else
         {
-            Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Unelected_Vertices);
+            Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Unselected_Vertices);
             PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
             
-            Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Unelected_Vertices);
-            if (unselected_Island_Indcies.Count > 0) PreviewMeshCollider.sharedMesh = ColliderMesh;
+            if (Unselected_Vertices.Count >= 3){
+                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(bakedMesh, Unselected_Vertices);
+                PreviewMeshCollider.sharedMesh = ColliderMesh;
+            }
+            else PreviewMeshCollider.sharedMesh = null;
         }
 
         Repaint();

@@ -13,11 +13,15 @@
 
 ### Security
 
-## [1.0.0-beta.4] - 2024-6-8
+## [1.0.0-beta.5] - 2024-06-08
+### Fixed
+- Skinning effects were not calculated accurately.
+
+## [1.0.0-beta.4] - 2024-06-08
 ### Fixed
 - the effect of transform was doubled on collider and highlight meshes.
 
-## [1.0.0-beta.3] - 2024-6-07
+## [1.0.0-beta.3] - 2024-06-07
 ### Changed
 - Changed to disable menuitem for non-executable objects
 - Changed the implementation to perform collision detection using raycast even for the mesh on the back side.
@@ -26,13 +30,13 @@
 - An issue where the highlighted positions of vertices may not be appropriate.
 - An issue where editorwindow remains even if previewmesh is deleted
 
-## [1.0.0-beta.2] - 2024-6-06
+## [1.0.0-beta.2] - 2024-06-06
 ### Changed
 - Changed to force enable gizmo
 - Changed layout of EditorWindow
 - Changed highlight color to red on selected mesh mode
 
-## [1.0.0-beta.1] - 2024-6-05
+## [1.0.0-beta.1] - 2024-06-05
 ### Added
 - initial release for v1.0.0
 
