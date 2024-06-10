@@ -46,7 +46,7 @@ public class ModuleCreatorIsland : EditorWindow
     private Vector2 startPoint;
     private Rect selectionRect = new Rect();
     private bool isSelecting = false;
-    private const float dragThreshold = 5f;
+    private const float dragThreshold = 10f;
 
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
@@ -666,9 +666,7 @@ private void RenderPreviewSelectedToggle()
 
     private void HandleClick()
     {
-        //Debug.Log("???");
         SaveUndoState();
-        Debug.Log("save");
         foreach (var index in PreviousIslandIndices)
         {
             if (isPreviewSelected)
