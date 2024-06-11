@@ -448,7 +448,6 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnUndoRedo()
     {
         UpdateMesh();
-        Repaint();
     }
 
     private void processend()
@@ -559,7 +558,7 @@ public class ModuleCreatorIsland : EditorWindow
         DontActiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
-        sceneView.Repaint();
+        DrawSelectionRectangle();
     }
 
     private void DontActiveSKin(Event e)
@@ -594,20 +593,13 @@ public class ModuleCreatorIsland : EditorWindow
     private void HandleMouseEvents(Event e, SceneView sceneView)
     {
         Vector2 mousePos = e.mousePosition;
+        //consoleがrectに入っているので多分あまり正確ではない
         Rect sceneViewRect = new Rect(0, 0, sceneView.position.width, sceneView.position.height);
 
         //左クリック
         if (e.type == EventType.MouseDown && e.button == 0)
         {
             startPoint = mousePos;
-        }
-        //マウス移動検知
-        else if (e.type == EventType.MouseDrag && e.button == 0)
-        {
-            if (Vector2.Distance(startPoint, mousePos) >= dragThreshold)
-            {
-                isSelecting = true;
-            }
         }
         //左クリック解放
         else if (e.type == EventType.MouseUp && e.button == 0)
@@ -627,19 +619,16 @@ public class ModuleCreatorIsland : EditorWindow
             isSelecting = false;
             selectionRect = new Rect();
             DrawSelectionRectangle();
+            HandleUtility.Repaint();
 
         }
-        //sceneviewの外側にある場合の初期化処理
-        else if (!sceneViewRect.Contains(mousePos))
+        //ドラッグ中
+        else if (e.type == EventType.MouseDrag && e.button == 0 && Vector2.Distance(startPoint, mousePos) >= dragThreshold)
         {
+            isSelecting = true;
             HighlightNull();
-            if (isSelecting)
-            {
-                isSelecting = false;
-                selectionRect = new Rect();
-                HandleUtility.Repaint();
-                DrawSelectionRectangle();
-            }
+            selectionRect = new Rect(startPoint.x, startPoint.y, mousePos.x - startPoint.x, mousePos.y - startPoint.y);
+            HandleUtility.Repaint();
         }
         //ドラッグしていないとき
         else if (!isSelecting)
@@ -651,12 +640,18 @@ public class ModuleCreatorIsland : EditorWindow
                 PerformRaycast();
             }
         }
-        //ドラッグ中
-        else if (isSelecting)
+
+        //sceneviewの外側にある場合の初期化処理
+        if (!sceneViewRect.Contains(mousePos))
         {
             HighlightNull();
-            selectionRect = new Rect(startPoint.x, startPoint.y, mousePos.x - startPoint.x, mousePos.y - startPoint.y);
-            DrawSelectionRectangle();
+            if (isSelecting)
+            {
+                isSelecting = false;
+                selectionRect = new Rect();
+                HandleUtility.Repaint();
+                DrawSelectionRectangle();
+            }
         }
     }
 
@@ -666,9 +661,7 @@ public class ModuleCreatorIsland : EditorWindow
         Color selectionColor = isPreviewSelected ? new Color(1, 0, 0, 0.2f) : new Color(0, 1, 1, 0.2f);
         GUI.color = selectionColor;
         GUI.DrawTexture(selectionRect, EditorGUIUtility.whiteTexture);
-        GUI.color = Color.white;
         Handles.EndGUI();
-        HandleUtility.Repaint();
     }
 
     private void HandleClick()
