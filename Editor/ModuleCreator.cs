@@ -41,7 +41,7 @@ public class ModuleCreator
             stopwatch.Start();
             (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("SaveAsPrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             CleanUpHierarchy(new_root, skin_index);
@@ -51,7 +51,7 @@ public class ModuleCreator
             stopwatch.Start();
             PrefabUtility.SavePrefabAsset(new_root);
             stopwatch.Stop();
-            UnityEngine.Debug.Log("SavePrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
+            //UnityEngine.Debug.Log("SavePrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
 
             float BaseX = root.transform.position.x;
             float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
@@ -78,7 +78,7 @@ public class ModuleCreator
         }
     }
 
-    public SkinnedMeshRenderer PreciewMesh(GameObject sourceObject)
+    public SkinnedMeshRenderer PreviewMesh(GameObject sourceObject)
     {
         SkinnedMeshRenderer skinnedMeshRenderer = null;;
         try

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- Range selection
 
 ### Changed
 - Mouse events are now handled more accurately.

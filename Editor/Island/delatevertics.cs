@@ -220,32 +220,33 @@ public class MeshDeletionUtility
         return newMesh;
     }
 
-public static Mesh GenerateBacksideMesh(Mesh mesh)
-{
-    Mesh newMesh = Object.Instantiate(mesh);
-
-    int[] triangles = mesh.triangles;    
-    int triCount = triangles.Length;
-
-    int[] newTriangles = new int[triCount * 2];
-
-    // Copy original triangles
-    for (int i = 0; i < triCount; i += 3)
+    public static Mesh GenerateBacksideMesh(Mesh mesh)
     {
-        newTriangles[i] = triangles[i];
-        newTriangles[i + 1] = triangles[i + 1];
-        newTriangles[i + 2] = triangles[i + 2];
+        Mesh newMesh = Object.Instantiate(mesh);
 
-        // Generate backface triangles (reverse winding order for backface)
-        newTriangles[i + triCount] = triangles[i];
-        newTriangles[i + triCount + 1] = triangles[i + 2];
-        newTriangles[i + triCount + 2] = triangles[i + 1];
+        int[] triangles = mesh.triangles;    
+        int triCount = triangles.Length;
+
+        int[] newTriangles = new int[triCount * 2];
+
+        // Copy original triangles
+        for (int i = 0; i < triCount; i += 3)
+        {
+            newTriangles[i] = triangles[i];
+            newTriangles[i + 1] = triangles[i + 1];
+            newTriangles[i + 2] = triangles[i + 2];
+
+            // Generate backface triangles (reverse winding order for backface)
+            newTriangles[i + triCount] = triangles[i];
+            newTriangles[i + triCount + 1] = triangles[i + 2];
+            newTriangles[i + triCount + 2] = triangles[i + 1];
+        }
+
+        newMesh.triangles = newTriangles;
+        
+        newMesh.RecalculateBounds();
+        newMesh.RecalculateNormals();
+
+        return newMesh;
     }
-
-    newMesh.triangles = newTriangles;
-    
-    newMesh.RecalculateBounds();
-    newMesh.RecalculateNormals();
-
-    return newMesh;
-}}
+}

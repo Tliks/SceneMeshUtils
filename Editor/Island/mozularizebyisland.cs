@@ -35,7 +35,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private Stopwatch stopwatch = new Stopwatch();
 
-    private static string textFieldValue = "-1";
+    private static string textFieldValue;
 
     public bool mergeSamePosition = true;
     private MeshCollider PreviewMeshCollider;
@@ -287,6 +287,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void CreateModule(List<int> islandIndices)
     {
+        Debug.Log(textFieldValue);
         SaveUndoState();
         if (islandIndices.Count > 0)
         {
@@ -308,7 +309,7 @@ public class ModuleCreatorIsland : EditorWindow
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
         stopwatch.Stop();
-        Debug.Log($"Save newMesh: {stopwatch.ElapsedMilliseconds} ms");
+        //Debug.Log($"Save newMesh: {stopwatch.ElapsedMilliseconds} ms");
 
         _Settings.newmesh = newMesh;
         stopwatch.Restart();
@@ -348,9 +349,9 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void RenderIslandHashField()
     {
+        int total_islands_count = total_islands_index + 1;
         GUILayout.Label("Encoded islands:", EditorStyles.boldLabel);
         string newValue = EditorGUILayout.TextField(textFieldValue);
-        int total_islands_count = total_islands_index+1;
 
         if (newValue != textFieldValue)
         {
@@ -367,15 +368,19 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 if (decodedArray == null)
                 {
-                    Debug.LogError("Island Hashのデコードに失敗しました。無効な形式です。");
+                    Debug.LogWarning("Island Hashのデコードに失敗しました。無効な形式です。");
                 }
                 else if (decodedArray[decodedArray.Length - 1] != total_islands_count)
                 {
-                    Debug.LogError($"Island Hashのデコード成功しましたが、島の数が一致しません。デコードされた島の数 (最後の要素): {decodedArray[decodedArray.Length - 1]}, 現在の島の数: {total_islands_count}");
+                    Debug.LogWarning($"Island Hashのデコード成功しましたが、島の数が一致しません。デコードされた島の数 (最後の要素): {decodedArray[decodedArray.Length - 1]}, 現在の島の数: {total_islands_count}");
                 }
             }
         }
+    }
 
+    private void UpdateEncodedString()
+    {   
+        int total_islands_count = total_islands_index + 1;
         selected_Island_Indcies.Sort();
         string encodedString = IntArrayConverter.Encode(selected_Island_Indcies.Append(total_islands_count).ToArray());
         if (encodedString != textFieldValue)
@@ -384,6 +389,7 @@ public class ModuleCreatorIsland : EditorWindow
             GUI.FocusControl(""); 
         }
     }
+
     private void SelectAllIslands()
     {
         SaveUndoState();
@@ -524,9 +530,8 @@ public class ModuleCreatorIsland : EditorWindow
         stopwatch.Restart();
         islands = IslandUtility.GetIslands(bakedMesh);
         stopwatch.Stop();
-        Debug.Log($"Calculate Islands: {stopwatch.ElapsedMilliseconds} ms");
         total_islands_index = GetTotalElementCount(islands);
-        Debug.Log($"Islands count: {islands.Count}/{total_islands_index+1}");
+        Debug.Log($"Island Count: {islands.Count}/{total_islands_index + 1} - Time: {stopwatch.ElapsedMilliseconds} ms");
         selected_Island_Indcies.Clear();
         unselected_Island_Indcies = Enumerable.Range(0, total_islands_index).ToList(); 
         Total_Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
@@ -697,7 +702,6 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void HighlightNull()
     {
-        //Debug.Log("消えた");
         PreviousIslandIndices.Clear();
         HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices);
     }
@@ -715,7 +719,6 @@ public class ModuleCreatorIsland : EditorWindow
         Vector2 corner2 = new Vector2(startpos.x, endpos.y);
         Vector2 corner4 = new Vector2(endpos.x, startpos.y);
         
-        // GUIポイントからワールド空間へのRayを取得
         Ray ray1 = HandleUtility.GUIPointToWorldRay(startpos);
         Ray ray2 = HandleUtility.GUIPointToWorldRay(corner2);
         Ray ray3 = HandleUtility.GUIPointToWorldRay(endpos);
@@ -723,7 +726,6 @@ public class ModuleCreatorIsland : EditorWindow
 
         float depth = 10.0f;
 
-        // 各頂点の座標を取得
         Vector3[] vertices = new Vector3[8];
         vertices[0] = ray1.origin;
         vertices[1] = ray2.origin;
@@ -735,7 +737,6 @@ public class ModuleCreatorIsland : EditorWindow
         vertices[7] = ray4.origin + ray4.direction * depth;
         Mesh mesh = new Mesh();
 
-        // 頂点リストとインデックスリストを設定
         mesh.vertices = vertices;
         mesh.triangles = new int[]
         {
@@ -898,7 +899,7 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBone = false,
             IncludePhysBoneColider = false
         };
-        PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreciewMesh(OriginskinnedMeshRenderer.gameObject);
+        PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreviewMesh(OriginskinnedMeshRenderer.gameObject);
 
         ResetAllBlendShapes(PreviewSkinnedMeshRenderer);
         PreviewMeshObject = PreviewSkinnedMeshRenderer.transform.parent.gameObject;
@@ -955,5 +956,6 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         Repaint();
+        UpdateEncodedString();
     }
 }
