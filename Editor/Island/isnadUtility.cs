@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 public class UnionFind
@@ -220,47 +221,131 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         }
 
         return (minBounds, maxBounds);
-}
-
-public static List<int> GetIslandIndexFromTriangleIndex(Mesh mesh, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)
-{
-    int[] triangles = mesh.triangles;
-
-    if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
-    {
-        throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
     }
 
-    int vertexIndex = triangles[triangleIndex * 3];
-
-    List<int> foundIndices = new List<int>();
-    foreach (var mergedIsland in mergedIslands)
+    public static List<int> GetIslandIndexFromTriangleIndex(Mesh mesh, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)
     {
-        foreach (var island in mergedIsland)
+        int[] triangles = mesh.triangles;
+
+        if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
         {
-            if (island.Vertices.Contains(vertexIndex))
+            throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
+        }
+
+        int vertexIndex = triangles[triangleIndex * 3];
+
+        List<int> foundIndices = new List<int>();
+        foreach (var mergedIsland in mergedIslands)
+        {
+            foreach (var island in mergedIsland)
             {
-                if (mergeSamePosition)
+                if (island.Vertices.Contains(vertexIndex))
+                {
+                    if (mergeSamePosition)
+                    {
+                        foreach (var samePosIsland in mergedIsland)
+                        {
+                            foundIndices.Add(samePosIsland.Index);
+                        }
+                    }
+                    else
+                    {
+                        foundIndices.Add(island.Index);
+                    }
+                    break;
+                }
+            }
+            if (foundIndices.Count > 0) break;
+        }
+
+        if (foundIndices.Count == 0)
+        {
+            Debug.LogWarning($"No island found for vertexIndex: {vertexIndex}");
+        }
+
+        return foundIndices;
+    }
+
+
+    public static List<int> GetIslandIndicesInColider(Mesh mesh, MeshCollider collider, List<List<Island>> mergedIslands, bool mergeSamePosition, bool isall, Transform transform)
+    {
+        List<int> foundIndices = new List<int>();
+        Vector3[] vertices = mesh.vertices;
+
+        foreach (var mergedIsland in mergedIslands)
+        {
+            bool isInsideMergedIsland = false;
+
+            if (mergeSamePosition)
+            {
+                if (isall)
+                {
+                    isInsideMergedIsland = mergedIsland.All(island =>
+                        island.Vertices.TrueForAll(vertexIndex => 
+                        {   
+                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
+                            Vector3 closestPoint = collider.ClosestPoint(point);
+                            bool isEqual = closestPoint == point;
+                            return isEqual;
+                        })
+                    );
+                }
+                else
+                {
+                    isInsideMergedIsland = mergedIsland.Any(island =>
+                        island.Vertices.Exists(vertexIndex => 
+                        {
+                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
+                            Vector3 closestPoint = collider.ClosestPoint(point);
+                            bool isEqual = closestPoint == point;
+                            return isEqual;
+                        })
+                    );
+                }
+
+                if (isInsideMergedIsland)
                 {
                     foreach (var samePosIsland in mergedIsland)
                     {
                         foundIndices.Add(samePosIsland.Index);
                     }
                 }
-                else
+            }
+            else
+            {
+                foreach (var island in mergedIsland)
                 {
-                    foundIndices.Add(island.Index);
+                    bool isInside = false;
+
+                    if (isall)
+                    {
+                        isInside = island.Vertices.TrueForAll(vertexIndex => 
+                        {   
+                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
+                            Vector3 closestPoint = collider.ClosestPoint(point);
+                            bool isEqual = closestPoint == point;
+                            return isEqual;
+                        });
+                    }
+                    else
+                    {
+                        isInside = island.Vertices.Exists(vertexIndex => 
+                        {
+                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
+                            Vector3 closestPoint = collider.ClosestPoint(point);
+                            bool isEqual = closestPoint == point;
+                            return isEqual;
+                        });
+                    }
+
+                    if (isInside)
+                    {
+                        foundIndices.Add(island.Index);
+                    }
                 }
-                break;
             }
         }
-        if (foundIndices.Count > 0) break;
-    }
 
-    if (foundIndices.Count == 0)
-    {
-        Debug.LogWarning($"No island found for vertexIndex: {vertexIndex}");
+        return foundIndices;
     }
-
-    return foundIndices;
-}}
+}
