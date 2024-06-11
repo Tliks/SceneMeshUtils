@@ -510,7 +510,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         if (selectionMode == true)
-        {
+        {   
             PreviewMeshCollider = SceneRaycastUtility.AddCollider(PreviewSkinnedMeshRenderer);
             EnsureHighlightManagerExists();
             UpdateMesh(); // コライダーのメッシュを更新
@@ -757,7 +757,20 @@ public class ModuleCreatorIsland : EditorWindow
 
     private List<int> GetVerticesFromIndices(List<int> indices)
     {
-        var vertices = new List<int>();
+        var vertices = new HashSet<int>();
+        var indexToIslandMap = new Dictionary<int, List<int>>();
+
+        foreach (var islandList in islands)
+        {
+            foreach (var island in islandList)
+            {
+                if (!indexToIslandMap.ContainsKey(island.Index))
+                {
+                    indexToIslandMap[island.Index] = island.Vertices;
+                }
+            }
+        }
+
         foreach (var index in indices)
         {
             if (index < 0)
@@ -766,19 +779,16 @@ public class ModuleCreatorIsland : EditorWindow
                 continue;
             }
 
-            foreach (var islandList in islands)
+            if (indexToIslandMap.TryGetValue(index, out var islandVertices))
             {
-                foreach (var island in islandList)
+                foreach (var vertex in islandVertices)
                 {
-                    if (island.Index == index)
-                    {
-                        vertices.AddRange(island.Vertices);
-                    }
+                    vertices.Add(vertex);
                 }
             }
         }
 
-        return vertices.Distinct().ToList();
+        return vertices.ToList();
     }
 
     private void UpdateSelection(List<int> indices)
@@ -886,7 +896,7 @@ public class ModuleCreatorIsland : EditorWindow
     }
 
     private void DuplicateAndSetup()
-    {
+    {   
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
             IncludePhysBone = false,
