@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 public class UnionFind
 {
@@ -71,13 +72,17 @@ public static class IslandUtility
 {
 public static List<List<Island>> GetIslands(Mesh mesh)
 {
+    Stopwatch stopwatch = new Stopwatch();
+
+    stopwatch.Start();
     int[] triangles = mesh.triangles;
     Vector3[] vertices = mesh.vertices;
+    int tricount = triangles.Length;
 
     UnionFind unionFind = new UnionFind(vertices.Length);
-    Dictionary<int, List<int>> vertexEdges = new Dictionary<int, List<int>>();
+    Dictionary<int, HashSet<int>> vertexEdges = new Dictionary<int, HashSet<int>>();
 
-    for (int i = 0; i < triangles.Length; i += 3)
+    for (int i = 0; i < tricount; i += 3)
     {
         int v1 = triangles[i];
         int v2 = triangles[i + 1];
@@ -92,6 +97,9 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         AddEdge(vertexEdges, v3, v1);
     }
 
+    stopwatch.Stop();
+    //Debug.Log($"1, {stopwatch.ElapsedMilliseconds} ms");
+    stopwatch.Restart();
     Dictionary<int, List<int>> islandDict = new Dictionary<int, List<int>>();
     for (int i = 0; i < vertices.Length; i++)
     {
@@ -102,10 +110,12 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         }
         islandDict[root].Add(i);
     }
-
+    stopwatch.Stop();
+    //Debug.Log($"{stopwatch.ElapsedMilliseconds} ms");
+    stopwatch.Restart();
     Dictionary<Vector3, List<int>> vertexMap = new Dictionary<Vector3, List<int>>();
-
-    for (int i = 0; i < vertices.Length; i++)
+    int verticesCount = vertices.Length;
+    for (int i = 0; i < verticesCount; i++)
     {
         if (!vertexMap.ContainsKey(vertices[i]))
         {
@@ -113,7 +123,9 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         }
         vertexMap[vertices[i]].Add(i);
     }
-
+    stopwatch.Stop();
+    //Debug.Log($"2, {stopwatch.ElapsedMilliseconds} ms");
+    stopwatch.Restart();
     foreach (var kvp in vertexMap)
     {
         var indices = kvp.Value;
@@ -123,7 +135,9 @@ public static List<List<Island>> GetIslands(Mesh mesh)
             unionFind.Unite(rootIndex, indices[i]);
         }
     }
-
+    stopwatch.Stop();
+    //Debug.Log($"{stopwatch.ElapsedMilliseconds} ms");
+    stopwatch.Restart();
     Dictionary<int, List<List<int>>> mergedIslandDict = new Dictionary<int, List<List<int>>>();
     foreach (var kvp in islandDict)
     {
@@ -134,7 +148,9 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         }
         mergedIslandDict[mergedRoot].Add(kvp.Value);
     }
-
+    stopwatch.Stop();
+    //Debug.Log($"{stopwatch.ElapsedMilliseconds} ms");
+    stopwatch.Restart();
     List<List<Island>> mergedIslands = new List<List<Island>>();
     int index = 0;
     foreach (var kvp in mergedIslandDict)
@@ -149,24 +165,27 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         }
         mergedIslands.Add(mergedIsland);
     }
+    stopwatch.Stop();
+    //Debug.Log($"3, {stopwatch.ElapsedMilliseconds} ms");
+
     return mergedIslands;
     }
 
-    private static void AddEdge(Dictionary<int, List<int>> vertexEdges, int v1, int v2)
+    private static void AddEdge(Dictionary<int, HashSet<int>> vertexEdges, int v1, int v2)
     {
         if (!vertexEdges.ContainsKey(v1))
         {
-            vertexEdges[v1] = new List<int>();
+            vertexEdges[v1] = new HashSet<int>();
         }
         if (!vertexEdges.ContainsKey(v2))
         {
-            vertexEdges[v2] = new List<int>();
+            vertexEdges[v2] = new HashSet<int>();
         }
         vertexEdges[v1].Add(v2);
         vertexEdges[v2].Add(v1);
     }
 
-    private static HashSet<(int, int)> GetAllEdges(List<int> vertices, Dictionary<int, List<int>> vertexEdges)
+    private static HashSet<(int, int)> GetAllEdges(List<int> vertices, Dictionary<int, HashSet<int>> vertexEdges)
     {
         HashSet<(int, int)> allEdges = new HashSet<(int, int)>();
         foreach (int v in vertices)
