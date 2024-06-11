@@ -619,7 +619,6 @@ public class ModuleCreatorIsland : EditorWindow
             isSelecting = false;
             selectionRect = new Rect();
             DrawSelectionRectangle();
-            HandleUtility.Repaint();
 
         }
         //ドラッグ中
@@ -667,6 +666,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void HandleClick()
     {
         UpdateSelection(PreviousIslandIndices);
+        HighlightNull();
     }
 
     private void PerformRaycast()
