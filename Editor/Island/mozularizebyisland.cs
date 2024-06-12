@@ -843,8 +843,8 @@ public class ModuleCreatorIsland : EditorWindow
     {   
         //EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));
 
-        mergeSamePosition = !EditorGUILayout.Toggle("Split More", !mergeSamePosition);
-        isAll = EditorGUILayout.Toggle("isALL ", isAll);
+        mergeSamePosition = !EditorGUILayout.Toggle("Separate mesh more", !mergeSamePosition);
+        isAll = !EditorGUILayout.Toggle("Select all in range ", !isAll);
 
         EditorGUILayout.Space();
 
