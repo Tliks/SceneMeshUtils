@@ -594,7 +594,24 @@ public class ModuleCreatorIsland : EditorWindow
     {
         Vector2 mousePos = e.mousePosition;
         //consoleがrectに入っているので多分あまり正確ではない
-        Rect sceneViewRect = new Rect(0, 0, sceneView.position.width, sceneView.position.height);
+        float xoffset = 10f; 
+        float yoffset = 30f; 
+        Rect sceneViewRect = new Rect(0, 0, sceneView.position.width -xoffset, sceneView.position.height - yoffset);
+        //Debug.Log($"{mousePos.x}/{sceneView.position.width - xoffset}, {mousePos.y}/{sceneView.position.height - yoffset}");
+
+        if (!sceneViewRect.Contains(mousePos))
+        {
+            HighlightNull();
+            if (isSelecting)
+            {
+                Debug.Log("stoto");
+                isSelecting = false;
+                selectionRect = new Rect();
+                HandleUtility.Repaint();
+                DrawSelectionRectangle();
+            }
+            return;
+        }
 
         //左クリック
         if (e.type == EventType.MouseDown && e.button == 0)
@@ -641,17 +658,6 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         //sceneviewの外側にある場合の初期化処理
-        if (!sceneViewRect.Contains(mousePos))
-        {
-            HighlightNull();
-            if (isSelecting)
-            {
-                isSelecting = false;
-                selectionRect = new Rect();
-                HandleUtility.Repaint();
-                DrawSelectionRectangle();
-            }
-        }
     }
 
     private void DrawSelectionRectangle()
@@ -696,7 +702,8 @@ public class ModuleCreatorIsland : EditorWindow
     private void HighlightNull()
     {
         PreviousIslandIndices.Clear();
-        HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices);
+        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+        highlightManager.HighlightEdges(edgesToHighlight, bakedMesh.vertices, Color.cyan, PreviewSkinnedMeshRenderer.transform);
     }
 
     private void HandleDrag(Vector2 startpos, Vector2 endpos)
@@ -717,7 +724,7 @@ public class ModuleCreatorIsland : EditorWindow
         Ray ray3 = HandleUtility.GUIPointToWorldRay(endpos);
         Ray ray4 = HandleUtility.GUIPointToWorldRay(corner4);
 
-        float depth = 10.0f;
+        float depth = 100f;
 
         Vector3[] vertices = new Vector3[8];
         vertices[0] = ray1.origin;
@@ -808,12 +815,6 @@ public class ModuleCreatorIsland : EditorWindow
             }
         }
         UpdateMesh();
-    }
-
-   private void HighlightIslandEdges(Transform transform, Vector3[] vertices)
-    {
-        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        highlightManager.HighlightEdges(edgesToHighlight, vertices, Color.cyan, transform);
     }
 
     private void HighlightIslandEdges(Transform transform, Vector3[] vertices, Color color, List<int> islandIndices)
