@@ -931,10 +931,10 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateMesh()
     {
+        Selected_Vertices = GetVerticesFromIndices(selected_Island_Indcies);
 
         if (isPreviewSelected)
         {
-            Selected_Vertices = GetVerticesFromIndices(selected_Island_Indcies);
 
             Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Selected_Vertices);
             PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
