@@ -604,7 +604,6 @@ public class ModuleCreatorIsland : EditorWindow
             HighlightNull();
             if (isSelecting)
             {
-                Debug.Log("stoto");
                 isSelecting = false;
                 selectionRect = new Rect();
                 HandleUtility.Repaint();
