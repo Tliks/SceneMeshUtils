@@ -711,7 +711,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
         List<int> indices = IslandUtility.GetIslandIndicesInColider(bakedMesh, meshCollider, islands, mergeSamePosition, isAll, PreviewSkinnedMeshRenderer.transform);
-        Debug.Log(indices.Count);
+        //Debug.Log(indices.Count);
         DestroyImmediate(meshCollider.gameObject);
         UpdateSelection(indices);
     }
