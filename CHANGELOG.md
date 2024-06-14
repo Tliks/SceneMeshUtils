@@ -12,6 +12,11 @@
 ### Removed
 
 ### Fixed
+- Mouse events were not handled accurately.
+- repaint is called too much
+- GetVerticesFromIndices is slow
+- HighlightNull is not called on click
+- label of toggle field
 
 ### Security
 

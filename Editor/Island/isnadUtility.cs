@@ -227,7 +227,7 @@ public static List<List<Island>> GetIslands(Mesh mesh)
     {
         int[] triangles = mesh.triangles;
 
-        if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
+        if (triangleIndex < 0 || triangleIndex >= triangles.Length/ 3)
         {
             throw new ArgumentOutOfRangeException("triangleIndex", "Triangle index out of range.");
         }
@@ -348,4 +348,41 @@ public static List<List<Island>> GetIslands(Mesh mesh)
 
         return foundIndices;
     }
+
+    public static List<int> GetVerticesFromIndices(List<List<Island>> islands, List<int> indices)
+    {
+        var vertices = new HashSet<int>();
+        var indexToIslandMap = new Dictionary<int, List<int>>();
+
+        foreach (var islandList in islands)
+        {
+            foreach (var island in islandList)
+            {
+                if (!indexToIslandMap.ContainsKey(island.Index))
+                {
+                    indexToIslandMap[island.Index] = island.Vertices;
+                }
+            }
+        }
+
+        foreach (var index in indices)
+        {
+            if (index < 0)
+            {
+                Console.WriteLine($"Index out of range: {index}. Valid index should be non-negative.");
+                continue;
+            }
+
+            if (indexToIslandMap.TryGetValue(index, out var islandVertices))
+            {
+                foreach (var vertex in islandVertices)
+                {
+                    vertices.Add(vertex);
+                }
+            }
+        }
+
+        return vertices.ToList();
+    }
+
 }

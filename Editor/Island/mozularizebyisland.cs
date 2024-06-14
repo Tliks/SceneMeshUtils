@@ -18,6 +18,7 @@ public class ModuleCreatorIsland : EditorWindow
     public SkinnedMeshRenderer OriginskinnedMeshRenderer;
     private SkinnedMeshRenderer PreviewSkinnedMeshRenderer;
     private Mesh bakedMesh;
+    private Mesh BacksideMesh;
     private GameObject PreviewMeshObject;
     private List<int> PreviousIslandIndices = new List<int>();
 
@@ -41,8 +42,8 @@ public class ModuleCreatorIsland : EditorWindow
     private MeshCollider PreviewMeshCollider;
     private bool isPreviewSelected = false;
     private int total_islands_index = 0;
-    List<int> Selected_Vertices = new List<int>();
-    List<int> Total_Vertices = new List<int>();
+    private int Selected_Vertices_Count;
+    private int Total_Vertices_Count;
     private Vector2 startPoint;
     private Rect selectionRect = new Rect();
     private bool isSelecting = false;
@@ -228,7 +229,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void RenderVertexCount()
     {
         GUILayout.Label("Selected/Total Polygons", EditorStyles.boldLabel);
-        GUILayout.Label($"{Selected_Vertices.Count}/{Total_Vertices.Count}");
+        GUILayout.Label($"{Selected_Vertices_Count}/{Total_Vertices_Count}");
     }
 
     private void RenderSelectionButtons()
@@ -291,7 +292,7 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
         if (islandIndices.Count > 0)
         {
-            var allVertices = GetVerticesFromIndices(islandIndices);
+            var allVertices = IslandUtility.GetVerticesFromIndices(islands, islandIndices);
             SaveModule(allVertices.ToList());
         }
 
@@ -530,10 +531,10 @@ public class ModuleCreatorIsland : EditorWindow
         islands = IslandUtility.GetIslands(bakedMesh);
         stopwatch.Stop();
         total_islands_index = GetTotalElementCount(islands);
-        Debug.Log($"Island Count: {islands.Count}/{total_islands_index + 1} - Time: {stopwatch.ElapsedMilliseconds} ms");
+        Debug.Log($"Islands Merged: {islands.Count} of {total_islands_index + 1} - Elapsed Time: {stopwatch.ElapsedMilliseconds} ms");
         selected_Island_Indcies.Clear();
         unselected_Island_Indcies = Enumerable.Range(0, total_islands_index).ToList(); 
-        Total_Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
+        Total_Vertices_Count = IslandUtility.GetVerticesFromIndices(islands, unselected_Island_Indcies).Count;
     }
 
     private int GetTotalElementCount<T>(List<List<T>> lists)
@@ -555,7 +556,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (PreviewSkinnedMeshRenderer == null) Close();
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
-        DontActiveSKin(e);
+        if (selectionMode) DontActiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
@@ -594,7 +595,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         Vector2 mousePos = e.mousePosition;
         //consoleがrectに入っているので多分あまり正確ではない
-        float xoffset = 10f; 
+        float xoffset = 10f;
         float yoffset = 30f; 
         Rect sceneViewRect = new Rect(0, 0, sceneView.position.width -xoffset, sceneView.position.height - yoffset);
         //Debug.Log($"{mousePos.x}/{sceneView.position.width - xoffset}, {mousePos.y}/{sceneView.position.height - yoffset}");
@@ -681,7 +682,7 @@ public class ModuleCreatorIsland : EditorWindow
             if (SceneRaycastUtility.IsHitObject(PreviewSkinnedMeshRenderer.gameObject, hitInfo))
             {
                 int triangleIndex = hitInfo.triangleIndex;
-                List<int> indices = IslandUtility.GetIslandIndexFromTriangleIndex(bakedMesh, triangleIndex, islands, mergeSamePosition);
+                List<int> indices = IslandUtility.GetIslandIndexFromTriangleIndex(BacksideMesh, triangleIndex, islands, mergeSamePosition);
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;
@@ -709,6 +710,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
         List<int> indices = IslandUtility.GetIslandIndicesInColider(bakedMesh, meshCollider, islands, mergeSamePosition, isAll, PreviewSkinnedMeshRenderer.transform);
+        Debug.Log(indices.Count);
         DestroyImmediate(meshCollider.gameObject);
         UpdateSelection(indices);
     }
@@ -723,7 +725,7 @@ public class ModuleCreatorIsland : EditorWindow
         Ray ray3 = HandleUtility.GUIPointToWorldRay(endpos);
         Ray ray4 = HandleUtility.GUIPointToWorldRay(corner4);
 
-        float depth = 100f;
+        float depth = 10f;
 
         Vector3[] vertices = new Vector3[8];
         vertices[0] = ray1.origin;
@@ -739,18 +741,19 @@ public class ModuleCreatorIsland : EditorWindow
         mesh.vertices = vertices;
         mesh.triangles = new int[]
         {
+            //裏面ポリゴンだとcollider.ClosestPointがうまく動作しないことがある
             // Front face
-            0, 1, 2, 0, 2, 3,
+            0, 2, 1, 0, 3, 2,
             // Back face
-            4, 6, 5, 4, 7, 6,
+            4, 5, 6, 4, 6, 7,
             // Top face
-            1, 5, 6, 1, 6, 2,
+            1, 6, 5, 1, 2, 6,
             // Bottom face
-            0, 3, 7, 0, 7, 4,
+            0, 7, 3, 0, 4, 7,
             // Left face
-            0, 4, 1, 1, 4, 5,
+            0, 1, 4, 1, 5, 4,
             // Right face
-            3, 2, 6, 3, 6, 7
+            3, 6, 2, 3, 7, 6
         };
 
         GameObject coliderObject = new GameObject();
@@ -761,41 +764,6 @@ public class ModuleCreatorIsland : EditorWindow
         return meshCollider;
     }
 
-    private List<int> GetVerticesFromIndices(List<int> indices)
-    {
-        var vertices = new HashSet<int>();
-        var indexToIslandMap = new Dictionary<int, List<int>>();
-
-        foreach (var islandList in islands)
-        {
-            foreach (var island in islandList)
-            {
-                if (!indexToIslandMap.ContainsKey(island.Index))
-                {
-                    indexToIslandMap[island.Index] = island.Vertices;
-                }
-            }
-        }
-
-        foreach (var index in indices)
-        {
-            if (index < 0)
-            {
-                Console.WriteLine($"Index out of range: {index}. Valid index should be non-negative.");
-                continue;
-            }
-
-            if (indexToIslandMap.TryGetValue(index, out var islandVertices))
-            {
-                foreach (var vertex in islandVertices)
-                {
-                    vertices.Add(vertex);
-                }
-            }
-        }
-
-        return vertices.ToList();
-    }
 
     private void UpdateSelection(List<int> indices)
     {
@@ -843,7 +811,7 @@ public class ModuleCreatorIsland : EditorWindow
     {   
         //EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));
 
-        mergeSamePosition = !EditorGUILayout.Toggle("Separate mesh more", !mergeSamePosition);
+        mergeSamePosition = !EditorGUILayout.Toggle("Split mesh more", !mergeSamePosition);
         isAll = !EditorGUILayout.Toggle("Select all in range ", !isAll);
 
         EditorGUILayout.Space();
@@ -914,7 +882,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         bakedMesh = new Mesh(); 
         PreviewSkinnedMeshRenderer.BakeMesh(bakedMesh);
-        bakedMesh = MeshDeletionUtility.GenerateBacksideMesh(bakedMesh);
+        BacksideMesh = MeshDeletionUtility.GenerateBacksideMesh(bakedMesh);
 
         FocusCustomViewObject(PreviewSkinnedMeshRenderer.transform, bakedMesh);
     }
@@ -930,29 +898,30 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateMesh()
     {
-        Selected_Vertices = GetVerticesFromIndices(selected_Island_Indcies);
-
         if (isPreviewSelected)
         {
+            List<int> Selected_Vertices = IslandUtility.GetVerticesFromIndices(islands, selected_Island_Indcies);
+            Selected_Vertices_Count = Selected_Vertices.Count;
 
             Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Selected_Vertices);
             PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
 
             if (Selected_Vertices.Count >= 3){
-                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(bakedMesh, Selected_Vertices);
+                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Selected_Vertices);
                 PreviewMeshCollider.sharedMesh = ColliderMesh;
             }
             else PreviewMeshCollider.sharedMesh = null;
         }
         else
         {
-            List<int> Unselected_Vertices = GetVerticesFromIndices(unselected_Island_Indcies);
+            List<int> Unselected_Vertices = IslandUtility.GetVerticesFromIndices(islands, unselected_Island_Indcies);
+            Selected_Vertices_Count = Total_Vertices_Count - Unselected_Vertices.Count;
 
             Mesh PreviewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, Unselected_Vertices);
             PreviewSkinnedMeshRenderer.sharedMesh = PreviewMesh;
             
             if (Unselected_Vertices.Count >= 3){
-                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(bakedMesh, Unselected_Vertices);
+                Mesh ColliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(BacksideMesh, Unselected_Vertices);
                 PreviewMeshCollider.sharedMesh = ColliderMesh;
             }
             else PreviewMeshCollider.sharedMesh = null;
