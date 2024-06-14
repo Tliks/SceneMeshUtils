@@ -683,6 +683,7 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 int triangleIndex = hitInfo.triangleIndex;
                 List<int> indices = IslandUtility.GetIslandIndexFromTriangleIndex(BacksideMesh, triangleIndex, islands, mergeSamePosition);
+                if (mergeSamePosition) indices = isPreviewSelected ? indices.Intersect(selected_Island_Indcies).ToList() : indices.Intersect(unselected_Island_Indcies).ToList();
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;

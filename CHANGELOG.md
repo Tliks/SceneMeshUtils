@@ -17,6 +17,7 @@
 - GetVerticesFromIndices is slow
 - HighlightNull is not called on click
 - label of toggle field
+- extra islands is highlighted
 
 ### Security
 
