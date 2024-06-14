@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - Range selection
+- EditorGUIUtility.PingObject
 
 ### Changed
 - Mouse events are now handled more accurately.
