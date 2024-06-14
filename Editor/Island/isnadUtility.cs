@@ -385,4 +385,26 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         return vertices.ToList();
     }
 
+    public static HashSet<(int, int)> GetEdgesFromIndices(List<List<Island>> islands, List<int> islandIndices)
+    {
+        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
+        foreach (int childIndex in islandIndices)
+        {
+            foreach (var mergedIsland in islands)
+            {
+                Island island = mergedIsland.FirstOrDefault(i => i.Index == childIndex);
+                if (island != null)
+                {
+                    foreach (var edge in island.AllEdges)
+                    {
+                        edgesToHighlight.Add((edge.Item1, edge.Item2));
+                    }
+                    break; // 1つ見つけたらループ抜けて次のchildIndexへ
+                }
+            }
+        }
+
+        return edgesToHighlight;
+    }
+
 }
