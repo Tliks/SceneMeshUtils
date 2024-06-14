@@ -6,7 +6,6 @@
 - EditorGUIUtility.PingObject
 
 ### Changed
-- Mouse events are now handled more accurately.
 
 ### Deprecated
 
