@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System;
 
 public class LocalizationEditor
 {
@@ -39,13 +40,14 @@ public class LocalizationEditor
         { "tooltip.SpecifyRootObjectLabel", new string[] { "The default root object is the parent object of the specified skinned mesh renderer object", "デフォルトのルートオブジェクトは、指定されたスキンメッシュレンダラーオブジェクトの親オブジェクトです" } }
     };
 
+    private const string PreferenceKey = "io.aoyon.module-creator.lang";
+
     private static void SetCurrentLanguage(string language)
     {
-        EditorPrefs.SetString("currentLanguage", language);
+        EditorPrefs.SetString(PreferenceKey, language);
     }
-
-    public static int selectedLanguage = 0;
     public static string[] availableLanguages = new[] { "English", "日本語" };
+    public static int selectedLanguage = Array.IndexOf(availableLanguages, EditorPrefs.GetString(PreferenceKey, availableLanguages[0]));
 
     public static string GetLocalizedText(string key)
     {
@@ -66,7 +68,6 @@ public class LocalizationEditor
 
     public static void RenderLocalize()
     {
-        //GUILayout.Label("Select Language", EditorStyles.boldLabel);
         selectedLanguage = EditorGUILayout.Popup("Language", selectedLanguage, availableLanguages);
         SetLanguage(selectedLanguage);
     }
