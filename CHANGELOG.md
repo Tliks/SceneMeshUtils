@@ -14,7 +14,7 @@
 ### Fixed
 - Mouse events were not handled accurately.
 - repaint is called too much
-- GetVerticesFromIndices is slow
+- GetVerticesFromIndices is too slow
 - HighlightNull is not called on click
 - label of toggle field
 - extra islands is highlighted

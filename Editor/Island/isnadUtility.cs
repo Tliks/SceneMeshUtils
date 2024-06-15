@@ -56,16 +56,12 @@ public class Island
     public List<int> Vertices { get; }
     public int Index { get; }
     public HashSet<(int, int)> AllEdges { get; }
-    public Vector3 MinBounds { get; }
-    public Vector3 MaxBounds { get; }
 
-    public Island(List<int> vertices, int index, HashSet<(int, int)> allEdges, Vector3 minBounds, Vector3 maxBounds)
+    public Island(List<int> vertices, int index, HashSet<(int, int)> allEdges)
     {
         Vertices = vertices;
         Index = index;
         AllEdges = allEdges;
-        MinBounds = minBounds;
-        MaxBounds = maxBounds;
     }
 }
 
@@ -160,8 +156,7 @@ public static List<List<Island>> GetIslands(Mesh mesh)
         foreach (List<int> allVertices in kvp.Value)
         {
             var allEdges = GetAllEdges(allVertices, vertexEdges);
-            var (minBounds, maxBounds) = GetBounds(allVertices, vertices);
-            Island island = new Island(allVertices, index++, allEdges, minBounds, maxBounds);
+            Island island = new Island(allVertices, index++, allEdges);
             mergedIsland.Add(island);
         }
         mergedIslands.Add(mergedIsland);
@@ -201,26 +196,6 @@ public static List<List<Island>> GetIslands(Mesh mesh)
             }
         }
         return allEdges;
-    }
-
-    private static (Vector3, Vector3) GetBounds(List<int> vertices, Vector3[] meshVertices)
-    {
-        if (vertices.Count == 0)
-        {
-            return (Vector3.zero, Vector3.zero);
-        }
-
-        Vector3 minBounds = meshVertices[vertices[0]];
-        Vector3 maxBounds = meshVertices[vertices[0]];
-
-        foreach (int vertexIndex in vertices)
-        {
-            Vector3 vertex = meshVertices[vertexIndex];
-            minBounds = Vector3.Min(minBounds, vertex);
-            maxBounds = Vector3.Max(maxBounds, vertex);
-        }
-
-        return (minBounds, maxBounds);
     }
 
     public static List<int> GetIslandIndexFromTriangleIndex(Mesh mesh, int triangleIndex, List<List<Island>> mergedIslands, bool mergeSamePosition)

@@ -126,164 +126,8 @@ public class ModuleCreatorIsland : EditorWindow
         RenderPreviewSelectedToggle();
         EditorGUILayout.Space();
         RenderCreateModuleButtons();
-    }
-
-    private void RenderUndoRedoButtons()
-    {
-        GUILayout.BeginHorizontal();
-
-        bool performUndo = false;
-        bool performRedo = false;
-
-        try
-        {
-            if (GUILayout.Button("Undo (Ctrl+Z)"))
-            {
-                performUndo = true;
-            }
-
-            if (GUILayout.Button("Redo (Ctrl+Y)"))
-            {
-                performRedo = true;
-            }
-        }
-        finally
-        {
-            GUILayout.EndHorizontal();
-        }
-
-        if (performUndo)
-        {
-            Undo.PerformUndo();
-        }
-
-        if (performRedo)
-        {
-            Undo.PerformRedo();
-        }
-    }
-
-    private void RenderPreviewSelectedToggle()
-    {
-        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = 15; // 文字のサイズを大きくする
-        //labelStyle.fontStyle = FontStyle.Bold; // ボールドにして明瞭にする
-
-        GUILayout.Label("Preview Mode: " + (isPreviewSelected ? "Selected Mesh" : "Unselected Mesh"), labelStyle);
-
-        if (GUILayout.Button("Switch Preview Mode"))
-        {
-            isPreviewSelected = !isPreviewSelected;
-            UpdateMesh();
-        }
-    }
-
-    private void RenderGUI()
-    {
-        SkinnedMeshRenderer newskinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField("Skinned Mesh Renderer", OriginskinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
-        if (OriginskinnedMeshRenderer == newskinnedMeshRenderer || OriginskinnedMeshRenderer == null)
-        {
-            OriginskinnedMeshRenderer = newskinnedMeshRenderer;
-        }
-        else
-        {
-            FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
-            processend();
-            OriginskinnedMeshRenderer = newskinnedMeshRenderer;
-        }
-    }
-
-    private void RenderSetupButtons()
-    {
-        GUI.enabled = OriginskinnedMeshRenderer != null;
-        if (GUILayout.Button("Preview Mesh"))
-        {
-            DuplicateAndSetup();
-        }
-        GUI.enabled = true;
-
-        GUI.enabled = PreviewSkinnedMeshRenderer != null;
-        if (GUILayout.Button("Calculate Islands"))
-        {
-            CalculateIslands();
-        }
-        GUI.enabled = true;
-    }
-
-
-    private void RenderModeoff()
-    {
-        if (GUILayout.Button(selectionMode == false ? "Enable Selection" : "Disable Selection"))
-        {
-            if (selectionMode == false)
-            {
-                ToggleSelectionMode(true);
-            }
-            else
-            {
-                ToggleSelectionMode(false);
-            }
-        }
-    }
-
-    private void RenderVertexCount()
-    {
-        GUILayout.Label("Selected/Total Polygons", EditorStyles.boldLabel);
-        GUILayout.Label($"{Selected_Vertices_Count}/{Total_Vertices_Count}");
-    }
-
-    private void RenderSelectionButtons()
-    {
-        GUILayout.BeginHorizontal();
-
-        GUI.enabled = islands.Count > 0;
-        if (GUILayout.Button("Select All"))
-        {
-            SelectAllIslands();
-        }
-
-        if (GUILayout.Button("Unselect All"))
-        {
-            UnselectAllIslands();
-        }
-
-        if (GUILayout.Button("Reverse All"))
-        {
-            ReverseAllIslands();
-        }
-        GUI.enabled = true;
-
-        GUILayout.EndHorizontal();
-    }
-
-    private void RenderCreateModuleButtons()
-    {
-        GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
-        
-        // Create Selected Islands Module
-        if (GUILayout.Button("Create Module"))
-        {
-            CreateModule(selected_Island_Indcies);
-            if (isGameObjectContext) Close();
-        }
-
-        GUI.enabled = true;
-    }
-
-    private void RenderCreateBothModuleButtons()
-    {
-        GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
-
-        // Create Both Modules
-        if (GUILayout.Button("Create Both Modules"))
-        {
-            CreateModule(selected_Island_Indcies);
-            CreateModule(unselected_Island_Indcies);
-            processend();
-            if (isGameObjectContext) Close();
-        }
-
-        GUI.enabled = true;
+        EditorGUILayout.Space();
+        LocalizationEditor.RenderLocalize();
     }
 
     private void CreateModule(List<int> islandIndices)
@@ -348,33 +192,28 @@ public class ModuleCreatorIsland : EditorWindow
 
     }
 
-    private void RenderIslandHashField()
+    private void ValidateAndApplyNewValue(string newValue)
     {
+        int[] decodedArray = IntArrayConverter.Decode(newValue);
         int total_islands_count = total_islands_index + 1;
-        GUILayout.Label("Encoded islands:", EditorStyles.boldLabel);
-        string newValue = EditorGUILayout.TextField(textFieldValue);
-
-        if (newValue != textFieldValue)
+        
+        if (decodedArray != null && decodedArray[decodedArray.Length - 1] == total_islands_count) // 最後の要素が島の数と一致するか確認
         {
-            int[] decodedArray = IntArrayConverter.Decode(newValue);
-            if (decodedArray != null && decodedArray[decodedArray.Length - 1] == total_islands_count) // 最後の要素が島の数と一致するか確認
+            selected_Island_Indcies = new List<int>(decodedArray.Take(decodedArray.Length - 1)); // 最後の要素を除外
+            unselected_Island_Indcies = unselected_Island_Indcies.Except(selected_Island_Indcies).ToList();
+            UpdateMesh();
+            textFieldValue = newValue;
+            GUI.FocusControl(""); 
+        }
+        else
+        {
+            if (decodedArray == null)
             {
-                selected_Island_Indcies = new List<int>(decodedArray.Take(decodedArray.Length - 1)); // 最後の要素を除外
-                unselected_Island_Indcies = unselected_Island_Indcies.Except(selected_Island_Indcies).ToList();
-                UpdateMesh();
-                textFieldValue = newValue;
-                GUI.FocusControl(""); 
+                Debug.LogWarning("Island Hashのデコードに失敗しました。無効な形式です。");
             }
-            else
+            else if (decodedArray[decodedArray.Length - 1] != total_islands_count)
             {
-                if (decodedArray == null)
-                {
-                    Debug.LogWarning("Island Hashのデコードに失敗しました。無効な形式です。");
-                }
-                else if (decodedArray[decodedArray.Length - 1] != total_islands_count)
-                {
-                    Debug.LogWarning($"Island Hashのデコード成功しましたが、島の数が一致しません。デコードされた島の数 (最後の要素): {decodedArray[decodedArray.Length - 1]}, 現在の島の数: {total_islands_count}");
-                }
+                Debug.LogWarning($"Island Hashのデコード成功しましたが、島の数が一致しません。デコードされた島の数 (最後の要素): {decodedArray[decodedArray.Length - 1]}, 現在の島の数: {total_islands_count}");
             }
         }
     }
@@ -677,6 +516,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void PerformRaycast()
     {
+        bool conditionMet = false;
         if (SceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
         {
             if (SceneRaycastUtility.IsHitObject(PreviewSkinnedMeshRenderer.gameObject, hitInfo))
@@ -687,17 +527,22 @@ public class ModuleCreatorIsland : EditorWindow
                 if (indices.Count > 0 && indices != PreviousIslandIndices)
                 {
                     PreviousIslandIndices = indices;
-                    if (isPreviewSelected)
-                        HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices, Color.red, indices);
-                    else
-                        HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices, Color.cyan, indices);
+                    Color color = isPreviewSelected ? Color.red : Color.cyan;
+                    HighlightIslandEdges(PreviewSkinnedMeshRenderer.transform, bakedMesh.vertices, color, indices);
+                    conditionMet = true;
                 }
             }
         }
-        else
+        if (!conditionMet)
         {
             HighlightNull();
         }
+    }
+
+    private void HighlightIslandEdges(Transform transform, Vector3[] vertices, Color color, List<int> islandIndices)
+    {
+        HashSet<(int, int)> edgesToHighlight = IslandUtility.GetEdgesFromIndices(islands, islandIndices);
+        highlightManager.HighlightEdges(edgesToHighlight, vertices, color, transform);
     }
 
     private void HighlightNull()
@@ -785,25 +630,175 @@ public class ModuleCreatorIsland : EditorWindow
         UpdateMesh();
     }
 
-    private void HighlightIslandEdges(Transform transform, Vector3[] vertices, Color color, List<int> islandIndices)
+    private void RenderUndoRedoButtons()
     {
-        HashSet<(int, int)> edgesToHighlight = IslandUtility.GetEdgesFromIndices(islands, islandIndices);
-        highlightManager.HighlightEdges(edgesToHighlight, vertices, color, transform);
+        GUILayout.BeginHorizontal();
+
+        bool performUndo = false;
+        bool performRedo = false;
+
+        try
+        {
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("UndoButton")))
+            {
+                performUndo = true;
+            }
+
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("RedoButton")))
+            {
+                performRedo = true;
+            }
+        }
+        finally
+        {
+            GUILayout.EndHorizontal();
+        }
+
+        if (performUndo)
+        {
+            Undo.PerformUndo();
+        }
+
+        if (performRedo)
+        {
+            Undo.PerformRedo();
+        }
+    }
+
+    private void RenderPreviewSelectedToggle()
+    {
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+        labelStyle.fontSize = 15; // 文字のサイズを大きくする
+
+        GUILayout.Label(LocalizationEditor.GetLocalizedText("PreviewModeLabel") + (isPreviewSelected ? LocalizationEditor.GetLocalizedText("SelectedMesh") : LocalizationEditor.GetLocalizedText("UnselectedMesh")), labelStyle);
+
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("SwitchPreviewModeButton")))
+        {
+            isPreviewSelected = !isPreviewSelected;
+            UpdateMesh();
+        }
+    }
+
+    private void RenderGUI()
+    {
+        SkinnedMeshRenderer newskinnedMeshRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(LocalizationEditor.GetLocalizedText("SkinnedMeshRendererField"), OriginskinnedMeshRenderer, typeof(SkinnedMeshRenderer), true);
+        if (OriginskinnedMeshRenderer == newskinnedMeshRenderer || OriginskinnedMeshRenderer == null)
+        {
+            OriginskinnedMeshRenderer = newskinnedMeshRenderer;
+        }
+        else
+        {
+            FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
+            processend();
+            OriginskinnedMeshRenderer = newskinnedMeshRenderer;
+        }
+    }
+
+    private void RenderSetupButtons()
+    {
+        GUI.enabled = OriginskinnedMeshRenderer != null;
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("PreviewMeshButton")))
+        {
+            DuplicateAndSetup();
+        }
+        GUI.enabled = true;
+
+        GUI.enabled = PreviewSkinnedMeshRenderer != null;
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CalculateIslandsButton")))
+        {
+            CalculateIslands();
+        }
+        GUI.enabled = true;
+    }
+
+    private void RenderModeoff()
+    {
+        if (GUILayout.Button(selectionMode == false ? LocalizationEditor.GetLocalizedText("EnableSelectionButton") : LocalizationEditor.GetLocalizedText("DisableSelectionButton")))
+        {
+            if (selectionMode == false)
+            {
+                ToggleSelectionMode(true);
+            }
+            else
+            {
+                ToggleSelectionMode(false);
+            }
+        }
+    }
+
+    private void RenderVertexCount()
+    {
+        GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectedTotalPolygonsLabel"), EditorStyles.boldLabel);
+        GUILayout.Label($"{Selected_Vertices_Count}/{Total_Vertices_Count}");
+    }
+
+    private void RenderSelectionButtons()
+    {
+        GUILayout.BeginHorizontal();
+
+        GUI.enabled = islands.Count > 0;
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("SelectAllButton")))
+        {
+            SelectAllIslands();
+        }
+
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("UnselectAllButton")))
+        {
+            UnselectAllIslands();
+        }
+
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("ReverseAllButton")))
+        {
+            ReverseAllIslands();
+        }
+        GUI.enabled = true;
+
+        GUILayout.EndHorizontal();
+    }
+
+    private void RenderCreateModuleButtons()
+    {
+        GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
+        
+        // Create Selected Islands Module
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
+        {
+            CreateModule(selected_Island_Indcies);
+            if (isGameObjectContext) Close();
+        }
+
+        GUI.enabled = true;
+    }
+
+    private void RenderCreateBothModuleButtons()
+    {
+        GUI.enabled = OriginskinnedMeshRenderer != null && selected_Island_Indcies.Count > 0;
+
+        // Create Both Modules
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
+        {
+            CreateModule(selected_Island_Indcies);
+            CreateModule(unselected_Island_Indcies);
+            processend();
+            if (isGameObjectContext) Close();
+        }
+
+        GUI.enabled = true;
     }
 
     private void porcess_options()
     {   
         //EditorGUILayout.LabelField("Island Indices", string.Join(", ", Island_Index));
 
-        mergeSamePosition = !EditorGUILayout.Toggle("Split mesh more", !mergeSamePosition);
-        isAll = !EditorGUILayout.Toggle("Select all in range ", !isAll);
+        mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !mergeSamePosition);
+        isAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !isAll);
 
         EditorGUILayout.Space();
 
-        _Settings.IncludePhysBone = EditorGUILayout.Toggle("PhysBone ", _Settings.IncludePhysBone);
+        _Settings.IncludePhysBone = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneToggle"), _Settings.IncludePhysBone);
 
         GUI.enabled = _Settings.IncludePhysBone;
-        _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle("PhysBoneColider", _Settings.IncludePhysBoneColider);
+        _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
         GUI.enabled = true;
 
         EditorGUILayout.Space();
@@ -813,22 +808,22 @@ public class ModuleCreatorIsland : EditorWindow
         {
 
             GUI.enabled = _Settings.IncludePhysBone;
-            GUIContent content_at = new GUIContent("Additional Transforms", "Output Additional PhysBones Affected Transforms for exact PhysBone movement");
+            GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.AdditionalTransformsToggle"));
             _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
 
-            GUIContent content_ii = new GUIContent("Include IgnoreTransforms", "Output PhysBone's IgnoreTransforms");
+            GUIContent content_ii = new GUIContent(LocalizationEditor.GetLocalizedText("IncludeIgnoreTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.IncludeIgnoreTransformsToggle"));
             _Settings.IncludeIgnoreTransforms = EditorGUILayout.Toggle(content_ii, _Settings.IncludeIgnoreTransforms);
 
             GUIContent content_rr = new GUIContent(
-                "Rename RootTransform",
-                "Not Recommended: Due to the specifications of modular avatar, costume-side physbones may be deleted in some cases, so renaming physbone RootTransform will ensure that the costume-side physbones are integrated. This may cause duplication.");
+                LocalizationEditor.GetLocalizedText("RenameRootTransformToggle"),
+                LocalizationEditor.GetLocalizedText("tooltip.RenameRootTransformToggle"));
             _Settings.RenameRootTransform = EditorGUILayout.Toggle(content_rr, _Settings.RenameRootTransform);
 
             GUI.enabled = true;
 
-            GUIContent content_sr = new GUIContent("Specify Root Object", "The default root object is the parent object of the specified skinned mesh renderer object");
+            GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("tooltip.SpecifyRootObjectLabel"));
             _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
-
+            
             RenderIslandHashField();
             RenderModeoff();
             RenderUndoRedoButtons();
@@ -836,6 +831,17 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         EditorGUILayout.Space();
+    }
+
+    private void RenderIslandHashField()
+    {
+        GUILayout.Label(LocalizationEditor.GetLocalizedText("EncodedIslandsLabel"), EditorStyles.boldLabel);
+        string newValue = EditorGUILayout.TextField(textFieldValue);
+
+        if (newValue != textFieldValue)
+        {
+            ValidateAndApplyNewValue(newValue);
+        }
     }
 
     public void ResetAllBlendShapes(SkinnedMeshRenderer skinnedMeshRenderer)
