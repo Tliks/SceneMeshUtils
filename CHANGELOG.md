@@ -2,10 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- Range selection
-- EditorGUIUtility.PingObject
-- ScrollView of EditorWindow
-- Localization
 
 ### Changed
 
@@ -14,14 +10,28 @@
 ### Removed
 
 ### Fixed
-- Mouse events were not handled accurately.
+
+### Security
+
+## [1.0.0-beta.6] - 2024-06-16
+### Added
+- Range selection
+- EditorGUIUtility.PingObject
+- ScrollView of EditorWindow
+- Localization
+- EditorGUILayout.HelpBox
+
+### Changed
+- label and arrangement of editorwindow
+- Calculations regarding islands are now slightly faster overall.
+
+
+### Fixed
+- Mouse events is not handled accurately.
 - repaint is called too much
 - GetVerticesFromIndices is too slow
 - HighlightNull is not called on click
-- label of toggle field
 - extra islands is highlighted
-
-### Security
 
 ## [1.0.0-beta.5] - 2024-06-08
 ### Fixed
@@ -30,6 +40,7 @@
 ## [1.0.0-beta.4] - 2024-06-08
 ### Fixed
 - the effect of transform was doubled on collider and highlight meshes.
+
 
 ## [1.0.0-beta.3] - 2024-06-07
 ### Changed

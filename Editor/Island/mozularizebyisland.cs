@@ -126,6 +126,7 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.Space();
 
         RenderSelectionButtons();
+        RenderDescription();
         process_options();
 
         RenderPreviewSelectedToggle();
@@ -683,6 +684,13 @@ public class ModuleCreatorIsland : EditorWindow
             CalculateIslands();
         }
         GUI.enabled = true;
+    }
+
+    private void RenderDescription()
+    {
+        //EditorGUILayout.Space();
+        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("description"), MessageType.Info);
+        //EditorGUILayout.Space();
     }
 
     private void RenderVertexCount()

@@ -8,6 +8,7 @@ public class LocalizationEditor
     
     private static Dictionary<string, string[]> _LocalizedText = new Dictionary<string, string[]>
     {
+        { "description", new string[] {"You can select the desired part by clicking on the scene. You can also select a range by dragging. Make sure to drag so that the desired part is completely within the range.", "欲しい箇所をシーン上でクリックすることで選択できます。ドラッグすることで範囲選択も可能です。欲しい箇所が範囲内に完全に入るようにドラッグしてください。"}},
         { "advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},
         { "UndoButton", new string[] { "Undo (Ctrl+Z)", "元に戻す (Ctrl+Z)" } },
         { "RedoButton", new string[] { "Redo (Ctrl+Y)", "やり直し (Ctrl+Y)" } },
@@ -40,7 +41,7 @@ public class LocalizationEditor
         { "tooltip.RenameRootTransformToggle", new string[] { "Not Recommended: Due to the specifications of modular avatar, costume-side physbones may be deleted in some cases, so renaming physbone RootTransform will ensure that the costume-side physbones are integrated. This may cause duplication.", "推奨されません。モジュラーアバターの仕様により、場合によっては衣装側の物理ボーンが削除されることがあります。そのため、PhysBoneのRootTransformの名前を変更することで、衣装側の物理ボーンが統合されることを保証します。これにより重複が発生する可能性があります。" } },
         { "tooltip.SpecifyRootObjectLabel", new string[] { "The default root object is the parent object of the specified skinned mesh renderer object", "デフォルトのルートオブジェクトは、指定されたSkinned Mesh Rendererオブジェクトの親オブジェクトです" } },
         { "tooltip.SplitMeshMoreToggle", new string[] {"Splits the mesh into smaller pieces. This is off by default as it can create unnecessarily small separations.", "メッシュをさらに細かく分離します。無意味に小さな分離をすることがあるのでデフォルトではオフになっています。"}},
-        { "tooltip.SelectAllInRangeToggle", new string[] {"Range selection options. By default, only islands that are completely within the dragged range are selected. Change this so that islands are selected even if only a part of them is within the range.", "範囲選択に関するオプションです。デフォルトでは、ドラッグされた範囲内に完全に含まれているアイランドのみが選択されます。これを、アイランドの一部でも範囲内にある場合に選択されるように変更します。"}}
+        { "tooltip.SelectAllInRangeToggle", new string[] {"Range selection options. By default, only parts that are completely within the dragged range are selected. Change this to select parts that are even partially within the range.", "範囲選択に関するオプションです。デフォルトでは、ドラッグされた範囲内に完全に含まれているパーツのみが選択されます。これを、一部でも範囲内にあるパーツも選択されるように変更します。"}}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";
