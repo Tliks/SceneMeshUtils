@@ -25,7 +25,6 @@
 - label and arrangement of editorwindow
 - Calculations regarding islands are now slightly faster overall.
 
-
 ### Fixed
 - Mouse events is not handled accurately.
 - repaint is called too much
@@ -40,7 +39,6 @@
 ## [1.0.0-beta.4] - 2024-06-08
 ### Fixed
 - the effect of transform was doubled on collider and highlight meshes.
-
 
 ## [1.0.0-beta.3] - 2024-06-07
 ### Changed
