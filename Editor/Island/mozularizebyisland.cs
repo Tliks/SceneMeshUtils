@@ -130,7 +130,11 @@ public class ModuleCreatorIsland : EditorWindow
         process_options();
 
         RenderPreviewSelectedToggle();
+
+        RenderPhysBoneOptions();
+
         EditorGUILayout.Space();
+
         RenderCreateModuleButtons();
         EditorGUILayout.Space();
         
@@ -580,7 +584,6 @@ public class ModuleCreatorIsland : EditorWindow
         Ray ray2 = HandleUtility.GUIPointToWorldRay(corner2);
         Ray ray3 = HandleUtility.GUIPointToWorldRay(endpos);
         Ray ray4 = HandleUtility.GUIPointToWorldRay(corner4);
-
         float depth = 10f;
 
         Vector3[] vertices = new Vector3[8];
@@ -748,14 +751,17 @@ public class ModuleCreatorIsland : EditorWindow
 
         EditorGUILayout.Space();
 
+    }
+
+    private void RenderPhysBoneOptions()
+    {
+        EditorGUILayout.Space();
+
         _Settings.IncludePhysBone = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneToggle"), _Settings.IncludePhysBone);
 
         GUI.enabled = _Settings.IncludePhysBone;
         _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
         GUI.enabled = true;
-
-        EditorGUILayout.Space();
-
     }
     
     private void process_advanced_options()
