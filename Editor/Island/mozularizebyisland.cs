@@ -294,7 +294,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
         processend();
-        FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
+        FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh, Quaternion.LookRotation(Vector3.back));
         Undo.undoRedoPerformed -= OnUndoRedo;
     }
 
@@ -319,7 +319,7 @@ public class ModuleCreatorIsland : EditorWindow
         //Close();
     }
     
-    private void FocusCustomViewObject(Transform transform, Mesh mesh)
+    private void FocusCustomViewObject(Transform transform, Mesh mesh, Quaternion rotation)
     {
         Vector3 middleVertex = Vector3.zero;
 
@@ -336,7 +336,7 @@ public class ModuleCreatorIsland : EditorWindow
         Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
 
         //Debug.Log(middleVertex);
-        SceneView.lastActiveSceneView.LookAt(middleVertex, SceneView.lastActiveSceneView.rotation, cameraDistance);
+        SceneView.lastActiveSceneView.LookAt(middleVertex, rotation, cameraDistance);
 
         SceneView.lastActiveSceneView.Repaint();
     }
@@ -666,7 +666,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else
         {
-            FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh);
+            FocusCustomViewObject(OriginskinnedMeshRenderer.transform, OriginskinnedMeshRenderer.sharedMesh, SceneView.lastActiveSceneView.rotation);
             processend();
             OriginskinnedMeshRenderer = newskinnedMeshRenderer;
         }
@@ -906,7 +906,7 @@ public class ModuleCreatorIsland : EditorWindow
         PreviewSkinnedMeshRenderer.BakeMesh(bakedMesh);
         BacksideMesh = MeshDeletionUtility.GenerateBacksideMesh(bakedMesh);
 
-        FocusCustomViewObject(PreviewSkinnedMeshRenderer.transform, bakedMesh);
+        FocusCustomViewObject(PreviewSkinnedMeshRenderer.transform, bakedMesh, SceneView.lastActiveSceneView.rotation);
 
         Selection.activeGameObject = null;
     }

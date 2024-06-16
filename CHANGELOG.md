@@ -24,6 +24,7 @@
 ### Changed
 - label and arrangement of editorwindow
 - Calculations regarding islands are now slightly faster overall.
+- Change to look in -z direction when finished
 
 ### Fixed
 - Mouse events is not handled accurately.
