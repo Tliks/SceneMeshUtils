@@ -731,8 +731,12 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void process_options()
     {
+        EditorGUILayout.Space();
+
         mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !mergeSamePosition);
+        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SplitMeshMoreToggle"), MessageType.Info);
         isAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !isAll);
+        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SelectAllInRangeToggle"), MessageType.Info);
 
         EditorGUILayout.Space();
 
@@ -749,7 +753,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void process_advanced_options()
     {   
 
-        showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options");
+        showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));
         if (showAdvancedOptions)
         {
             GUI.enabled = _Settings.IncludePhysBone;
