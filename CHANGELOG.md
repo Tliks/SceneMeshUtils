@@ -4,6 +4,8 @@
 ### Added
 - Range selection
 - EditorGUIUtility.PingObject
+- ScrollView of EditorWindow
+- Localization
 
 ### Changed
 

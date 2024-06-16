@@ -49,6 +49,8 @@ public class ModuleCreatorIsland : EditorWindow
     private bool isSelecting = false;
     private const float dragThreshold = 10f;
     private bool isAll = true;
+    private Vector2 scrollPosition;
+
 
 
     [MenuItem("Window/Module Creator/Modularize Mesh by Island")]
@@ -109,6 +111,8 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnGUI()
     {
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
         if (!isGameObjectContext)
         {
             RenderGUI();
@@ -128,6 +132,8 @@ public class ModuleCreatorIsland : EditorWindow
         RenderCreateModuleButtons();
         EditorGUILayout.Space();
         LocalizationEditor.RenderLocalize();
+
+        EditorGUILayout.EndScrollView();
     }
 
     private void CreateModule(List<int> islandIndices)
