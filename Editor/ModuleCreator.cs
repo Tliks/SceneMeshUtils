@@ -64,6 +64,7 @@ public class ModuleCreator
 
             EditorGUIUtility.PingObject(instance);
             //Selection.activeGameObject = instance;
+            Selection.objects = Selection.gameObjects.Append(instance).ToArray();
 
             UnityEngine.Debug.Log("Saved prefab to " + variantPath);
         }

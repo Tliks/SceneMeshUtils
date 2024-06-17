@@ -19,13 +19,14 @@
 - ScrollView of EditorWindow
 - Localization
 - EditorGUILayout.HelpBox
+- EditorGUIUtility.PingObject
 
 ### Changed
 - label and arrangement of editorwindow
 - Calculations regarding islands are now slightly faster overall.
 - Change to look in -z direction when finished
 - Changed to move outside of bounds
-- Use EditorGUIUtility.PingObject insted of Selection.activeGameObject
+- Use Selection.objects instead of Selection.activeGameObject
 
 ### Fixed
 - Mouse events is not handled accurately.
