@@ -159,7 +159,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void SaveModule(List<int> vertices)
     {
         _stopwatch.Restart();
-        Mesh newMesh = MeshDeletionUtility.DeleteMeshByKeepVertices(_OriginskinnedMeshRenderer, vertices);
+        Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, vertices, true);
         _stopwatch.Stop();
         //Debug.Log($"Delete Mesh: {stopwatch.ElapsedMilliseconds} ms");
 
@@ -410,7 +410,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!_isselectionEnabled) return;
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
-        DontActiveSKin(e);
+        //DontActiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
@@ -945,14 +945,14 @@ public class ModuleCreatorIsland : EditorWindow
             _Selected_Vertices_Count = _Total_Vertices_Count - vertices.Count;
         }
 
-        previewMesh = MeshDeletionUtility.KeepTriangles(_OriginskinnedMeshRenderer.sharedMesh, vertices);
+        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, vertices, true);
         _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
 
         if (_isselectionEnabled)
         {
             if (vertices.Count >= 3)
             {
-                Mesh colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices);
+                Mesh colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices, false);
                 _PreviewMeshCollider.sharedMesh = colliderMesh;
             }
             else

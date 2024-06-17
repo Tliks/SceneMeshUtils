@@ -25,7 +25,6 @@
 - label and arrangement of editorwindow
 - Calculations regarding islands are now slightly faster overall.
 - Change to look in -z direction when finished
-- Mesh deletion during preview to directly delete triangles instead of degenerate triangles
 - Changed to move outside of bounds
 
 ### Fixed
@@ -35,6 +34,7 @@
 - HighlightNull is not called on click
 - extra islands is highlighted
 - processing would stop due to an error when creating a collider.
+- deleting meshes during preview would cause strange display
 
 ## [1.0.0-beta.5] - 2024-06-08
 ### Fixed

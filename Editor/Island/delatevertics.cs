@@ -4,22 +4,7 @@ using System.Diagnostics;
 
 public class MeshDeletionUtility
 {
-    public static Mesh DeleteMeshByKeepVertices(SkinnedMeshRenderer skinnedMeshRenderer, List<int> keepVerticesIndexes)
-    {
-        return DeleteMesh(skinnedMeshRenderer, keepVerticesIndexes, null, true);
-    }
-
-    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh mesh, List<int> keepVerticesIndexes)
-    {
-        return KeepVerticesUsingDegenerateTriangles(mesh, keepVerticesIndexes, null);
-    }
-
-    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh mesh, List<int> keepVerticesIndexes, Mesh existingMesh)
-    {
-        return MarkVerticesForDegenerationbeta(mesh, keepVerticesIndexes, existingMesh, true);
-    }
-
-    private static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, Mesh existingMesh, bool keepVertices)
+    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, bool keepVertices)
     {
         Stopwatch stopwatch = new Stopwatch();
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
@@ -75,7 +60,7 @@ public class MeshDeletionUtility
         stopwatch.Stop();
         //UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
 
-        Mesh newMesh = existingMesh ? existingMesh : new Mesh();
+        Mesh newMesh = new Mesh();
         newMesh.Clear();
 
         newMesh.vertices = newVerticesList.ToArray();
@@ -187,62 +172,27 @@ public class MeshDeletionUtility
         }
     }
 
-    private static Mesh MarkVerticesForDegenerationbeta(Mesh originalMesh, List<int> vertexIndexes, Mesh existingMesh, bool keepVertices)
+    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh originalMesh, List<int> vertexIndexes, bool infnity)
     {
-        Stopwatch stopwatch = new Stopwatch();
         Mesh newMesh = Object.Instantiate(originalMesh);
         
-        stopwatch.Start();
         Vector3[] vertices = newMesh.vertices;
         
-        if (keepVertices)
+        HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
+        Vector3 replacementValue = infnity ? Vector3.positiveInfinity : Vector3.zero;
+        
+        for (int i = 0; i < vertices.Length; i++)
         {
-            HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
-            for (int i = 0; i < vertices.Length; i++)
+            if (!vertexIndexesSet.Contains(i))
             {
-                if (!vertexIndexesSet.Contains(i))
-                {
-                    vertices[i] = Vector3.zero;
-                }
+                vertices[i] = replacementValue;
             }
         }
-        else
-        {
-            foreach (int index in vertexIndexes)
-            {
-                vertices[index] = Vector3.zero;
-            }
-        }
-        newMesh.vertices = vertices;
-        stopwatch.Stop();
-        //UnityEngine.Debug.Log("Processing vertices: " + stopwatch.ElapsedMilliseconds + " ms");
 
+        newMesh.vertices = vertices;
         return newMesh;
     }
 
-    public static Mesh KeepTriangles(Mesh originalMesh, List<int> vertexIndexes)
-    {
-        Mesh modifiedMesh = Object.Instantiate(originalMesh);
-
-        var triangles = modifiedMesh.triangles;
-        var newTriangles = new List<int>();
-
-        HashSet<int> vertexSet = new HashSet<int>(vertexIndexes);
-
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            if (vertexSet.Contains(triangles[i]) || vertexSet.Contains(triangles[i + 1]) || vertexSet.Contains(triangles[i + 2]))
-            {
-                newTriangles.Add(triangles[i]);
-                newTriangles.Add(triangles[i + 1]);
-                newTriangles.Add(triangles[i + 2]);
-            }
-        }
-
-        modifiedMesh.SetTriangles(newTriangles, 0);
-
-        return modifiedMesh;
-    }
     public static Mesh GenerateBacksideMesh(Mesh mesh)
     {
         Mesh newMesh = Object.Instantiate(mesh);
