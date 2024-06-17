@@ -20,6 +20,7 @@
 - Localization
 - EditorGUILayout.HelpBox
 - EditorGUIUtility.PingObject
+- Remove unnecessary materials
 
 ### Changed
 - label and arrangement of editorwindow

@@ -222,4 +222,32 @@ public class MeshDeletionUtility
 
         return newMesh;
     }
+
+    public static void RemoveUnusedMaterials(SkinnedMeshRenderer skinnedMeshRenderer)
+    {
+        Mesh newMesh = skinnedMeshRenderer.sharedMesh;
+        // 使われているマテリアルのインデックスを集める
+        HashSet<int> usedMaterialIndices = new HashSet<int>();
+
+        for (int subMeshIndex = 0; subMeshIndex < newMesh.subMeshCount; subMeshIndex++)
+        {
+            int[] triangles = newMesh.GetTriangles(subMeshIndex);
+            if (triangles.Length > 0)
+            {
+                usedMaterialIndices.Add(subMeshIndex);
+            }
+        }
+
+        // 未使用のマテリアルを削除する
+        List<Material> usedMaterials = new List<Material>();
+        for (int i = 0; i < skinnedMeshRenderer.sharedMaterials.Length; i++)
+        {
+            if (usedMaterialIndices.Contains(i))
+            {
+                usedMaterials.Add(skinnedMeshRenderer.sharedMaterials[i]);
+            }
+        }
+
+        skinnedMeshRenderer.sharedMaterials = usedMaterials.ToArray();
+    }
 }

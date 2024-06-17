@@ -257,7 +257,11 @@ public class ModuleCreator
         objectsToSave.Add(skin);
 
         SkinnedMeshRenderer skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
-        if (Settings.newmesh) skinnedMeshRenderer.sharedMesh = Settings.newmesh;
+        if (Settings.newmesh) 
+        {
+            skinnedMeshRenderer.sharedMesh = Settings.newmesh;
+            MeshDeletionUtility.RemoveUnusedMaterials(skinnedMeshRenderer);
+        }
 
         // SkinnedMeshRendererのrootBoneとanchor overrideに設定されているオブジェクトを追加
         Transform rootBone = skinnedMeshRenderer.rootBone;
