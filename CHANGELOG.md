@@ -29,6 +29,9 @@
 - Changed to move outside of bounds
 - Use Selection.objects instead of Selection.activeGameObject
 
+### Deprecated
+- ability to not activate skinnedmesh objects
+
 ### Fixed
 - Mouse events is not handled accurately.
 - repaint is called too much
