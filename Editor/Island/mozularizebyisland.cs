@@ -50,6 +50,7 @@ public class ModuleCreatorIsland : EditorWindow
     private const float dragThreshold = 10f;
     private bool _isAll = true;
     private Vector2 _scrollPosition;
+    private const float minZOffset = 5f;     
 
 
 
@@ -896,7 +897,8 @@ public class ModuleCreatorIsland : EditorWindow
 
         ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
         _PreviewMeshObject = _PreviewSkinnedMeshRenderer.transform.parent.gameObject;
-        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(0, 0, -5);
+        float zOffset = _PreviewSkinnedMeshRenderer.bounds.size.z + minZOffset;
+        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(0, 0, -zOffset);
         _PreviewMeshObject.name = "Preview Mesh";
 
         Vector3 parentScale = _PreviewMeshObject.transform.localScale;
