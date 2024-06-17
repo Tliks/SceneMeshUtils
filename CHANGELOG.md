@@ -13,7 +13,7 @@
 
 ### Security
 
-## [1.0.0-beta.6] - 2024-06-16
+## [1.0.0-beta.6] - 2024-06-17
 ### Added
 - Range selection
 - ScrollView of EditorWindow
