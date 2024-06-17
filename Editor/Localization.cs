@@ -16,7 +16,7 @@ public class LocalizationEditor
         { "SelectedMesh", new string[] { "Selected Mesh", "選択済みのメッシュ" } },
         { "UnselectedMesh", new string[] { "Unselected Mesh", "未選択のメッシュ" } },
         { "SwitchPreviewModeButton", new string[] { "Switch Preview Mode", "プレビューモード切替" } },
-        { "SkinnedMeshRendererField", new string[] { "Skinned Mesh Renderer", "スキンメッシュレンダラー" } },
+        { "SkinnedMeshRendererField", new string[] { "Skinned Mesh Renderer", "Skinned Mesh Renderer" } },
         { "PreviewMeshButton", new string[] { "Preview Mesh", "メッシュプレビュー" } },
         { "CalculateIslandsButton", new string[] { "Calculate Islands", "アイランド計算" } },
         { "EnableSelectionButton", new string[] { "Enable Selection", "選択を有効化" } },
@@ -39,7 +39,7 @@ public class LocalizationEditor
         { "tooltip.AdditionalTransformsToggle", new string[] { "Output Additional PhysBones Affected Transforms for exact PhysBone movement", "正確なPhysBoneの動きのために追加のPhysBones Affected Transformsを出力" } },
         { "tooltip.IncludeIgnoreTransformsToggle", new string[] { "Output PhysBone's IgnoreTransforms", "PhysBoneのIgnoreTransformsを出力する" } },
         { "tooltip.RenameRootTransformToggle", new string[] { "Not Recommended: Due to the specifications of modular avatar, costume-side physbones may be deleted in some cases, so renaming physbone RootTransform will ensure that the costume-side physbones are integrated. This may cause duplication.", "推奨されません。モジュラーアバターの仕様により、場合によっては衣装側の物理ボーンが削除されることがあります。そのため、PhysBoneのRootTransformの名前を変更することで、衣装側の物理ボーンが統合されることを保証します。これにより重複が発生する可能性があります。" } },
-        { "tooltip.SpecifyRootObjectLabel", new string[] { "The default root object is the parent object of the specified skinned mesh renderer object", "デフォルトのルートオブジェクトは、指定されたスキンメッシュレンダラーがついたオブジェクトの親オブジェクトです" } },
+        { "tooltip.SpecifyRootObjectLabel", new string[] { "The default root object is the parent object of the specified skinned mesh renderer object", "デフォルトのルートオブジェクトは、指定されたSkinned Mesh Rendererがついたオブジェクトの親オブジェクトです" } },
         { "tooltip.SplitMeshMoreToggle", new string[] {"Splits the mesh into smaller pieces. This is off by default as it can create unnecessarily small separations.", "メッシュをさらに細かく分離します。無意味に小さな分離をすることがあるのでデフォルトではオフになっています。"}},
         { "tooltip.SelectAllInRangeToggle", new string[] {"Range selection options. By default, only parts that are completely within the dragged range are selected. Change this to select parts that are even partially within the range.", "範囲選択に関するオプションです。デフォルトでは、ドラッグされた範囲内に完全に含まれているパーツのみが選択されます。これを、一部でも範囲内にあるパーツも選択されるように変更します。"}}
     };

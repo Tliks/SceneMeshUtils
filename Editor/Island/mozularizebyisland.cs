@@ -654,7 +654,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void RenderPreviewSelectedToggle()
     {
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = 15; // 文字のサイズを大きくする
+        labelStyle.fontSize = 14; // 文字のサイズを大きくする
 
         GUILayout.Label(LocalizationEditor.GetLocalizedText("PreviewModeLabel") + (_isPreviewSelected ? LocalizationEditor.GetLocalizedText("SelectedMesh") : LocalizationEditor.GetLocalizedText("UnselectedMesh")), labelStyle);
 
