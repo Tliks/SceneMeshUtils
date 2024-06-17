@@ -34,6 +34,7 @@
 - GetVerticesFromIndices is too slow
 - HighlightNull is not called on click
 - extra islands is highlighted
+- processing would stop due to an error when creating a collider.
 
 ## [1.0.0-beta.5] - 2024-06-08
 ### Fixed

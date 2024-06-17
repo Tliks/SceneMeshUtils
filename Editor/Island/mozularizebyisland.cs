@@ -618,8 +618,15 @@ public class ModuleCreatorIsland : EditorWindow
 
         GameObject coliderObject = new GameObject();
         MeshCollider meshCollider = coliderObject.AddComponent<MeshCollider>();
-        meshCollider.sharedMesh = mesh;
-        meshCollider.convex = true;
+        try
+        {
+            meshCollider.sharedMesh = mesh;
+            meshCollider.convex = true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("MeshColliderの設定中にエラーが発生しました: " + e.Message);
+        }
 
         return meshCollider;
     }
