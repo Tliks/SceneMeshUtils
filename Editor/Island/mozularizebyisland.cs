@@ -936,7 +936,7 @@ public class ModuleCreatorIsland : EditorWindow
             Selected_Vertices_Count = Total_Vertices_Count - vertices.Count;
         }
 
-        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer.sharedMesh, vertices);
+        previewMesh = MeshDeletionUtility.KeepTriangles(OriginskinnedMeshRenderer.sharedMesh, vertices);
         PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
 
         if (isselectionEnabled)

@@ -25,6 +25,7 @@
 - label and arrangement of editorwindow
 - Calculations regarding islands are now slightly faster overall.
 - Change to look in -z direction when finished
+- Mesh deletion during preview to directly delete triangles instead of degenerate triangles
 
 ### Fixed
 - Mouse events is not handled accurately.

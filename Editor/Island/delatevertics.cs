@@ -220,6 +220,29 @@ public class MeshDeletionUtility
         return newMesh;
     }
 
+    public static Mesh KeepTriangles(Mesh originalMesh, List<int> vertexIndexes)
+    {
+        Mesh modifiedMesh = Object.Instantiate(originalMesh);
+
+        var triangles = modifiedMesh.triangles;
+        var newTriangles = new List<int>();
+
+        HashSet<int> vertexSet = new HashSet<int>(vertexIndexes);
+
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            if (vertexSet.Contains(triangles[i]) || vertexSet.Contains(triangles[i + 1]) || vertexSet.Contains(triangles[i + 2]))
+            {
+                newTriangles.Add(triangles[i]);
+                newTriangles.Add(triangles[i + 1]);
+                newTriangles.Add(triangles[i + 2]);
+            }
+        }
+
+        modifiedMesh.SetTriangles(newTriangles, 0);
+
+        return modifiedMesh;
+    }
     public static Mesh GenerateBacksideMesh(Mesh mesh)
     {
         Mesh newMesh = Object.Instantiate(mesh);
