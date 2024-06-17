@@ -122,6 +122,7 @@ public class ModuleCreator
     private (GameObject, int) CheckObjects(GameObject targetObject)
     {
         Checktarget(targetObject);
+        CheckPrefabAsset(targetObject);
         GameObject root = CheckRoot(targetObject);
         CheckSkin(targetObject);
         CheckHips(root);
@@ -141,6 +142,14 @@ public class ModuleCreator
             }
         }
 
+        void CheckPrefabAsset(GameObject targetObject)
+        {
+            if (PrefabUtility.IsPartOfPrefabAsset(targetObject))
+            {
+                throw new InvalidOperationException("Please run it on the prefab instance in the hierarchy, not on the prefabasset.");
+            }
+        }
+
         GameObject CheckRoot(GameObject targetObject)
         {
             if (Settings.RootObject) return Settings.RootObject;
@@ -150,7 +159,16 @@ public class ModuleCreator
             {
                 throw new InvalidOperationException("Please select the object with SkinnedMeshRenderer directly under the avatar/costume");
             }
-            GameObject root = parent.gameObject;
+            
+            GameObject root;
+            if (PrefabUtility.IsPartOfPrefabInstance(targetObject))
+            {
+                root = PrefabUtility.GetOutermostPrefabInstanceRoot(targetObject);
+            }
+            else
+            {
+                root = parent.gameObject;
+            }
             return root;
         }
 

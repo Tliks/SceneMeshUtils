@@ -35,6 +35,7 @@
 - extra islands is highlighted
 - processing would stop due to an error when creating a collider.
 - deleting meshes during preview would cause strange display
+- prefab could not be created with nested structures.
 
 ## [1.0.0-beta.5] - 2024-06-08
 ### Fixed
