@@ -63,7 +63,7 @@ public class ModuleCreator
             //Selection.objects.Append(instance);
 
             EditorGUIUtility.PingObject(instance);
-            Selection.activeGameObject = instance;
+            //Selection.activeGameObject = instance;
 
             UnityEngine.Debug.Log("Saved prefab to " + variantPath);
         }
@@ -159,7 +159,7 @@ public class ModuleCreator
             {
                 throw new InvalidOperationException("Please select the object with SkinnedMeshRenderer directly under the avatar/costume");
             }
-            
+
             GameObject root;
             if (PrefabUtility.IsPartOfPrefabInstance(targetObject))
             {

@@ -16,7 +16,6 @@
 ## [1.0.0-beta.6] - 2024-06-16
 ### Added
 - Range selection
-- EditorGUIUtility.PingObject
 - ScrollView of EditorWindow
 - Localization
 - EditorGUILayout.HelpBox
@@ -26,6 +25,7 @@
 - Calculations regarding islands are now slightly faster overall.
 - Change to look in -z direction when finished
 - Changed to move outside of bounds
+- Use EditorGUIUtility.PingObject insted of Selection.activeGameObject
 
 ### Fixed
 - Mouse events is not handled accurately.
