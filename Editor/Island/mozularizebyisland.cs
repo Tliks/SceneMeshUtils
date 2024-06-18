@@ -478,10 +478,11 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void HandleDrag(Vector2 startpos, Vector2 endpos)
     {
+        if (!_colliderMesh) return;
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
         List<int> indices = IslandUtility.GetIslandIndicesInColider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
         //Debug.Log(indices.Count);
-        DestroyImmediate(meshCollider.gameObject);
+        //DestroyImmediate(meshCollider.gameObject);
         UpdateSelection(indices);
     }
 
@@ -494,7 +495,10 @@ public class ModuleCreatorIsland : EditorWindow
         Ray ray2 = HandleUtility.GUIPointToWorldRay(corner2);
         Ray ray3 = HandleUtility.GUIPointToWorldRay(endpos);
         Ray ray4 = HandleUtility.GUIPointToWorldRay(corner4);
-        float depth = 10f;
+
+        bool isiso = ray1.direction == ray3.direction;
+
+        float depth = isiso ? 100f : 3f;
 
         Vector3[] vertices = new Vector3[8];
         vertices[0] = ray1.origin;
@@ -822,7 +826,8 @@ public class ModuleCreatorIsland : EditorWindow
             }
             else
             {
-                _PreviewMeshCollider.sharedMesh = null;
+                _colliderMesh = null;
+                _PreviewMeshCollider.sharedMesh = _colliderMesh;
             }
         }
 

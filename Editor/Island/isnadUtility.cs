@@ -260,7 +260,8 @@ public static List<List<Island>> GetIslands(Mesh mesh)
                         {   
                             Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
                             Vector3 closestPoint = collider.ClosestPoint(point);
-                            bool isEqual = closestPoint == point;
+                            float distance = Vector3.Distance(closestPoint, point);
+                            bool isEqual = distance < 0.001f;
                             return isEqual;
                         })
                     );
@@ -272,7 +273,8 @@ public static List<List<Island>> GetIslands(Mesh mesh)
                         {
                             Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
                             Vector3 closestPoint = collider.ClosestPoint(point);
-                            bool isEqual = closestPoint == point;
+                            float distance = Vector3.Distance(closestPoint, point);
+                            bool isEqual = distance < 0.001f;
                             return isEqual;
                         })
                     );
@@ -298,7 +300,8 @@ public static List<List<Island>> GetIslands(Mesh mesh)
                         {   
                             Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
                             Vector3 closestPoint = collider.ClosestPoint(point);
-                            bool isEqual = closestPoint == point;
+                            float distance = Vector3.Distance(closestPoint, point);
+                            bool isEqual = distance < 0.001f;
                             return isEqual;
                         });
                     }
@@ -308,7 +311,8 @@ public static List<List<Island>> GetIslands(Mesh mesh)
                         {
                             Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
                             Vector3 closestPoint = collider.ClosestPoint(point);
-                            bool isEqual = closestPoint == point;
+                            float distance = Vector3.Distance(closestPoint, point);
+                            bool isEqual = distance < 0.001f;
                             return isEqual;
                         });
                     }
