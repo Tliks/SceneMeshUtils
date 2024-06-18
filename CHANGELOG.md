@@ -13,6 +13,20 @@
 
 ### Security
 
+## [1.0.0-beta.7] - 2024-06-18
+### changed
+- The code has been revised, including the initialization process.
+- Range selection now allows for a tolerance of 0.001f.
+- the depth for accurate detection in range selection has been adjusted to 10f for iso and 3f for persp.
+- Prefab instances will be placed in the same scene as the specified object.
+
+### Removed
+- Modularized mesh by island menuitem/window execution.
+
+### Fixed
+- range selection caused overlapping island selections
+- Localization
+
 ## [1.0.0-beta.6] - 2024-06-17
 ### Added
 - Range selection

@@ -500,7 +500,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         bool isiso = ray1.direction == ray3.direction;
 
-        float depth = isiso ? 100f : 3f;
+        float depth = isiso ? 10f : 3f;
 
         Vector3[] vertices = new Vector3[8];
         vertices[0] = ray1.origin;
