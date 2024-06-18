@@ -75,7 +75,6 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnEnable()
     {
         _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-        Debug.Log(Selection.activeGameObject.scene.name);
         SceneManager.SetActiveScene(Selection.activeGameObject.scene);
         DuplicateAndSetup();
         CalculateIslands();
