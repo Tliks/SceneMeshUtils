@@ -242,9 +242,10 @@ public static List<List<Island>> GetIslands(Mesh mesh)
     }
 
 
-    public static List<int> GetIslandIndicesInColider(Mesh mesh, MeshCollider collider, List<List<Island>> mergedIslands, bool mergeSamePosition, bool isall, Transform transform)
+    public static object GetIslandIndicesOrEdgesInCollider(Mesh mesh, MeshCollider collider, List<List<Island>> mergedIslands, bool mergeSamePosition, bool isall, Transform transform, bool returnEdges)
     {
         List<int> foundIndices = new List<int>();
+        HashSet<(int, int)> foundEdges = new HashSet<(int, int)>();
         Vector3[] vertices = mesh.vertices;
 
         foreach (var mergedIsland in mergedIslands)
@@ -282,9 +283,22 @@ public static List<List<Island>> GetIslands(Mesh mesh)
 
                 if (isInsideMergedIsland)
                 {
-                    foreach (var samePosIsland in mergedIsland)
+                    if (returnEdges)
                     {
-                        foundIndices.Add(samePosIsland.Index);
+                        foreach (var samePosIsland in mergedIsland)
+                        {
+                            foreach (var edge in samePosIsland.AllEdges)
+                            {
+                                foundEdges.Add(edge);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var samePosIsland in mergedIsland)
+                        {
+                            foundIndices.Add(samePosIsland.Index);
+                        }
                     }
                 }
             }
@@ -319,13 +333,23 @@ public static List<List<Island>> GetIslands(Mesh mesh)
 
                     if (isInside)
                     {
-                        foundIndices.Add(island.Index);
+                        if (returnEdges)
+                        {
+                            foreach (var edge in island.AllEdges)
+                            {
+                                foundEdges.Add(edge);
+                            }
+                        }
+                        else
+                        {
+                            foundIndices.Add(island.Index);
+                        }
                     }
                 }
             }
         }
 
-        return foundIndices;
+        return returnEdges ? (object)foundEdges : foundIndices;
     }
 
     public static List<int> GetVerticesFromIndices(List<List<Island>> islands, List<int> indices)

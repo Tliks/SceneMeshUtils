@@ -13,6 +13,10 @@
 
 ### Security
 
+## [1.0.0-beta.8] - 2024-06-18
+### Added
+- highlighting for range selection
+
 ## [1.0.0-beta.7] - 2024-06-18
 ### changed
 - The code has been revised, including the initialization process.

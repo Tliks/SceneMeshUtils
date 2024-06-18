@@ -408,9 +408,16 @@ public class ModuleCreatorIsland : EditorWindow
         else if (e.type == EventType.MouseDrag && e.button == 0 && Vector2.Distance(_startPoint, mousePos) >= dragThreshold)
         {
             _isdragging = true;
-            HighlightNull();
             _selectionRect = new Rect(_startPoint.x, _startPoint.y, mousePos.x - _startPoint.x, mousePos.y - _startPoint.y);
+            double currentTime = EditorApplication.timeSinceStartup;
+            if (currentTime - _lastUpdateTime >= raycastInterval)
+            {
+                _lastUpdateTime = currentTime;
+                Vector2 endPoint = mousePos;
+                DragHighlight(_startPoint, endPoint);
+            }
             HandleUtility.Repaint();
+
         }
         //ドラッグしていないとき
         else if (!_isdragging)
@@ -478,12 +485,21 @@ public class ModuleCreatorIsland : EditorWindow
         _highlightManager.HighlightEdges(edgesToHighlight, _bakedMesh.vertices, Color.cyan, _PreviewSkinnedMeshRenderer.transform);
     }
 
+    private void DragHighlight(Vector2 startpos, Vector2 endpos)
+    {
+        if (!_colliderMesh) return;
+        MeshCollider meshCollider = GenerateColider(startpos, endpos);
+        HashSet<(int, int)> foundEdges = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, true) as HashSet<(int, int)>;
+        Color color = _isPreviewSelected ? Color.red : Color.cyan;
+        _highlightManager.HighlightEdges(foundEdges, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
+        DestroyImmediate(meshCollider.gameObject);
+    }
+
     private void HandleDrag(Vector2 startpos, Vector2 endpos)
     {
         if (!_colliderMesh) return;
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
-        List<int> indices = IslandUtility.GetIslandIndicesInColider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
-        //Debug.Log(indices.Count);
+        List<int> indices = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, false) as List<int>;
         DestroyImmediate(meshCollider.gameObject);
         UpdateSelection(indices);
     }
