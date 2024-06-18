@@ -20,11 +20,11 @@ public class ModuleCreatorSettings
 
 public class ModuleCreator
 {
-    private readonly ModuleCreatorSettings Settings;
+    private readonly ModuleCreatorSettings _Settings;
 
     public ModuleCreator(ModuleCreatorSettings settings)
     {
-        Settings = settings;
+        _Settings = settings;
     }
     
     public void CheckAndCopyBones(GameObject sourceObject)
@@ -153,7 +153,7 @@ public class ModuleCreator
 
         GameObject CheckRoot(GameObject targetObject)
         {
-            if (Settings.RootObject) return Settings.RootObject;
+            if (_Settings.RootObject) return _Settings.RootObject;
             //親オブジェクトが存在するか確認
             Transform parent = targetObject.transform.parent;
             if (parent == null)
@@ -208,7 +208,7 @@ public class ModuleCreator
 
     private (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
     {
-        string variantPath = GenerateVariantPath(root_object, source_name);
+        string variantPath = AssetPathUtility.GeneratePrefabPath(root_object.name, source_name);
 
         GameObject new_root = PrefabUtility.SaveAsPrefabAsset(root_object, variantPath);        
         if (new_root == null)
@@ -217,28 +217,6 @@ public class ModuleCreator
         }
         return (new_root, variantPath);
 
-
-        string GenerateVariantPath(GameObject root_object, string source_name)
-        {
-            string base_path = $"Assets/ModuleCreator";
-            if (!AssetDatabase.IsValidFolder(base_path))
-            {
-                AssetDatabase.CreateFolder("Assets", "ModuleCreator");
-                AssetDatabase.Refresh();
-            }
-            
-            string folderPath = $"{base_path}/{root_object.name}";
-            if (!AssetDatabase.IsValidFolder(folderPath))
-            {
-                AssetDatabase.CreateFolder(base_path, root_object.name);
-                AssetDatabase.Refresh();
-            }
-
-            string fileName = $"{source_name}_MA";
-            string fileExtension = "prefab";
-            
-            return AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + fileName + "." + fileExtension);
-        }
     }
 
     private GameObject CopyObjects(GameObject root_object, string source_name)
@@ -257,9 +235,9 @@ public class ModuleCreator
         objectsToSave.Add(skin);
 
         SkinnedMeshRenderer skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
-        if (Settings.newmesh) 
+        if (_Settings.newmesh) 
         {
-            skinnedMeshRenderer.sharedMesh = Settings.newmesh;
+            skinnedMeshRenderer.sharedMesh = _Settings.newmesh;
             MeshDeletionUtility.RemoveUnusedMaterials(skinnedMeshRenderer);
         }
 
@@ -275,7 +253,7 @@ public class ModuleCreator
         objectsToSave.UnionWith(weightedBones);
 
         // PhysBoneに関連するオブジェクトを追加
-        if (Settings.IncludePhysBone == true) 
+        if (_Settings.IncludePhysBone == true) 
         {
             HashSet<GameObject> PhysBoneObjects = FindPhysBoneObjects(new_root, weightedBones);
             objectsToSave.UnionWith(PhysBoneObjects);
@@ -387,7 +365,7 @@ public class ModuleCreator
     {
         // 削除対象のomponentを列挙
         List<Component> componentsToRemove;
-        if (Settings.IncludePhysBone == true)
+        if (_Settings.IncludePhysBone == true)
         {
             componentsToRemove = targetGameObject.GetComponents<Component>()
                 .Where(c => !(c is Transform) && !(c is SkinnedMeshRenderer)&& !(c is VRCPhysBone) && !(c is VRCPhysBoneCollider))
@@ -420,7 +398,7 @@ public class ModuleCreator
             if (weightedPBObjects.Count > 0)
             {
                 //MAの仕様に反し衣装側のPBを強制
-                if (Settings.RenameRootTransform == true)
+                if (_Settings.RenameRootTransform == true)
                 {
                     physBone.rootTransform.name += ".1";
                 }
@@ -428,7 +406,7 @@ public class ModuleCreator
                 physBoneObjects.Add(physBone.gameObject);
                 physBoneObjects.UnionWith(weightedPBObjects);
 
-                if (Settings.IncludePhysBoneColider == true)
+                if (_Settings.IncludePhysBoneColider == true)
                 {
                     foreach (VRCPhysBoneCollider collider in physBone.colliders)
                     {
@@ -452,7 +430,7 @@ public class ModuleCreator
 
     private void AddSingleChildRecursive(Transform transform, HashSet<GameObject> result, HashSet<Transform> ignoreTransforms)
     {   
-        if (Settings.IncludeIgnoreTransforms == false && ignoreTransforms.Contains(transform)) return;
+        if (_Settings.IncludeIgnoreTransforms == false && ignoreTransforms.Contains(transform)) return;
         result.Add(transform.gameObject);   
         if (transform.childCount == 1)
         {
@@ -487,7 +465,7 @@ public class ModuleCreator
         {
             if (weightedBones.Contains(child.gameObject))
             {
-                if (Settings.RemainAllPBTransforms == true)
+                if (_Settings.RemainAllPBTransforms == true)
                 {
                     WeightedPhysBoneObjects.UnionWith(allchildren.Select(t => t.gameObject));
                     break;
@@ -510,7 +488,7 @@ public class ModuleCreator
             if (physBoneObjects.Contains(collider.gameObject))
             {
                 //MAの仕様に反し衣装側のPBCを強制
-                if (Settings.RenameRootTransform == true)
+                if (_Settings.RenameRootTransform == true)
                 {
                     collider.rootTransform.name += ".1";
                     //Debug.Log(collider.rootTransform.name);
