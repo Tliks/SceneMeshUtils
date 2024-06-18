@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 using System.Diagnostics;
 
@@ -56,6 +57,7 @@ public class ModuleCreator
             float BaseX = root.transform.position.x;
             float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
             GameObject instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
+            SceneManager.MoveGameObjectToScene(instance, sourceObject.scene);
             Vector3 newPosition = instance.transform.position;
             newPosition.x = randomX;
             //instance.transform.position = newPosition;

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
 
@@ -74,6 +75,8 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnEnable()
     {
         _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+        Debug.Log(Selection.activeGameObject.scene.name);
+        SceneManager.SetActiveScene(Selection.activeGameObject.scene);
         DuplicateAndSetup();
         CalculateIslands();
         ToggleSelectionEnabled(true);
