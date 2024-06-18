@@ -202,14 +202,12 @@ public class MeshDeletionUtility
 
         int[] newTriangles = new int[triCount * 2];
 
-        // Copy original triangles
         for (int i = 0; i < triCount; i += 3)
         {
             newTriangles[i] = triangles[i];
             newTriangles[i + 1] = triangles[i + 1];
             newTriangles[i + 2] = triangles[i + 2];
 
-            // Generate backface triangles (reverse winding order for backface)
             newTriangles[i + triCount] = triangles[i];
             newTriangles[i + triCount + 1] = triangles[i + 2];
             newTriangles[i + triCount + 2] = triangles[i + 1];
@@ -226,7 +224,6 @@ public class MeshDeletionUtility
     public static void RemoveUnusedMaterials(SkinnedMeshRenderer skinnedMeshRenderer)
     {
         Mesh newMesh = skinnedMeshRenderer.sharedMesh;
-        // 使われているマテリアルのインデックスを集める
         HashSet<int> usedMaterialIndices = new HashSet<int>();
 
         for (int subMeshIndex = 0; subMeshIndex < newMesh.subMeshCount; subMeshIndex++)
@@ -238,7 +235,6 @@ public class MeshDeletionUtility
             }
         }
 
-        // 未使用のマテリアルを削除する
         List<Material> usedMaterials = new List<Material>();
         for (int i = 0; i < skinnedMeshRenderer.sharedMaterials.Length; i++)
         {
