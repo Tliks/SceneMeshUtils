@@ -434,7 +434,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void HandleClick()
     {
         UpdateSelection(_PreviousIslandIndices);
-        Debug.Log(string.Join(", ", _PreviousIslandIndices));
+        //Debug.Log(string.Join(", ", _PreviousIslandIndices));
         HighlightNull();
     }
 
@@ -482,7 +482,7 @@ public class ModuleCreatorIsland : EditorWindow
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
         List<int> indices = IslandUtility.GetIslandIndicesInColider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
         //Debug.Log(indices.Count);
-        //DestroyImmediate(meshCollider.gameObject);
+        DestroyImmediate(meshCollider.gameObject);
         UpdateSelection(indices);
     }
 
