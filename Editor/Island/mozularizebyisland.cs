@@ -56,6 +56,9 @@ public class ModuleCreatorIsland : EditorWindow
     private bool _isPreviewSelected;
     private bool _isPreviewEnabled;
     private Scene _scene;
+    private Vector3 _offset;
+    private Vector3 _middleVertex;
+    private const float cameraDistance = 0.3f;
 
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
@@ -96,7 +99,7 @@ public class ModuleCreatorIsland : EditorWindow
         Bounds targetbounds = _OriginskinnedMeshRenderer.bounds;
         SceneManager.SetActiveScene(_scene);
         SceneView.lastActiveSceneView.Frame(targetbounds);
-        FocusCustomViewObject(_OriginskinnedMeshRenderer.transform, _OriginskinnedMeshRenderer.sharedMesh, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)));
+        SceneView.lastActiveSceneView.LookAtDirect(_middleVertex - _offset, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)), cameraDistance);
 
         SceneView.duringSceneGui -= OnSceneGUI;
         Undo.undoRedoPerformed -= OnUndoRedo;
@@ -223,24 +226,15 @@ public class ModuleCreatorIsland : EditorWindow
         UpdateMesh();
     }
 
-    private void FocusCustomViewObject(Transform transform, Mesh mesh, Quaternion rotation)
+    private void CalculatemiddleVertex(Transform transform, Mesh mesh)
     {
-        Vector3 middleVertex = Vector3.zero;
-
         if (mesh != null)
         {
             Vector3[] vertices = mesh.vertices;
-            middleVertex = vertices
+            _middleVertex = vertices
                 .Select(v => transform.TransformPoint(v))
                 .Aggregate((acc, v) => acc + v) / vertices.Length;
         }
-
-        float cameraDistance = 0.3f;
-        Vector3 direction = SceneView.lastActiveSceneView.camera.transform.forward;
-        Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
-
-        //Debug.Log(middleVertex);
-        SceneView.lastActiveSceneView.LookAtDirect(middleVertex, rotation, cameraDistance);
     }
 
     private void EnsureHighlightManagerExists()
@@ -816,8 +810,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {   
-        float minZOffset = 5f;
-        float xoffset = 5f;
+        Vector3 minOffset = new Vector3(5f, 0, -5f);
         SceneManager.SetActiveScene(_scene);
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
@@ -827,8 +820,8 @@ public class ModuleCreatorIsland : EditorWindow
         (_PreviewMeshObject, _PreviewSkinnedMeshRenderer) = new ModuleCreator(settings).PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
 
         ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
-        float zOffset = _PreviewSkinnedMeshRenderer.bounds.size.z + minZOffset;
-        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(xoffset, 0, -zOffset);
+        _offset = minOffset + new Vector3(0, 0, -_PreviewSkinnedMeshRenderer.bounds.size.z);
+        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + _offset;
         _PreviewMeshObject.name = "Preview Mesh";
 
         Vector3 parentScale = _PreviewMeshObject.transform.localScale;
@@ -840,7 +833,8 @@ public class ModuleCreatorIsland : EditorWindow
 
         //FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
         SceneView.lastActiveSceneView.Frame(_PreviewSkinnedMeshRenderer.bounds, true);
-        FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
+        CalculatemiddleVertex(_PreviewSkinnedMeshRenderer.transform, _bakedMesh);
+        SceneView.lastActiveSceneView.LookAtDirect(_middleVertex, SceneView.lastActiveSceneView.rotation, cameraDistance);
     }
 
     private void UpdateMesh()
