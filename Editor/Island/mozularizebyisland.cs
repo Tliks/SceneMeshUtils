@@ -534,6 +534,9 @@ public class ModuleCreatorIsland : EditorWindow
         try
         {
             meshCollider.sharedMesh = mesh;
+            // bug:エラーをcatch出来ていないっぽい？ その影響で不正な範囲選択が停止されず実行されている
+            // [Physics.PhysX] QuickHullConvexHullLib::findSimplex: Simplex input points appers to be coplanar.
+            // UnityEngine.StackTraceUtility:ExtractStackTrace ()
             meshCollider.convex = true;
         }
         catch (Exception e)
@@ -555,6 +558,7 @@ public class ModuleCreatorIsland : EditorWindow
                 if (_unselected_Island_Indcies.Contains(index))
                 {
                     Debug.LogWarning($"Index {index} is already in unselected indices.");
+                    break;
                 }
                 _selected_Island_Indcies.Remove(index);
                 _unselected_Island_Indcies.Add(index);
@@ -564,6 +568,7 @@ public class ModuleCreatorIsland : EditorWindow
                 if (_selected_Island_Indcies.Contains(index))
                 {
                     Debug.LogWarning($"Index {index} is already in selected indices.");
+                    break;
                 }
                 _unselected_Island_Indcies.Remove(index);
                 _selected_Island_Indcies.Add(index);
