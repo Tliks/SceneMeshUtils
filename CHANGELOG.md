@@ -7,6 +7,8 @@
 ### Changed
 - The color used for GUI.DrawTexture has been unified to gray.
 - Restored ability to not activate skinnedmesh objects
+- Use SceneView.lastActiveSceneView.Frame insted of FocusCustomViewObject
+- use Selection.activeGameObject to prefab instance
 
 ### Deprecated
 
