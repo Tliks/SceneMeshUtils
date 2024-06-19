@@ -416,7 +416,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         Handles.BeginGUI();
         //Color selectionColor = _isPreviewSelected ? new Color(1, 0, 0, 0.2f) : new Color(0, 1, 1, 0.2f);
-        Color selectionColor = new Color(0.7f, 0.7f, 0.8f, 0.25f); 
+        Color selectionColor = new Color(0.6f, 0.7f, 0.8f, 0.25f); 
         GUI.color = selectionColor;
         GUI.DrawTexture(_selectionRect, EditorGUIUtility.whiteTexture);
         Handles.EndGUI();
