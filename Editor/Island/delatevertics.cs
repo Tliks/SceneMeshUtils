@@ -172,14 +172,15 @@ public class MeshDeletionUtility
         }
     }
 
-    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh originalMesh, List<int> vertexIndexes, bool infnity)
+    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh originalMesh, List<int> vertexIndexes)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
         
         Vector3[] vertices = newMesh.vertices;
         
         HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
-        Vector3 replacementValue = infnity ? Vector3.positiveInfinity : Vector3.zero;
+        //Vector3 replacementValue = infnity ? Vector3.positiveInfinity : Vector3.zero;
+        Vector3 replacementValue = new Vector3(1e30f, 1e30f, 1e30f);
         
         for (int i = 0; i < vertices.Length; i++)
         {

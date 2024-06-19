@@ -833,14 +833,14 @@ public class ModuleCreatorIsland : EditorWindow
             _Selected_Vertices_Count = _Total_Vertices_Count - vertices.Count;
         }
 
-        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, vertices, true);
+        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, vertices);
         _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
 
         if (_isPreviewEnabled)
         {
             if (vertices.Count >= 3)
             {
-                _colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices, false);
+                _colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices);
                 _PreviewMeshCollider.sharedMesh = _colliderMesh;
             }
             else
