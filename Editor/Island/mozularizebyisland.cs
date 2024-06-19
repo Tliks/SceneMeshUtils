@@ -537,8 +537,9 @@ public class ModuleCreatorIsland : EditorWindow
         try
         {
             meshCollider.sharedMesh = mesh;
+            
             // bug:エラーをcatch出来ていないっぽい？ その影響で不正な範囲選択が停止されず実行されている
-            // update selectionで重複したインデックスを伴う操作は防がれる
+            // starposとendposの座標確認もしくはupdate selection内のインデクッスの確認で不正な操作は防がれているはず
             // [Physics.PhysX] QuickHullConvexHullLib::findSimplex: Simplex input points appers to be coplanar.
             // UnityEngine.StackTraceUtility:ExtractStackTrace ()
             meshCollider.convex = true;
