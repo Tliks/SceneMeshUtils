@@ -2,7 +2,19 @@
 
 ## [Unreleased]
 ### Added
-- Apply PingObject to preview object too
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [1.0.0-beta.9] - 2024-06-19
+### Added
 - Prevents unauthorized range selection
 
 ### Changed
@@ -10,20 +22,15 @@
 - Restored ability to not activate skinnedmesh objects
 - use Selection.activeGameObject to prefab instance
 - focus is changed to bounds.center without animation using SceneView.frame and lookatdiret
-- Move undo/redo from advanced options to normal options
-
-### Deprecated
-
-### Removed
+- Apply PingObject to preview object too
+- Move undo/redo button from advanced options to normal options
 
 ### Fixed
 - overlapping island selections could occur in range selections due to a vertex at the origin
 - an error could occur in meshCollider.convex when selecting an area of ​​0.
 - preview object could not be removed with nested structures
 - Localization
-- BeginLayoutGroup must be called first on undo/redo button
-
-### Security
+- an error of BeginLayoutGroup on undo/redo button
 
 ## [1.0.0-beta.8] - 2024-06-18
 ### Added

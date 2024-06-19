@@ -53,7 +53,6 @@ public class ModuleCreatorIsland : EditorWindow
     private const float dragThreshold = 10f;
     private bool _isAll = true;
     private Vector2 _scrollPosition;
-    private const float minZOffset = 5f;
     private bool _isPreviewSelected;
     private bool _isPreviewEnabled;
     private Scene _scene;
@@ -97,7 +96,7 @@ public class ModuleCreatorIsland : EditorWindow
         Bounds targetbounds = _OriginskinnedMeshRenderer.bounds;
         SceneManager.SetActiveScene(_scene);
         SceneView.lastActiveSceneView.Frame(targetbounds);
-        SceneView.lastActiveSceneView.LookAtDirect(targetbounds.center, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)), 0.3f);
+        FocusCustomViewObject(_OriginskinnedMeshRenderer.transform, _OriginskinnedMeshRenderer.sharedMesh, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)));
 
         SceneView.duringSceneGui -= OnSceneGUI;
         Undo.undoRedoPerformed -= OnUndoRedo;
@@ -222,6 +221,26 @@ public class ModuleCreatorIsland : EditorWindow
         _selected_Island_Indcies = new List<int>(_unselected_Island_Indcies);
         _unselected_Island_Indcies = temp;
         UpdateMesh();
+    }
+
+    private void FocusCustomViewObject(Transform transform, Mesh mesh, Quaternion rotation)
+    {
+        Vector3 middleVertex = Vector3.zero;
+
+        if (mesh != null)
+        {
+            Vector3[] vertices = mesh.vertices;
+            middleVertex = vertices
+                .Select(v => transform.TransformPoint(v))
+                .Aggregate((acc, v) => acc + v) / vertices.Length;
+        }
+
+        float cameraDistance = 0.3f;
+        Vector3 direction = SceneView.lastActiveSceneView.camera.transform.forward;
+        Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
+
+        //Debug.Log(middleVertex);
+        SceneView.lastActiveSceneView.LookAtDirect(middleVertex, rotation, cameraDistance);
     }
 
     private void EnsureHighlightManagerExists()
@@ -797,6 +816,8 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {   
+        float minZOffset = 5f;
+        float xoffset = 5f;
         SceneManager.SetActiveScene(_scene);
         ModuleCreatorSettings settings = new ModuleCreatorSettings
         {
@@ -807,7 +828,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
         float zOffset = _PreviewSkinnedMeshRenderer.bounds.size.z + minZOffset;
-        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(0, 0, -zOffset);
+        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(xoffset, 0, -zOffset);
         _PreviewMeshObject.name = "Preview Mesh";
 
         Vector3 parentScale = _PreviewMeshObject.transform.localScale;
@@ -819,7 +840,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         //FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
         SceneView.lastActiveSceneView.Frame(_PreviewSkinnedMeshRenderer.bounds, true);
-        SceneView.lastActiveSceneView.LookAtDirect(_PreviewSkinnedMeshRenderer.bounds.center, SceneView.lastActiveSceneView.rotation, 0.3f);
+        FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
     }
 
     private void UpdateMesh()
