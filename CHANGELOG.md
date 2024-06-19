@@ -7,12 +7,13 @@
 ### Changed
 - The color used for GUI.DrawTexture has been unified to gray.
 - Restored ability to not activate skinnedmesh objects
-- Use SceneView.lastActiveSceneView.Frame insted of FocusCustomViewObject
 - use Selection.activeGameObject to prefab instance
+- focus is changed to bounds.center without animation using SceneView.frame and lookatdiret
 
 ### Deprecated
 
 ### Removed
+- FocusCustomViewObject
 
 ### Fixed
 - range selection caused overlapping island selections again
