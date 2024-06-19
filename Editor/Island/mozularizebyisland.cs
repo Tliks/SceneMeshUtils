@@ -377,7 +377,7 @@ public class ModuleCreatorIsland : EditorWindow
             else
             {
                 Vector2 endPoint = mousePos;
-                HandleDrag(_startPoint, endPoint);
+                HandleDragOrHighlight(_startPoint, endPoint, false);
             }
             
             _isdragging = false;
@@ -395,7 +395,7 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 _lastUpdateTime = currentTime;
                 Vector2 endPoint = mousePos;
-                DragHighlight(_startPoint, endPoint);
+                HandleDragOrHighlight(_startPoint, endPoint, true);
             }
             HandleUtility.Repaint();
 
@@ -467,23 +467,26 @@ public class ModuleCreatorIsland : EditorWindow
         _highlightManager.HighlightEdges(edgesToHighlight, _bakedMesh.vertices, Color.cyan, _PreviewSkinnedMeshRenderer.transform);
     }
 
-    private void DragHighlight(Vector2 startpos, Vector2 endpos)
+    private void HandleDragOrHighlight(Vector2 startpos, Vector2 endpos, bool isHighlight)
     {
         if (!_colliderMesh) return;
+        if (startpos.x == endpos.x || startpos.y == endpos.y) return;
+        
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
-        HashSet<(int, int)> foundEdges = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, true) as HashSet<(int, int)>;
-        Color color = _isPreviewSelected ? Color.red : Color.cyan;
-        _highlightManager.HighlightEdges(foundEdges, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
+        
+        if (isHighlight)
+        {
+            HashSet<(int, int)> foundEdges = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, true) as HashSet<(int, int)>;
+            Color color = _isPreviewSelected ? Color.red : Color.cyan;
+            _highlightManager.HighlightEdges(foundEdges, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
+        }
+        else
+        {
+            List<int> indices = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, false) as List<int>;
+            UpdateSelection(indices);
+        }
+        
         DestroyImmediate(meshCollider.gameObject);
-    }
-
-    private void HandleDrag(Vector2 startpos, Vector2 endpos)
-    {
-        if (!_colliderMesh) return;
-        MeshCollider meshCollider = GenerateColider(startpos, endpos);
-        List<int> indices = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, false) as List<int>;
-        DestroyImmediate(meshCollider.gameObject);
-        UpdateSelection(indices);
     }
 
     private MeshCollider GenerateColider(Vector2 startpos, Vector2 endpos)
@@ -540,9 +543,9 @@ public class ModuleCreatorIsland : EditorWindow
             // UnityEngine.StackTraceUtility:ExtractStackTrace ()
             meshCollider.convex = true;
         }
-        catch (Exception e)
+        catch
         {
-            Debug.LogWarning("MeshColliderの設定中にエラーが発生しました: " + e.Message);
+            Debug.LogWarning("MeshColliderの設定中にエラーが発生しました: ");
         }
 
         return meshCollider;
