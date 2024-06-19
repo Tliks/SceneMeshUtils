@@ -4,6 +4,8 @@ public static class AssetPathUtility
 {
     public static string GenerateMeshPath(string root_name)
     {
+        // Assets/ModuleCreator/{root_name}/Mesh/newMesh.asset
+
         string base_path = $"Assets/ModuleCreator";
         if (!AssetDatabase.IsValidFolder(base_path))
         {
@@ -33,6 +35,8 @@ public static class AssetPathUtility
 
     public static string GeneratePrefabPath(string root_name, string mesh_name)
     {
+        // Assets/ModuleCreator/{root_name}/mesh_name.prefab
+
         string base_path = $"Assets/ModuleCreator";
         if (!AssetDatabase.IsValidFolder(base_path))
         {
