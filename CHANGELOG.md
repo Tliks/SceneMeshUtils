@@ -3,9 +3,10 @@
 ## [Unreleased]
 ### Added
 - Apply PingObject to preview object too
- 
+
 ### Changed
 - The color used for GUI.DrawTexture has been unified to gray.
+- Restored ability to not activate skinnedmesh objects
 
 ### Deprecated
 

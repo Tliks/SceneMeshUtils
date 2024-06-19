@@ -321,7 +321,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!_isPreviewEnabled) return;
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
-        //DontActiveSKin(e);
+        DontActiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
