@@ -727,7 +727,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void RenderUndoRedoButtons()
     {
-        GUILayout.BeginHorizontal();
+        EditorGUILayout.BeginHorizontal();
 
         bool performUndo = false;
         bool performRedo = false;
@@ -741,17 +741,19 @@ public class ModuleCreatorIsland : EditorWindow
         {
             performRedo = true;
         }
-        
-        GUILayout.EndHorizontal();
+
+        EditorGUILayout.EndHorizontal();
 
         if (performUndo)
         {
             Undo.PerformUndo();
+            GUIUtility.ExitGUI();
         }
 
         if (performRedo)
         {
             Undo.PerformRedo();
+            GUIUtility.ExitGUI();
         }
     }
 
