@@ -28,8 +28,9 @@ public class ModuleCreator
         _Settings = settings;
     }
     
-    public void CheckAndCopyBones(GameObject sourceObject)
+    public GameObject CheckAndCopyBones(GameObject sourceObject)
     {   
+        GameObject instance = null;
         try
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -56,7 +57,7 @@ public class ModuleCreator
 
             float BaseX = root.transform.position.x;
             float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
-            GameObject instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
+            instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
             SceneManager.MoveGameObjectToScene(instance, sourceObject.scene);
             Vector3 newPosition = instance.transform.position;
             newPosition.x = randomX;
@@ -65,10 +66,11 @@ public class ModuleCreator
             //Selection.objects.Append(instance);
 
             EditorGUIUtility.PingObject(instance);
-            //Selection.activeGameObject = instance;
-            Selection.objects = Selection.gameObjects.Append(instance).ToArray();
+            Selection.activeGameObject = instance;
+            //Selection.objects = Selection.gameObjects.Append(instance).ToArray();
 
             UnityEngine.Debug.Log("Saved prefab to " + variantPath);
+
         }
 
         catch (InvalidOperationException ex)
@@ -80,6 +82,8 @@ public class ModuleCreator
             UnityEngine.Debug.LogError(ex.StackTrace);
             UnityEngine.Debug.LogError(ex);
         }
+
+        return instance;
     }
 
     public (GameObject, SkinnedMeshRenderer) PreviewMesh(GameObject sourceObject)
