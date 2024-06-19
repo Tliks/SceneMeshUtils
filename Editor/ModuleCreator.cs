@@ -105,7 +105,8 @@ public class ModuleCreator
             stopwatch.Stop();
             //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
 
-            Selection.activeGameObject = new_root;
+            EditorGUIUtility.PingObject(new_root);
+            Selection.objects = Selection.gameObjects.Append(new_root).ToArray();
 
         }
 
