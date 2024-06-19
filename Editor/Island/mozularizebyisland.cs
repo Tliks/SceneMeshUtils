@@ -551,14 +551,16 @@ public class ModuleCreatorIsland : EditorWindow
     private void UpdateSelection(List<int> indices)
     {
         SaveUndoState();
+        int logCounter = 0;
+
         foreach (var index in indices)
         {
             if (_isPreviewSelected)
             {
                 if (_unselected_Island_Indcies.Contains(index))
                 {
-                    Debug.LogWarning($"Index {index} is already in unselected indices.");
-                    break;
+                    logCounter++;
+                    continue;
                 }
                 _selected_Island_Indcies.Remove(index);
                 _unselected_Island_Indcies.Add(index);
@@ -567,16 +569,22 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 if (_selected_Island_Indcies.Contains(index))
                 {
-                    Debug.LogWarning($"Index {index} is already in selected indices.");
-                    break;
+                    logCounter++;
+                    continue;
                 }
                 _unselected_Island_Indcies.Remove(index);
                 _selected_Island_Indcies.Add(index);
             }
         }
+
+        if (logCounter > 0)
+        {
+            Debug.LogWarning($"{logCounter} indices were already in the list and skipped.");
+        }
+
         UpdateMesh();
     }
-
+    
     private void RenderPreviewSelectedToggle()
     {
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
