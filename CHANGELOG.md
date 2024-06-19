@@ -21,9 +21,10 @@
 - The color used for GUI.DrawTexture has been unified to gray.
 - Restored ability to not activate skinnedmesh objects
 - use Selection.activeGameObject to prefab instance
-- focus is changed to bounds.center without animation using SceneView.frame and lookatdiret
+- focus is changed to use SceneView.frame and lookatdiret
 - Apply PingObject to preview object too
 - Move undo/redo button from advanced options to normal options
+- Move 5f along the x-axis to avoid the camera gizmo
 
 ### Fixed
 - overlapping island selections could occur in range selections due to a vertex at the origin
