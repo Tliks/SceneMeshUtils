@@ -10,15 +10,17 @@
 - Restored ability to not activate skinnedmesh objects
 - use Selection.activeGameObject to prefab instance
 - focus is changed to bounds.center without animation using SceneView.frame and lookatdiret
+- Move undo/redo from advanced options to normal options
 
 ### Deprecated
 
 ### Removed
-- FocusCustomViewObject
 
 ### Fixed
-- range selection caused overlapping island selections again
+- overlapping island selections could occur in range selections due to a vertex at the origin
+- an error could occur in meshCollider.convex when selecting an area of ​​0.
 - preview object could not be removed with nested structures
+- Localization
 
 ### Security
 

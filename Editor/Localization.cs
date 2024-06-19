@@ -11,7 +11,7 @@ public class LocalizationEditor
         { "description", new string[] {"You can select the desired part by clicking on the scene. You can also select a range by dragging. Make sure to drag so that the desired part is completely within the range.", "欲しい箇所をシーン上でクリックすることで選択できます。ドラッグすることで範囲選択も可能です。欲しい箇所が範囲内に完全に入るようにドラッグしてください。"}},
         { "advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},
         { "UndoButton", new string[] { "Undo (Ctrl+Z)", "元に戻す (Ctrl+Z)" } },
-        { "RedoButton", new string[] { "Redo (Ctrl+Y)", "やり直し (Ctrl+Y)" } },
+        { "RedoButton", new string[] { "Redo (Ctrl+Y)", "やり直す (Ctrl+Y)" } },
         { "PreviewModeLabel", new string[] { "Preview Mode: ", "プレビューモード: " } },
         { "SelectedMesh", new string[] { "Selected Mesh", "選択済みのメッシュ" } },
         { "UnselectedMesh", new string[] { "Unselected Mesh", "未選択のメッシュ" } },
