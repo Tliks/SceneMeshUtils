@@ -580,11 +580,15 @@ public class ModuleCreatorIsland : EditorWindow
         if (logCounter > 0)
         {
             Debug.LogWarning($"{logCounter} indices were already in the list and skipped.");
+            Undo.PerformUndo();
+        }
+        else
+        {
+            UpdateMesh();
         }
 
-        UpdateMesh();
     }
-    
+
     private void RenderPreviewSelectedToggle()
     {
         GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
