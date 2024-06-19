@@ -125,6 +125,7 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.Space();
 
         RenderSelectionButtons();
+        RenderUndoRedoButtons();
         RenderDescription();
         process_options();
 
@@ -537,7 +538,7 @@ public class ModuleCreatorIsland : EditorWindow
         try
         {
             meshCollider.sharedMesh = mesh;
-            
+
             // bug:エラーをcatch出来ていないっぽい？ その影響で不正な範囲選択が停止されず実行されている
             // starposとendposの座標確認もしくはupdate selection内のインデクッスの確認で不正な操作は防がれているはず
             // [Physics.PhysX] QuickHullConvexHullLib::findSimplex: Simplex input points appers to be coplanar.
@@ -695,7 +696,6 @@ public class ModuleCreatorIsland : EditorWindow
             
             RenderIslandHashField();
             RenderModeoff();
-            RenderUndoRedoButtons();
             RenderCreateBothModuleButtons();
         }
 
