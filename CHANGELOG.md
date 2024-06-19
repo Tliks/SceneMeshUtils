@@ -21,6 +21,7 @@
 - an error could occur in meshCollider.convex when selecting an area of ​​0.
 - preview object could not be removed with nested structures
 - Localization
+- BeginLayoutGroup must be called first on undo/redo button
 
 ### Security
 
