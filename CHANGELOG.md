@@ -13,7 +13,7 @@
 
 ### Security
 
-## [1.0.0-beta.9] - 2024-06-19
+## [1.0.0-beta.9] - 2024-06-20
 ### Added
 - Prevents unauthorized range selection
 
@@ -32,6 +32,7 @@
 - preview object could not be removed with nested structures
 - Localization
 - an error of BeginLayoutGroup on undo/redo button
+- focus position was not accurate when returning focus to the original object
 
 ## [1.0.0-beta.8] - 2024-06-18
 ### Added
