@@ -4,12 +4,15 @@
 ### Added
 
 ### Changed
+- The color used for GUI.DrawTexture has been unified to gray.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- range selection caused overlapping island selections again
+- preview object could not be removed with nested structures
 
 ### Security
 

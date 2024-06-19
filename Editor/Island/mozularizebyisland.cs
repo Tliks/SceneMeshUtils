@@ -797,10 +797,9 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBone = false,
             IncludePhysBoneColider = false
         };
-        _PreviewSkinnedMeshRenderer = new ModuleCreator(settings).PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
+        (_PreviewMeshObject, _PreviewSkinnedMeshRenderer) = new ModuleCreator(settings).PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
 
         ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
-        _PreviewMeshObject = _PreviewSkinnedMeshRenderer.transform.parent.gameObject;
         float zOffset = _PreviewSkinnedMeshRenderer.bounds.size.z + minZOffset;
         _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + new Vector3(0, 0, -zOffset);
         _PreviewMeshObject.name = "Preview Mesh";

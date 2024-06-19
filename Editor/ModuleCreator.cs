@@ -82,9 +82,10 @@ public class ModuleCreator
         }
     }
 
-    public SkinnedMeshRenderer PreviewMesh(GameObject sourceObject)
+    public (GameObject, SkinnedMeshRenderer) PreviewMesh(GameObject sourceObject)
     {
-        SkinnedMeshRenderer skinnedMeshRenderer = null;;
+        SkinnedMeshRenderer skinnedMeshRenderer = null;
+        GameObject new_root = null;
         try
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -95,7 +96,7 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
-            GameObject new_root = CopyObjects(root, sourceObject.name);
+            new_root = CopyObjects(root, sourceObject.name);
             stopwatch.Stop();
             //UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
@@ -118,7 +119,7 @@ public class ModuleCreator
             UnityEngine.Debug.LogError(ex);
         }
 
-        return skinnedMeshRenderer;
+        return (new_root, skinnedMeshRenderer);
 
     }
 
