@@ -97,7 +97,7 @@ public class ModuleCreatorIsland : EditorWindow
         Bounds targetbounds = _OriginskinnedMeshRenderer.bounds;
         SceneManager.SetActiveScene(_scene);
         SceneView.lastActiveSceneView.Frame(targetbounds);
-        SceneView.lastActiveSceneView.rotation = Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)); 
+        SceneView.lastActiveSceneView.LookAtDirect(targetbounds.center, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)), 0.3f);
 
         SceneView.duringSceneGui -= OnSceneGUI;
         Undo.undoRedoPerformed -= OnUndoRedo;
@@ -795,6 +795,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         //FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
         SceneView.lastActiveSceneView.Frame(_PreviewSkinnedMeshRenderer.bounds, true);
+        SceneView.lastActiveSceneView.LookAtDirect(_PreviewSkinnedMeshRenderer.bounds.center, SceneView.lastActiveSceneView.rotation, 0.3f);
     }
 
     private void UpdateMesh()
