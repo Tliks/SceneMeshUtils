@@ -316,7 +316,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!_isPreviewEnabled) return;
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
-        DontActiveSKin(e);
+        //DontActiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
@@ -858,6 +858,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_isPreviewEnabled)
         {
+            Debug.Log(vertices.Count);
             if (vertices.Count >= 3)
             {
                 _colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices);
@@ -870,6 +871,7 @@ public class ModuleCreatorIsland : EditorWindow
             }
         }
 
+        Debug.Log(_PreviewMeshCollider.sharedMesh.vertices.Count());
         Repaint();
         UpdateEncodedString();
     }
