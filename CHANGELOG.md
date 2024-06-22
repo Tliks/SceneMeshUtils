@@ -13,8 +13,9 @@
 
 ### Security
 
-## [1.0.0-beta.9] - 2024-06-20
+## [1.0.0-beta.9] - 2024-06-22
 ### Added
+- Mask texture generation as an experimental feature.
 - Prevents unauthorized range selection
 
 ### Changed
@@ -25,6 +26,7 @@
 - Apply PingObject to preview object too
 - Move undo/redo button from advanced options to normal options
 - Move 5f along the x-axis to avoid the camera gizmo
+- the folder where prefabs and textures are saved can be selected in the project view.
 
 ### Fixed
 - overlapping island selections could occur in range selections due to a vertex at the origin
@@ -33,6 +35,7 @@
 - Localization
 - an error of BeginLayoutGroup on undo/redo button
 - focus position was not accurate when returning focus to the original object
+- The destination folder name was not correct
 
 ## [1.0.0-beta.8] - 2024-06-18
 ### Added
