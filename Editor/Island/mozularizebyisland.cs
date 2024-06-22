@@ -807,33 +807,33 @@ public class ModuleCreatorIsland : EditorWindow
     }
     private void RenderGenerateMask()
     {
-            GUI.enabled = _OriginskinnedMeshRenderer != null && _selected_Island_Indcies.Count > 0;
-            
-            // Create Selected Islands Module
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _selected_Island_Indcies.Count > 0;
+        
+        // Create Selected Islands Module
+        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
+        {
+            var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
+            MeshMaskGenerator generator = new MeshMaskGenerator();
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices);
+
+            foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
-                var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
-                MeshMaskGenerator generator = new MeshMaskGenerator();
-                List<Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer.sharedMesh, allVertices);
+                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
+                byte[] bytes = kvp.Value.EncodeToPNG();
+                File.WriteAllBytes(path, bytes);
+                AssetDatabase.Refresh();
 
-                foreach(var maskTexture in maskTextures)
+                UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                if (obj != null)
                 {
-                    string path = AssetPathUtility.GenerateTexturePath(_rootname, _OriginskinnedMeshRenderer.name);
-                    byte[] bytes = maskTexture.EncodeToPNG();
-                    File.WriteAllBytes(path, bytes);
-                    AssetDatabase.Refresh();
-
-                    UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                    if (obj != null)
-                    {
-                        Selection.activeObject = obj;
-                        EditorUtility.FocusProjectWindow();
-                    }
+                    Selection.objects = Selection.gameObjects.Append(obj).ToArray();
+                    EditorGUIUtility.PingObject(obj);
                     Debug.Log("Saved MaskTexture to " + path);
                 }
             }
+        }
 
-            GUI.enabled = true;
+        GUI.enabled = true;
     }
 
 

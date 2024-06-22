@@ -6,9 +6,11 @@ public class MeshMaskGenerator
 {
 public int textureSize = 1024;
 
-public List<Texture2D> GenerateMaskTextures(Mesh mesh, List<int> vertexIndices)
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices)
 {
-    List<Texture2D> maskTextures = new List<Texture2D>();
+    Mesh mesh = skinnedMeshRenderer.sharedMesh;
+    Material[] materials = skinnedMeshRenderer.sharedMaterials;
+    Dictionary<string, Texture2D> maskTextures = new Dictionary<string, Texture2D>();
 
     for (int subMeshIndex = 0; subMeshIndex < mesh.subMeshCount; subMeshIndex++)
     {
@@ -49,7 +51,8 @@ public List<Texture2D> GenerateMaskTextures(Mesh mesh, List<int> vertexIndices)
             }
 
             maskTexture.Apply();
-            maskTextures.Add(maskTexture);
+            string materialName = materials[subMeshIndex].name;
+            maskTextures[materialName] = maskTexture;
         }
     }
 
