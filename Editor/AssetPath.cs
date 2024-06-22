@@ -56,4 +56,36 @@ public static class AssetPathUtility
         
         return AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + fileName + "." + fileExtension);
     }
+
+    public static string GenerateTexturePath(string root_name, string mesh_name)
+    {
+        // Assets/ModuleCreator/{root_name}/Mesh/newMesh.asset
+
+        string base_path = $"Assets/ModuleCreator";
+        if (!AssetDatabase.IsValidFolder(base_path))
+        {
+            AssetDatabase.CreateFolder("Assets", "ModuleCreator");
+            AssetDatabase.Refresh();
+        }
+
+        string folderPath = $"{base_path}/{root_name}";
+        if (!AssetDatabase.IsValidFolder(folderPath))
+        {
+            AssetDatabase.CreateFolder(base_path, root_name);
+            AssetDatabase.Refresh();
+        }
+
+        string folderPath1 = $"{folderPath}/Textur";
+        if (!AssetDatabase.IsValidFolder(folderPath1))
+        {
+            AssetDatabase.CreateFolder(folderPath, "Textur");
+            AssetDatabase.Refresh();
+        }
+
+        string fileName = mesh_name + "_Mask";
+        string fileExtension = "png";
+        
+        return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);
+    }
+
 }

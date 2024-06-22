@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
+using System.IO;
 
 
 public class ModuleCreatorIsland : EditorWindow
@@ -35,6 +36,7 @@ public class ModuleCreatorIsland : EditorWindow
     private double _lastUpdateTime = 0;
 
     private bool _showAdvancedOptions = false;
+    private bool _showexperimentalOptions = false;
 
     private HighlightEdgesManager _highlightManager;
 
@@ -143,6 +145,8 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.Space();
         
         process_advanced_options();
+
+        processexperimentalOptions();
 
         EditorGUILayout.EndScrollView();
     }
@@ -792,6 +796,47 @@ public class ModuleCreatorIsland : EditorWindow
         GUI.enabled = true;
     }
 
+    private void processexperimentalOptions()
+    {
+        _showexperimentalOptions = EditorGUILayout.Foldout(_showexperimentalOptions, LocalizationEditor.GetLocalizedText("experimentalOptions"));
+        if (_showexperimentalOptions)
+        {
+            RenderGenerateMask();
+        }
+
+    }
+    private void RenderGenerateMask()
+    {
+            GUI.enabled = _OriginskinnedMeshRenderer != null && _selected_Island_Indcies.Count > 0;
+            
+            // Create Selected Islands Module
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
+            {
+                var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
+                MeshMaskGenerator generator = new MeshMaskGenerator();
+                List<Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer.sharedMesh, allVertices);
+
+                foreach(var maskTexture in maskTextures)
+                {
+                    string path = AssetPathUtility.GenerateTexturePath(_rootname, _OriginskinnedMeshRenderer.name);
+                    byte[] bytes = maskTexture.EncodeToPNG();
+                    File.WriteAllBytes(path, bytes);
+                    AssetDatabase.Refresh();
+
+                    UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+                    if (obj != null)
+                    {
+                        Selection.activeObject = obj;
+                        EditorUtility.FocusProjectWindow();
+                    }
+                    Debug.Log("Saved MaskTexture to " + path);
+                }
+            }
+
+            GUI.enabled = true;
+    }
+
+
     private void RenderCreateBothModuleButtons()
     {
         GUI.enabled = _OriginskinnedMeshRenderer != null && _selected_Island_Indcies.Count > 0;
@@ -826,6 +871,7 @@ public class ModuleCreatorIsland : EditorWindow
             IncludePhysBoneColider = false
         };
         (_PreviewMeshObject, _PreviewSkinnedMeshRenderer) = new ModuleCreator(settings).PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
+        _rootname = _PreviewMeshObject.name;
 
         ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
         _offset = minOffset + new Vector3(0, 0, -_PreviewSkinnedMeshRenderer.bounds.size.z);
