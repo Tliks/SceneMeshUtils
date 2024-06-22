@@ -64,6 +64,9 @@ public class ModuleCreatorIsland : EditorWindow
     private Dictionary<int, int> _oldToNewIndexMap;
     private Vector3[] _Degenerate_vertices;
     private string _rootname;
+    private int[] optionValues = { 512, 1024, 2048 };
+    private string[] displayOptions = { "512", "1024", "2048" };
+    private int selectedValue = 1024;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
@@ -805,15 +808,18 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
     }
+
     private void RenderGenerateMask()
     {
         GUI.enabled = _OriginskinnedMeshRenderer != null && _selected_Island_Indcies.Count > 0;
+        
+        selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
         
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
             var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
-            MeshMaskGenerator generator = new MeshMaskGenerator();
+            MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue);
             Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>(Selection.objects);
@@ -828,6 +834,7 @@ public class ModuleCreatorIsland : EditorWindow
                 if (obj != null)
                 {
                     selectedObjects.Add(obj);
+                    EditorGUIUtility.PingObject(obj);
                     Debug.Log("Saved MaskTexture to " + path);
                 }
             }

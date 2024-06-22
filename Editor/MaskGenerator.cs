@@ -4,7 +4,12 @@ using System.Collections.Generic;
 
 public class MeshMaskGenerator
 {
-public int textureSize = 1024;
+private int _textureSize = 1024;
+
+public MeshMaskGenerator(int textureSize)
+{
+    _textureSize = textureSize;
+}
 
 public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices)
 {
@@ -33,8 +38,8 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
 
         if (triangles.Count > 0)
         {
-            Texture2D maskTexture = new Texture2D(textureSize, textureSize);
-            Color[] colors = new Color[textureSize * textureSize];
+            Texture2D maskTexture = new Texture2D(_textureSize, _textureSize);
+            Color[] colors = new Color[_textureSize * _textureSize];
             for (int i = 0; i < colors.Length; i++)
             {
                 colors[i] = Color.black;
@@ -61,14 +66,14 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
 
 private void DrawTriangle(Texture2D texture, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color color)
 {
-    uv1 = new Vector2(uv1.x * textureSize, uv1.y * textureSize);
-    uv2 = new Vector2(uv2.x * textureSize, uv2.y * textureSize);
-    uv3 = new Vector2(uv3.x * textureSize, uv3.y * textureSize);
+    uv1 = new Vector2(uv1.x * _textureSize, uv1.y * _textureSize);
+    uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);
+    uv3 = new Vector2(uv3.x * _textureSize, uv3.y * _textureSize);
 
-    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, textureSize - 1);
-    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, textureSize - 1);
-    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, textureSize - 1);
-    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, textureSize - 1);
+    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
+    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
+    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, _textureSize - 1);
+    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, _textureSize - 1);
 
     for (int y = minY; y <= maxY; y++)
     {

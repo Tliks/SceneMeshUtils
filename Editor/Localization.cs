@@ -43,7 +43,8 @@ public class LocalizationEditor
         { "tooltip.SplitMeshMoreToggle", new string[] {"Splits the mesh into smaller pieces. This is off by default as it can create unnecessarily small separations.", "メッシュをさらに細かく分離します。無意味に小さな分離をすることがあるのでデフォルトではオフになっています。"}},
         { "tooltip.SelectAllInRangeToggle", new string[] {"Range selection options. By default, only parts that are completely within the dragged range are selected. Change this to select parts that are even partially within the range.", "範囲選択に関するオプションです。デフォルトでは、ドラッグされた範囲内に完全に含まれているパーツのみが選択されます。これを、一部でも範囲内にあるパーツも選択されるように変更します。"}},
         { "GenerateMaskTexture", new string[] {"GenerateMaskTexture", "マスク画像を生成"}},
-        { "experimentalOptions", new string[] {"Experimental Options", "実験的な機能"}}
+        { "experimentalOptions", new string[] {"Experimental Options", "実験的な機能"}},
+        { "mask.resolution", new string[] {"Resolution", "解像度"}}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";
