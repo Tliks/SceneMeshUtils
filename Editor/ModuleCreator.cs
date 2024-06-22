@@ -69,6 +69,8 @@ public class ModuleCreator
             Selection.activeGameObject = instance;
             //Selection.objects = Selection.gameObjects.Append(instance).ToArray();
 
+            Selection.activeGameObject = new_root;
+            EditorUtility.FocusProjectWindow();
             UnityEngine.Debug.Log("Saved prefab to " + variantPath);
 
         }
