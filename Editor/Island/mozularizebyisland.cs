@@ -690,6 +690,11 @@ public class ModuleCreatorIsland : EditorWindow
         _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));
         if (_showAdvancedOptions)
         {
+            RenderIslandHashField();
+            RenderModeoff();
+
+            EditorGUILayout.Space();
+
             GUI.enabled = _Settings.IncludePhysBone;
             GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.AdditionalTransformsToggle"));
             _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
@@ -707,8 +712,8 @@ public class ModuleCreatorIsland : EditorWindow
             GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("tooltip.SpecifyRootObjectLabel"));
             _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
             
-            RenderIslandHashField();
-            RenderModeoff();
+            EditorGUILayout.Space();
+            
             RenderCreateBothModuleButtons();
         }
 
@@ -858,7 +863,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_isPreviewEnabled)
         {
-            Debug.Log(vertices.Count);
+            //Debug.Log(vertices.Count);
             if (vertices.Count >= 3)
             {
                 _colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices);
@@ -871,7 +876,6 @@ public class ModuleCreatorIsland : EditorWindow
             }
         }
 
-        Debug.Log(_PreviewMeshCollider.sharedMesh.vertices.Count());
         Repaint();
         UpdateEncodedString();
     }
