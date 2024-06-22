@@ -59,7 +59,8 @@ public class ModuleCreatorIsland : EditorWindow
     private Vector3 _offset;
     private Vector3 _middleVertex;
     private const float cameraDistance = 0.3f;
-
+    private Dictionary<int, int> _oldToNewIndexMap;
+    private Vector3[] _Degenerate_vertices;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
@@ -451,7 +452,8 @@ public class ModuleCreatorIsland : EditorWindow
             if (SceneRaycastUtility.IsHitObject(_PreviewSkinnedMeshRenderer.gameObject, hitInfo))
             {
                 int triangleIndex = hitInfo.triangleIndex;
-                List<int> indices = IslandUtility.GetIslandIndexFromTriangleIndex(_BacksideMesh, triangleIndex, _islands, _mergeSamePosition);
+                int newIndex = MeshDeletionUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+                List<int> indices = IslandUtility.GetIslandIndexFromTriangleIndex(_BacksideMesh, newIndex, _islands, _mergeSamePosition);
                 if (_mergeSamePosition) indices = _isPreviewSelected ? indices.Intersect(_selected_Island_Indcies).ToList() : indices.Intersect(_unselected_Island_Indcies).ToList();
                 if (indices.Count > 0 && indices != _PreviousIslandIndices)
                 {
@@ -490,13 +492,13 @@ public class ModuleCreatorIsland : EditorWindow
         
         if (isHighlight)
         {
-            HashSet<(int, int)> foundEdges = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, true) as HashSet<(int, int)>;
+            HashSet<(int, int)> foundEdges = IslandUtility.GetIslandIndicesOrEdgesInCollider(_Degenerate_vertices, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, true) as HashSet<(int, int)>;
             Color color = _isPreviewSelected ? Color.red : Color.cyan;
             _highlightManager.HighlightEdges(foundEdges, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
         }
         else
         {
-            List<int> indices = IslandUtility.GetIslandIndicesOrEdgesInCollider(_colliderMesh, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, false) as List<int>;
+            List<int> indices = IslandUtility.GetIslandIndicesOrEdgesInCollider(_Degenerate_vertices, meshCollider, _islands, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform, false) as List<int>;
             UpdateSelection(indices);
         }
         
@@ -844,30 +846,35 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateMesh()
     {
-        List<int> vertices;
+        List<int> Keepvertices;
         Mesh previewMesh;
 
         if (_isPreviewSelected)
         {
-            vertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
-            _Selected_Vertices_Count = vertices.Count;
+            Keepvertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
+            _Selected_Vertices_Count = Keepvertices.Count;
         }
         else
         {
-            vertices = IslandUtility.GetVerticesFromIndices(_islands, _unselected_Island_Indcies);
-            _Selected_Vertices_Count = _Total_Vertices_Count - vertices.Count;
+            Keepvertices = IslandUtility.GetVerticesFromIndices(_islands, _unselected_Island_Indcies);
+            _Selected_Vertices_Count = _Total_Vertices_Count - Keepvertices.Count;
         }
 
-        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, vertices);
+        previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, Keepvertices);
         _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
 
         if (_isPreviewEnabled)
         {
             //Debug.Log(vertices.Count);
-            if (vertices.Count >= 3)
+            if (Keepvertices.Count >= 3)
             {
-                _colliderMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_BacksideMesh, vertices);
+                _colliderMesh = MeshDeletionUtility.RemoveTrianglesKeepingVertices(_BacksideMesh, Keepvertices);
                 _PreviewMeshCollider.sharedMesh = _colliderMesh;
+
+                // raycast.triangle
+                _oldToNewIndexMap = MeshDeletionUtility.CreateNewToOldTriangleMap(_BacksideMesh, Keepvertices);
+
+                _Degenerate_vertices = MeshDeletionUtility.GetModifiedVertices(_BacksideMesh, Keepvertices).ToArray();
             }
             else
             {

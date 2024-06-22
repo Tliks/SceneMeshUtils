@@ -242,11 +242,27 @@ public static List<List<Island>> GetIslands(Mesh mesh)
     }
 
 
-    public static object GetIslandIndicesOrEdgesInCollider(Mesh mesh, MeshCollider collider, List<List<Island>> mergedIslands, bool mergeSamePosition, bool isall, Transform transform, bool returnEdges)
+    public static object GetIslandIndicesOrEdgesInCollider(Vector3[] vertices, MeshCollider collider, List<List<Island>> mergedIslands, bool mergeSamePosition, bool isall, Transform transform, bool returnEdges)
     {
         List<int> foundIndices = new List<int>();
         HashSet<(int, int)> foundEdges = new HashSet<(int, int)>();
-        Vector3[] vertices = mesh.vertices;
+
+        bool IsInsideIsland(Island island, bool checkAll)
+        {
+            return checkAll ? 
+                island.Vertices.TrueForAll(vertexIndex => 
+                    IsVertexCloseToCollider(vertexIndex)) : 
+                island.Vertices.Exists(vertexIndex => 
+                    IsVertexCloseToCollider(vertexIndex));
+        }
+
+        bool IsVertexCloseToCollider(int vertexIndex)
+        {
+            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
+            Vector3 closestPoint = collider.ClosestPoint(point);
+            float distance = Vector3.Distance(closestPoint, point);
+            return distance < 0.001f;
+        }
 
         foreach (var mergedIsland in mergedIslands)
         {
@@ -254,32 +270,9 @@ public static List<List<Island>> GetIslands(Mesh mesh)
 
             if (mergeSamePosition)
             {
-                if (isall)
-                {
-                    isInsideMergedIsland = mergedIsland.All(island =>
-                        island.Vertices.TrueForAll(vertexIndex => 
-                        {   
-                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
-                            Vector3 closestPoint = collider.ClosestPoint(point);
-                            float distance = Vector3.Distance(closestPoint, point);
-                            bool isEqual = distance < 0.001f;
-                            return isEqual;
-                        })
-                    );
-                }
-                else
-                {
-                    isInsideMergedIsland = mergedIsland.Any(island =>
-                        island.Vertices.Exists(vertexIndex => 
-                        {
-                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
-                            Vector3 closestPoint = collider.ClosestPoint(point);
-                            float distance = Vector3.Distance(closestPoint, point);
-                            bool isEqual = distance < 0.001f;
-                            return isEqual;
-                        })
-                    );
-                }
+                isInsideMergedIsland = isall ? 
+                    mergedIsland.All(island => IsInsideIsland(island, true)) :
+                    mergedIsland.Any(island => IsInsideIsland(island, false));
 
                 if (isInsideMergedIsland)
                 {
@@ -306,32 +299,7 @@ public static List<List<Island>> GetIslands(Mesh mesh)
             {
                 foreach (var island in mergedIsland)
                 {
-                    bool isInside = false;
-
-                    if (isall)
-                    {
-                        isInside = island.Vertices.TrueForAll(vertexIndex => 
-                        {   
-                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
-                            Vector3 closestPoint = collider.ClosestPoint(point);
-                            float distance = Vector3.Distance(closestPoint, point);
-                            bool isEqual = distance < 0.001f;
-                            return isEqual;
-                        });
-                    }
-                    else
-                    {
-                        isInside = island.Vertices.Exists(vertexIndex => 
-                        {
-                            Vector3 point = transform.TransformPoint(vertices[vertexIndex]);
-                            Vector3 closestPoint = collider.ClosestPoint(point);
-                            float distance = Vector3.Distance(closestPoint, point);
-                            bool isEqual = distance < 0.001f;
-                            return isEqual;
-                        });
-                    }
-
-                    if (isInside)
+                    if (IsInsideIsland(island, isall))
                     {
                         if (returnEdges)
                         {
