@@ -61,6 +61,7 @@ public class ModuleCreatorIsland : EditorWindow
     private const float cameraDistance = 0.3f;
     private Dictionary<int, int> _oldToNewIndexMap;
     private Vector3[] _Degenerate_vertices;
+    private string _rootname;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
@@ -155,7 +156,7 @@ public class ModuleCreatorIsland : EditorWindow
             var allVertices = IslandUtility.GetVerticesFromIndices(_islands, islandIndices);
             Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, allVertices, true);
 
-            string path = AssetPathUtility.GenerateMeshPath(_OriginskinnedMeshRenderer.transform.parent.gameObject.name);
+            string path = AssetPathUtility.GenerateMeshPath(_rootname);
             AssetDatabase.CreateAsset(newMesh, path);
             AssetDatabase.SaveAssets();
 
