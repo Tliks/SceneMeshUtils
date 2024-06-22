@@ -11,11 +11,14 @@ public MeshMaskGenerator(int textureSize)
     _textureSize = textureSize;
 }
 
-public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices)
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices, int colorindex)
 {
     Mesh mesh = skinnedMeshRenderer.sharedMesh;
     Material[] materials = skinnedMeshRenderer.sharedMaterials;
     Dictionary<string, Texture2D> maskTextures = new Dictionary<string, Texture2D>();
+
+    Color color = (colorindex == 1) ? Color.white : Color.black;
+    Color drawColor = (colorindex == 1) ? Color.black : Color.white;
 
     for (int subMeshIndex = 0; subMeshIndex < mesh.subMeshCount; subMeshIndex++)
     {
@@ -42,7 +45,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
             Color[] colors = new Color[_textureSize * _textureSize];
             for (int i = 0; i < colors.Length; i++)
             {
-                colors[i] = Color.black;
+                colors[i] = color;
             }
             maskTexture.SetPixels(colors);
 
@@ -52,7 +55,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
                 Vector2 uv2 = mesh.uv[triangles[i + 1]];
                 Vector2 uv3 = mesh.uv[triangles[i + 2]];
 
-                DrawTriangle(maskTexture, uv1, uv2, uv3, Color.white);
+                DrawTriangle(maskTexture, uv1, uv2, uv3, drawColor);
             }
 
             maskTexture.Apply();

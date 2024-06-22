@@ -44,7 +44,11 @@ public class LocalizationEditor
         { "tooltip.SelectAllInRangeToggle", new string[] {"Range selection options. By default, only parts that are completely within the dragged range are selected. Change this to select parts that are even partially within the range.", "範囲選択に関するオプションです。デフォルトでは、ドラッグされた範囲内に完全に含まれているパーツのみが選択されます。これを、一部でも範囲内にあるパーツも選択されるように変更します。"}},
         { "GenerateMaskTexture", new string[] {"GenerateMaskTexture", "マスク画像を生成"}},
         { "experimentalOptions", new string[] {"Experimental Options", "実験的な機能"}},
-        { "mask.resolution", new string[] {"Resolution", "解像度"}}
+        { "mask.description", new string[] {"Generate a mask image of the selected area", "選択した箇所のマスク画像を生成"}},
+        { "mask.resolution", new string[] {"Resolution", "解像度"}},
+        { "mask.color", new string[] {"Selected area color", "選択した箇所の色"}},
+        { "mask.color.white", new string[] {"white", "白"}},
+        { "mask.color.black", new string[] {"black", "黒"}}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";

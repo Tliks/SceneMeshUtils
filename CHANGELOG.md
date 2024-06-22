@@ -14,6 +14,9 @@
 ### Security
 
 ## [1.0.0-beta.10] - 2024-06-23
+### Added
+- mask color option
+
 ### Fixed
 - Expanded UV coordinates in `DrawTriangle` method to mitigate fixboundary issues caused by low mask image resolution
 
