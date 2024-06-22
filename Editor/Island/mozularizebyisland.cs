@@ -815,7 +815,8 @@ public class ModuleCreatorIsland : EditorWindow
             var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
             MeshMaskGenerator generator = new MeshMaskGenerator();
             Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices);
-
+            
+            List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>(Selection.objects);
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
                 string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
@@ -826,11 +827,11 @@ public class ModuleCreatorIsland : EditorWindow
                 UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
                 if (obj != null)
                 {
-                    Selection.objects = Selection.gameObjects.Append(obj).ToArray();
-                    EditorGUIUtility.PingObject(obj);
+                    selectedObjects.Add(obj);
                     Debug.Log("Saved MaskTexture to " + path);
                 }
             }
+            Selection.objects = selectedObjects.ToArray();
         }
 
         GUI.enabled = true;

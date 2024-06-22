@@ -75,10 +75,10 @@ public static class AssetPathUtility
             AssetDatabase.Refresh();
         }
 
-        string folderPath1 = $"{folderPath}/Textur";
+        string folderPath1 = $"{folderPath}/Texture";
         if (!AssetDatabase.IsValidFolder(folderPath1))
         {
-            AssetDatabase.CreateFolder(folderPath, "Textur");
+            AssetDatabase.CreateFolder(folderPath, "Texture");
             AssetDatabase.Refresh();
         }
 
