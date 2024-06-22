@@ -13,6 +13,10 @@
 
 ### Security
 
+## [1.0.0-beta.10] - 2024-06-23
+### Fixed
+- Expanded UV coordinates in `DrawTriangle` method to mitigate fixboundary issues caused by low mask image resolution
+
 ## [1.0.0-beta.9] - 2024-06-22
 ### Added
 - Mask texture generation as an experimental feature.
