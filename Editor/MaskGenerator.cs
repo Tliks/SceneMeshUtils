@@ -70,6 +70,12 @@ private void DrawTriangle(Texture2D texture, Vector2 uv1, Vector2 uv2, Vector2 u
     uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);
     uv3 = new Vector2(uv3.x * _textureSize, uv3.y * _textureSize);
 
+    // UV座標を数ピクセル広げる
+    int expansion = 2;
+    uv1 = ExpandUV(uv1, uv2, uv3, expansion);
+    uv2 = ExpandUV(uv2, uv1, uv3, expansion);
+    uv3 = ExpandUV(uv3, uv1, uv2, expansion);
+
     int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
     int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
     int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, _textureSize - 1);
@@ -87,6 +93,14 @@ private void DrawTriangle(Texture2D texture, Vector2 uv1, Vector2 uv2, Vector2 u
         }
     }
 }
+
+private Vector2 ExpandUV(Vector2 uv, Vector2 uv1, Vector2 uv2, int expansion)
+{
+    Vector2 dir1 = (uv1 - uv).normalized;
+    Vector2 dir2 = (uv2 - uv).normalized;
+    return uv - (dir1 + dir2) * expansion;
+}
+
 private bool IsPointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
 {
     float area = 0.5f * (-b.y * c.x + a.y * (-b.x + c.x) + a.x * (b.y - c.y) + b.x * c.y);
