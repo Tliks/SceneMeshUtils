@@ -838,6 +838,7 @@ public class ModuleCreatorIsland : EditorWindow
                     Debug.Log("Saved MaskTexture to " + path);
                 }
             }
+            selectedObjects.Add(_PreviewMeshObject);
             Selection.objects = selectedObjects.ToArray();
         }
 
