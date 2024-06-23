@@ -17,6 +17,10 @@
 ### Added
 - mask color option
 
+### Changed
+- Changed the default resolution of mask images from 1024 to 512
+- Add timestamp to texture filenames
+
 ### Fixed
 - Expanded UV coordinates to mitigate fixboundary issues caused by low mask image resolution
 - Collider gizmo appears when generating mask
