@@ -55,12 +55,12 @@ public class ModuleCreator
             stopwatch.Stop();
             //UnityEngine.Debug.Log("SavePrefabAsset: " + stopwatch.ElapsedMilliseconds + " ms");
 
-            float BaseX = root.transform.position.x;
-            float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
+            //float BaseX = root.transform.position.x;
+            //float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
             instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
             SceneManager.MoveGameObjectToScene(instance, sourceObject.scene);
-            Vector3 newPosition = instance.transform.position;
-            newPosition.x = randomX;
+            //Vector3 newPosition = instance.transform.position;
+            //newPosition.x = randomX;
             //instance.transform.position = newPosition;
 
             //Selection.objects.Append(instance);
@@ -102,7 +102,7 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
-            new_root = CopyObjects(root, sourceObject.name);
+            new_root = CopyObjects(root, root.name);
             stopwatch.Stop();
             //UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
@@ -233,6 +233,7 @@ public class ModuleCreator
     private GameObject CopyObjects(GameObject root_object, string source_name)
     {
         GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object);
+        duplicatedParent.name = source_name;
         return duplicatedParent;
     }
 

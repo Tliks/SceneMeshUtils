@@ -13,6 +13,10 @@
 
 ### Security
 
+## [1.0.0-beta.11] - 2024-06-23
+### Fixed
+- Texture and mesh are not saved in the correct location
+
 ## [1.0.0-beta.10] - 2024-06-23
 ### Added
 - mask color option
