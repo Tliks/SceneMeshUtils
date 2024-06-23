@@ -66,7 +66,7 @@ public class ModuleCreatorIsland : EditorWindow
     private string _rootname;
     private int[] optionValues = { 512, 1024, 2048 };
     private string[] displayOptions = { "512", "1024", "2048" };
-    private int selectedValue = 1024;
+    private int selectedValue = 512;
     private int _areacolorindex = 0;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
@@ -831,7 +831,8 @@ public class ModuleCreatorIsland : EditorWindow
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
-                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
+                string timeStamp = DateTime.Now.ToString("yyMMdd_HHmmss");
+                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{timeStamp}_{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
                 byte[] bytes = kvp.Value.EncodeToPNG();
                 File.WriteAllBytes(path, bytes);
                 AssetDatabase.Refresh();

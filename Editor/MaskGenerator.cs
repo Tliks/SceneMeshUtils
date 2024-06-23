@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class MeshMaskGenerator
 {
-private int _textureSize = 1024;
+private int _textureSize;
 
 public MeshMaskGenerator(int textureSize)
 {

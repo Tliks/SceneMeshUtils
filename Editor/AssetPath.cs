@@ -82,7 +82,7 @@ public static class AssetPathUtility
             AssetDatabase.Refresh();
         }
 
-        string fileName = mesh_name + "_Mask";
+        string fileName = mesh_name;
         string fileExtension = "png";
         
         return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);
