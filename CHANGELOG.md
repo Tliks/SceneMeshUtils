@@ -18,7 +18,8 @@
 - mask color option
 
 ### Fixed
-- Expanded UV coordinates in `DrawTriangle` method to mitigate fixboundary issues caused by low mask image resolution
+- Expanded UV coordinates to mitigate fixboundary issues caused by low mask image resolution
+- Collider gizmo appears when generating mask
 
 ## [1.0.0-beta.9] - 2024-06-22
 ### Added

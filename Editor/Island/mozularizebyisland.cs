@@ -828,7 +828,7 @@ public class ModuleCreatorIsland : EditorWindow
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue);
             Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices, _areacolorindex);
             
-            List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>(Selection.objects);
+            List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
                 string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
@@ -844,7 +844,7 @@ public class ModuleCreatorIsland : EditorWindow
                     Debug.Log("Saved MaskTexture to " + path);
                 }
             }
-            selectedObjects.Add(_PreviewMeshObject);
+            //Selection.activeGameObject = null;
             Selection.objects = selectedObjects.ToArray();
         }
 
