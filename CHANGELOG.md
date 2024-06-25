@@ -23,6 +23,7 @@
 ### Fixed
 - expanding UV coordinates
 - IndexOutOfRangeException in DeleteMesh
+- colider highlighting was displayed by Selection.activeGameObject during preview.
 
 ## [1.0.0-beta.11] - 2024-06-23
 ### Fixed

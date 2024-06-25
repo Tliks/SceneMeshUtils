@@ -112,7 +112,10 @@ public class ModuleCreator
             //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
 
             EditorGUIUtility.PingObject(new_root);
-            Selection.activeGameObject = new_root;
+
+            // colider gizmoが表示される原因になる？
+            //Selection.activeGameObject = new_root;
+            
             //Selection.objects = Selection.gameObjects.Append(new_root).ToArray();
 
         }
