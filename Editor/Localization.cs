@@ -48,7 +48,8 @@ public class LocalizationEditor
         { "mask.resolution", new string[] {"Resolution", "解像度"}},
         { "mask.color", new string[] {"Selected area color", "選択した箇所の色"}},
         { "mask.color.white", new string[] {"white", "白"}},
-        { "mask.color.black", new string[] {"black", "黒"}}
+        { "mask.color.black", new string[] {"black", "黒"}},
+        { "mask.expansion", new string[] {"Padding", "パディング"}}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";

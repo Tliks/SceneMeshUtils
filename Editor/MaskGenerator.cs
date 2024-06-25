@@ -7,10 +7,13 @@ using Debug = UnityEngine.Debug;
 public class MeshMaskGenerator
 {
 private int _textureSize;
+private int _expansion;
 
-public MeshMaskGenerator(int textureSize)
+public MeshMaskGenerator(int textureSize, int expansion)
 {
     _textureSize = textureSize;
+    _expansion= expansion;
+
 }
 
 public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices, int colorindex)
@@ -80,17 +83,16 @@ private void DrawTriangle(Texture2D texture, ref Color[] colors, Vector2 uv1, Ve
     uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);
     uv3 = new Vector2(uv3.x * _textureSize, uv3.y * _textureSize);
 
-    int expansion = 2;  // 拡張範囲
-    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x) - expansion, 0, _textureSize - 1);
-    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x) + expansion, 0, _textureSize - 1);
-    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y) - expansion, 0, _textureSize - 1);
-    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y) + expansion, 0, _textureSize - 1);
+    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x) - _expansion, 0, _textureSize - 1);
+    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x) + _expansion, 0, _textureSize - 1);
+    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y) - _expansion, 0, _textureSize - 1);
+    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y) + _expansion, 0, _textureSize - 1);
     for (int y = minY; y <= maxY; y++)
     {
         for (int x = minX; x <= maxX; x++)
         {
             Vector2 pixel = new Vector2(x, y);
-            if (IsPointInTriangle(pixel, uv1, uv2, uv3) || IsPointNearTriangle(pixel, uv1, uv2, uv3, expansion))
+            if (IsPointInTriangle(pixel, uv1, uv2, uv3) || IsPointNearTriangle(pixel, uv1, uv2, uv3))
             {
                 colors[y * _textureSize + x] = color;
             }
@@ -98,11 +100,11 @@ private void DrawTriangle(Texture2D texture, ref Color[] colors, Vector2 uv1, Ve
     }
 }
 
-private bool IsPointNearTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c, int expansion)
+private bool IsPointNearTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
 {
-    return PointDistanceToSegment(p, a, b) < expansion 
-        || PointDistanceToSegment(p, b, c) < expansion 
-        || PointDistanceToSegment(p, c, a) < expansion;
+    return PointDistanceToSegment(p, a, b) < _expansion 
+        || PointDistanceToSegment(p, b, c) < _expansion 
+        || PointDistanceToSegment(p, c, a) < _expansion;
 }
 
 private float PointDistanceToSegment(Vector2 p, Vector2 a, Vector2 b)

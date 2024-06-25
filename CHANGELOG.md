@@ -13,6 +13,13 @@
 
 ### Security
 
+## [1.0.0-beta.12] - 2024-06-25
+### Added
+- padding option
+
+### Fixed
+- expanding UV coordinates
+
 ## [1.0.0-beta.11] - 2024-06-23
 ### Fixed
 - Texture and mesh are not saved in the correct location

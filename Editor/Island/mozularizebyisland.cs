@@ -68,6 +68,7 @@ public class ModuleCreatorIsland : EditorWindow
     private string[] displayOptions = { "512", "1024", "2048" };
     private int selectedValue = 512;
     private int _areacolorindex = 0;
+    private int _expansion = 2;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
@@ -820,13 +821,14 @@ public class ModuleCreatorIsland : EditorWindow
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
 
         selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
+        _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
         
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
             Debug.Log(_textFieldValue);
             var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
-            MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue);
+            MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
             Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices, _areacolorindex);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
