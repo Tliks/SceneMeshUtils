@@ -824,6 +824,7 @@ public class ModuleCreatorIsland : EditorWindow
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
+            Debug.Log(_textFieldValue);
             var allVertices = IslandUtility.GetVerticesFromIndices(_islands, _selected_Island_Indcies);
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue);
             Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, allVertices, _areacolorindex);
@@ -878,7 +879,7 @@ public class ModuleCreatorIsland : EditorWindow
     }
 
     private void DuplicateAndSetup()
-    {   
+    {
         Vector3 minOffset = new Vector3(5f, 0, -5f);
         SceneManager.SetActiveScene(_scene);
         ModuleCreatorSettings settings = new ModuleCreatorSettings

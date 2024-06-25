@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class MeshMaskGenerator
 {
@@ -41,13 +43,15 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
 
         if (triangles.Count > 0)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             Texture2D maskTexture = new Texture2D(_textureSize, _textureSize);
             Color[] colors = new Color[_textureSize * _textureSize];
             for (int i = 0; i < colors.Length; i++)
             {
                 colors[i] = color;
             }
-            maskTexture.SetPixels(colors);
 
             for (int i = 0; i < triangles.Count; i += 3)
             {
@@ -55,53 +59,61 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
                 Vector2 uv2 = mesh.uv[triangles[i + 1]];
                 Vector2 uv3 = mesh.uv[triangles[i + 2]];
 
-                DrawTriangle(maskTexture, uv1, uv2, uv3, drawColor);
+                DrawTriangle(maskTexture, ref colors, uv1, uv2, uv3, drawColor);
             }
 
+            maskTexture.SetPixels(colors);
             maskTexture.Apply();
             string materialName = materials[subMeshIndex].name;
             maskTextures[materialName] = maskTexture;
+
+            stopwatch.Stop();
+            //Debug.Log(stopwatch.ElapsedMilliseconds);
         }
     }
-
     return maskTextures;
 }
 
-private void DrawTriangle(Texture2D texture, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color color)
+private void DrawTriangle(Texture2D texture, ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color color)
 {
     uv1 = new Vector2(uv1.x * _textureSize, uv1.y * _textureSize);
     uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);
     uv3 = new Vector2(uv3.x * _textureSize, uv3.y * _textureSize);
 
-    // UV座標を数ピクセル広げる
-    int expansion = 2;
-    uv1 = ExpandUV(uv1, uv2, uv3, expansion);
-    uv2 = ExpandUV(uv2, uv1, uv3, expansion);
-    uv3 = ExpandUV(uv3, uv1, uv2, expansion);
-
-    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
-    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x), 0, _textureSize - 1);
-    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, _textureSize - 1);
-    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y), 0, _textureSize - 1);
-
+    int expansion = 2;  // 拡張範囲
+    int minX = Mathf.Clamp(Mathf.Min((int)uv1.x, (int)uv2.x, (int)uv3.x) - expansion, 0, _textureSize - 1);
+    int maxX = Mathf.Clamp(Mathf.Max((int)uv1.x, (int)uv2.x, (int)uv3.x) + expansion, 0, _textureSize - 1);
+    int minY = Mathf.Clamp(Mathf.Min((int)uv1.y, (int)uv2.y, (int)uv3.y) - expansion, 0, _textureSize - 1);
+    int maxY = Mathf.Clamp(Mathf.Max((int)uv1.y, (int)uv2.y, (int)uv3.y) + expansion, 0, _textureSize - 1);
     for (int y = minY; y <= maxY; y++)
     {
         for (int x = minX; x <= maxX; x++)
         {
             Vector2 pixel = new Vector2(x, y);
-            if (IsPointInTriangle(pixel, uv1, uv2, uv3))
+            if (IsPointInTriangle(pixel, uv1, uv2, uv3) || IsPointNearTriangle(pixel, uv1, uv2, uv3, expansion))
             {
-                texture.SetPixel(x, y, color);
+                colors[y * _textureSize + x] = color;
             }
         }
     }
 }
 
-private Vector2 ExpandUV(Vector2 uv, Vector2 uv1, Vector2 uv2, int expansion)
+private bool IsPointNearTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c, int expansion)
 {
-    Vector2 dir1 = (uv1 - uv).normalized;
-    Vector2 dir2 = (uv2 - uv).normalized;
-    return uv - (dir1 + dir2) * expansion;
+    return PointDistanceToSegment(p, a, b) < expansion 
+        || PointDistanceToSegment(p, b, c) < expansion 
+        || PointDistanceToSegment(p, c, a) < expansion;
+}
+
+private float PointDistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+{
+    Vector2 ap = p - a;
+    Vector2 ab = b - a;
+    float ab2 = ab.x * ab.x + ab.y * ab.y;
+    float ap_ab = ap.x * ab.x + ap.y * ab.y;
+    float t = Mathf.Clamp(ap_ab / ab2, 0.0f, 1.0f);
+    Vector2 point = a + ab * t;
+    return Vector2.Distance(p, point);
 }
 
 private bool IsPointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
