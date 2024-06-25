@@ -17,8 +17,12 @@
 ### Added
 - padding option
 
+### Changed
+- Restored ability to not activate skinnedmesh objects
+
 ### Fixed
 - expanding UV coordinates
+- IndexOutOfRangeException in DeleteMesh
 
 ## [1.0.0-beta.11] - 2024-06-23
 ### Fixed

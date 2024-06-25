@@ -40,22 +40,23 @@ public class MeshDeletionUtility
         Vector2[] uv4 = originalMesh.uv4;
         BoneWeight[] boneWeights = originalMesh.boneWeights;
 
-        for (int i = 0; i < originalMesh.vertexCount; i++)
+    for (int i = 0; i < originalMesh.vertexCount; i++)
+    {
+        if ((keepVertices && verticesIndexesSet.Contains(i)) || (!keepVertices && !verticesIndexesSet.Contains(i)))
         {
-            if ((keepVertices && verticesIndexesSet.Contains(i)) || (!keepVertices && !verticesIndexesSet.Contains(i)))
-            {
-                indexMap[i] = newVerticesList.Count;
-                newVerticesList.Add(vertices[i]);
-                newNormalsList.Add(normals[i]);
-                newTangentsList.Add(tangents[i]);
-                newUvList.Add(uv[i]);
-                newBoneWeight.Add(boneWeights[i]);
-
-                if (uv2.Length > 0) newUv2List.Add(uv2[i]);
-                if (uv3.Length > 0) newUv3List.Add(uv3[i]);
-                if (uv4.Length > 0) newUv4List.Add(uv4[i]);
-            }
+            indexMap[i] = newVerticesList.Count;
+            newVerticesList.Add(vertices[i]);
+            
+            if (normals.Length > i) newNormalsList.Add(normals[i]);
+            if (tangents.Length > i) newTangentsList.Add(tangents[i]);
+            if (uv.Length > i) newUvList.Add(uv[i]);
+            if (boneWeights.Length > i) newBoneWeight.Add(boneWeights[i]);
+            
+            if (uv2.Length > i) newUv2List.Add(uv2[i]);
+            if (uv3.Length > i) newUv3List.Add(uv3[i]);
+            if (uv4.Length > i) newUv4List.Add(uv4[i]);
         }
+    }
 
         stopwatch.Stop();
         //UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
