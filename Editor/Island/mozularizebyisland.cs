@@ -14,8 +14,8 @@ public class ModuleCreatorIsland : EditorWindow
 {
     
     private IslandUtility _islandUtility;
-    [SerializeField] private List<int> _SelectedTriangleIndices = new List<int>();
-    [SerializeField] private List<int> _UnselectedTriangleIndices = new List<int>();
+    [SerializeField] private HashSet<int> _SelectedTriangleIndices = new HashSet<int>();
+    [SerializeField] private HashSet<int> _UnselectedTriangleIndices = new HashSet<int>();
 
     private List<int> _AllTriangleIndices = new List<int>();
     private List<int> _PreviousTriangleIndices = new List<int>();
@@ -158,13 +158,13 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.EndScrollView();
     }
 
-    private void CreateModule(List<int> Vertices)
+    private void CreateModule(HashSet<int> Vertices)
     {
         Debug.Log(_textFieldValue);
         SaveUndoState();
         if (Vertices.Count > 0)
         {
-            Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices, true);
+            Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList(), true);
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname);
             AssetDatabase.CreateAsset(newMesh, path);
@@ -178,7 +178,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void SelectAllIslands()
     {
         SaveUndoState();
-        _SelectedTriangleIndices = new List<int>(_AllTriangleIndices);
+        _SelectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
         _UnselectedTriangleIndices.Clear();
         UpdateMesh();
     }
@@ -187,15 +187,15 @@ public class ModuleCreatorIsland : EditorWindow
     {
         SaveUndoState();
         _SelectedTriangleIndices.Clear();
-        _UnselectedTriangleIndices = new List<int>(_AllTriangleIndices);
+        _UnselectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
         UpdateMesh();
     }
 
     private void ReverseAllIslands()
     {
         SaveUndoState();
-        var temp = new List<int>(_SelectedTriangleIndices);
-        _SelectedTriangleIndices = new List<int>(_UnselectedTriangleIndices);
+        var temp = new HashSet<int>(_SelectedTriangleIndices);
+        _SelectedTriangleIndices = new HashSet<int>(_UnselectedTriangleIndices);
         _UnselectedTriangleIndices = temp;
         UpdateMesh();
     }
@@ -267,7 +267,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         _AllTriangleIndices = Enumerable.Range(0, _bakedMesh.triangles.Count() / 3).ToList();
         _SelectedTriangleIndices.Clear();
-        _UnselectedTriangleIndices = new List<int>(_AllTriangleIndices);
+        _UnselectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
     }
 
     private void RemoveHighlight()
@@ -285,7 +285,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!_isPreviewEnabled) return;
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
-        DontActiveSKin(e);
+        //tiveSKin(e);
         HandleUndoRedoEvent(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
@@ -532,8 +532,10 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateSelection(List<int> indices)
     {
+
         SaveUndoState();
         int logCounter = 0;
+        _stopwatch.Start();
 
         foreach (var index in indices)
         {
@@ -558,7 +560,9 @@ public class ModuleCreatorIsland : EditorWindow
                 _SelectedTriangleIndices.Add(index);
             }
         }
-
+        _stopwatch.Stop();
+        Debug.Log(_stopwatch.ElapsedMilliseconds + " UpdateSelection");
+        _stopwatch.Restart();
         if (logCounter > 0)
         {
             Debug.LogWarning($"{logCounter} indices were already in the list and skipped.");
@@ -568,7 +572,8 @@ public class ModuleCreatorIsland : EditorWindow
         {
             UpdateMesh();
         }
-
+        _stopwatch.Stop();
+        Debug.Log(_stopwatch.ElapsedMilliseconds + " UpdateMesh");
     }
 
     private void RenderPreviewSelectedToggle()
@@ -764,7 +769,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             Debug.Log(_textFieldValue);
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices.ToList(), _areacolorindex);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
@@ -845,7 +850,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.lastActiveSceneView.LookAtDirect(_middleVertex, SceneView.lastActiveSceneView.rotation, cameraDistance);
     }
 
-    public List<int> GetTriangleVertices(int[] triangles, List<int> triangleIndices)
+    public List<int> GetTriangleVertices(int[] triangles, HashSet<int> triangleIndices)
     {
         HashSet<int> verticesList = new HashSet<int>();
         foreach (int triangleIndex in triangleIndices)
@@ -870,7 +875,6 @@ public class ModuleCreatorIsland : EditorWindow
     
         private void UpdateMesh()
     {   
-        _stopwatch.Restart();
         List<int> Keepvertices;
         Mesh previewMesh;
 
@@ -882,35 +886,21 @@ public class ModuleCreatorIsland : EditorWindow
         {
             Keepvertices = GetTriangleVertices(_bakedMesh.triangles, _UnselectedTriangleIndices);
         }
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds + " 1");
-        _stopwatch.Restart();
-
         previewMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(_OriginskinnedMeshRenderer.sharedMesh, Keepvertices);
         _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds+ " 2");
-        _stopwatch.Restart();
-
         if (_isPreviewEnabled)
         {
             //Debug.Log(vertices.Count);
             if (Keepvertices.Count >= 3)
             {
-                _colliderMesh = MeshDeletionUtility.RemoveTrianglesKeepingVertices(_BacksideMesh, Keepvertices);
+                _colliderMesh = MeshDeletionUtility.RemoveTrianglesKeepingVertices(_BacksideMesh, _UnselectedTriangleIndices.ToList());
                 _PreviewMeshCollider.sharedMesh = _colliderMesh;
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds+ " 3");
-        _stopwatch.Restart();
+
                 // raycast.triangle
-                _oldToNewIndexMap = MeshDeletionUtility.CreateNewToOldTriangleMap(_BacksideMesh, Keepvertices);
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds+ " 4");
-        _stopwatch.Restart();
+                _oldToNewIndexMap = MeshDeletionUtility.CreateNewToOldTriangleMap(_BacksideMesh, _UnselectedTriangleIndices.ToList());
+
+                // range selection
                 _Degenerate_vertices = MeshDeletionUtility.GetModifiedVertices(_BacksideMesh, Keepvertices).ToArray();
-                        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds+ " 5");
-        _stopwatch.Restart();
             }
             else
             {
@@ -918,9 +908,6 @@ public class ModuleCreatorIsland : EditorWindow
                 _PreviewMeshCollider.sharedMesh = _colliderMesh;
             }
         }
-
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds);
 
         Repaint();
     }
