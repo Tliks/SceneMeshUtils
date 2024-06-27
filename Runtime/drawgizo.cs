@@ -3,34 +3,62 @@ using UnityEngine;
 
 public class HighlightEdgesManager : MonoBehaviour
 {
-    private Color HighlightColor;
-    //public Color highlightColor = new Color(255f / 255f, 50f / 255f, 0f / 255f, 1f);
-
-    private HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-    private Vector3[] Vertices;
-    private Transform Origin;
+    private Color _highlightColor;
+    private HashSet<(int, int)> _edges = new HashSet<(int, int)>();
+    private Vector3[] _vertices;
+    private Transform _origin;
 
     public void HighlightEdges(HashSet<(int, int)> edges, Vector3[] vertices, Color highlightColor, Transform origin)
     {
-        HighlightColor = highlightColor;
-        edgesToHighlight = edges;
-        Vertices = vertices;
-        Origin = origin;
+        _highlightColor = highlightColor;
+        _origin = origin;
+        _vertices = vertices;
+
+        _edges = edges;
     }
 
+    public void HighlighttriangleIndices(int[] triangles, List<int> triangleIndices, Vector3[] vertices, Color highlightColor, Transform origin)
+    {
+        _highlightColor = highlightColor;
+        _origin = origin;
+        _vertices = vertices;
+
+        _edges = GetMeshEdges(triangles, triangleIndices);
+
+    }
+
+    public HashSet<(int, int)> GetMeshEdges(int[] triangles, List<int> triangleIndices)
+    {
+        HashSet<(int, int)> edges = new HashSet<(int, int)>();
+
+        foreach (int triangleIndex in triangleIndices)
+        {
+            if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
+            {
+                Debug.LogError("Invalid triangle index.");
+                continue;
+            }
+
+            int index0 = triangles[triangleIndex * 3];
+            int index1 = triangles[triangleIndex * 3 + 1];
+            int index2 = triangles[triangleIndex * 3 + 2];
+
+            edges.Add((Mathf.Min(index0, index1), Mathf.Max(index0, index1)));
+            edges.Add((Mathf.Min(index1, index2), Mathf.Max(index1, index2)));
+            edges.Add((Mathf.Min(index2, index0), Mathf.Max(index2, index0)));
+             
+        }
+        return edges;
+    }
+    
     private void OnDrawGizmos()
     {
-        Gizmos.color = HighlightColor;
-        foreach (var edge in edgesToHighlight)
+        Gizmos.color = _highlightColor;
+        foreach (var edge in _edges)
         {
-            DrawEdge(Vertices, edge.Item1, edge.Item2);
+            Vector3 v0 = _origin.TransformPoint(_vertices[edge.Item1]);
+            Vector3 v1 = _origin.TransformPoint(_vertices[edge.Item2]);
+            Gizmos.DrawLine(v0, v1);
         }
-    }
-
-    private void DrawEdge(Vector3[] vertices, int index1, int index2)
-    {
-        Vector3 v0 = Origin.TransformPoint(vertices[index1]);
-        Vector3 v1 = Origin.TransformPoint(vertices[index2]);
-        Gizmos.DrawLine(v0, v1);
     }
 }
