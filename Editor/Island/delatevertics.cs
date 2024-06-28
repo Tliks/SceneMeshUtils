@@ -173,61 +173,6 @@ public class MeshDeletionUtility
         }
     }
 
-    public static List<Vector3> GetModifiedVertices(Mesh originalMesh, List<int> vertexIndexes)
-    {   
-        List<Vector3> vertices = new List<Vector3>(originalMesh.vertexCount);
-
-        originalMesh.GetVertices(vertices);
-
-        HashSet<int> vertexIndexesSet = new HashSet<int>(vertexIndexes);
-        Vector3 replacementValue = Vector3.positiveInfinity;
-
-        for (int i = 0; i < vertices.Count; i++)
-        {
-            if (!vertexIndexesSet.Contains(i))
-            {
-                vertices[i] = replacementValue;
-            }
-        }
-
-        return vertices;
-    }
-
-    public static Mesh KeepVerticesUsingDegenerateTriangles(Mesh originalMesh, List<int> vertexIndexes)
-    {
-        Mesh newMesh = Object.Instantiate(originalMesh);
-        newMesh.vertices = GetModifiedVertices(originalMesh, vertexIndexes).ToArray();
-        return newMesh;
-    }
-
-    public static Mesh GenerateBacksideMesh(Mesh mesh)
-    {
-        Mesh newMesh = Object.Instantiate(mesh);
-
-        int[] triangles = mesh.triangles;    
-        int triCount = triangles.Length;
-
-        int[] newTriangles = new int[triCount * 2];
-
-        for (int i = 0; i < triCount; i += 3)
-        {
-            newTriangles[i] = triangles[i];
-            newTriangles[i + 1] = triangles[i + 1];
-            newTriangles[i + 2] = triangles[i + 2];
-
-            newTriangles[i + triCount] = triangles[i];
-            newTriangles[i + triCount + 1] = triangles[i + 2];
-            newTriangles[i + triCount + 2] = triangles[i + 1];
-        }
-
-        newMesh.triangles = newTriangles;
-        
-        newMesh.RecalculateBounds();
-        newMesh.RecalculateNormals();
-
-        return newMesh;
-    }
-
     public static void RemoveUnusedMaterials(SkinnedMeshRenderer skinnedMeshRenderer)
     {
         Mesh newMesh = skinnedMeshRenderer.sharedMesh;
@@ -255,39 +200,18 @@ public class MeshDeletionUtility
     }
 
 
-    public static Dictionary<int, int> CreateNewToOldTriangleMap(Mesh originalMesh, List<int> triangleIndexesToKeep)
-    {
-        int[] originalTriangles = originalMesh.triangles;
-        Dictionary<int, int> newToOldTriangleMap = new Dictionary<int, int>();
-        HashSet<int> triangleIndexesToKeepSet = new HashSet<int>(triangleIndexesToKeep);
-        
-        int newTriangleIndex = 0;
-        for (int i = 0; i < originalTriangles.Length; i += 3)
-        {
-            int triangleIndex = i / 3;
 
-            if (triangleIndexesToKeepSet.Contains(triangleIndex))
-            {
-                newToOldTriangleMap[newTriangleIndex] = triangleIndex;
-                newTriangleIndex++;
-            }
-        }
-
-        return newToOldTriangleMap;
-    }
-
-    public static Mesh RemoveTrianglesKeepingVertices(Mesh originalMesh, List<int> triangleIndexesToKeep)
+    public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
         int[] originalTriangles = originalMesh.triangles;
         List<int> newTriangles = new List<int>();
-        HashSet<int> triangleIndexesToKeepSet = new HashSet<int>(triangleIndexesToKeep);
 
         for (int i = 0; i < originalTriangles.Length; i += 3)
         {
             int triangleIndex = i / 3;
 
-            if (triangleIndexesToKeepSet.Contains(triangleIndex))
+            if (triangleIndexesToKeep.Contains(triangleIndex))
             {
                 newTriangles.Add(originalTriangles[i]);
                 newTriangles.Add(originalTriangles[i + 1]);
@@ -296,10 +220,46 @@ public class MeshDeletionUtility
         }
 
         newMesh.triangles = newTriangles.ToArray();
-        newMesh.RecalculateNormals();
-        newMesh.RecalculateBounds();
+        //newMesh.RecalculateNormals();
+        //newMesh.RecalculateBounds();
 
         return newMesh;
+    }
+    public static (Mesh, Dictionary<int, int>) ProcessMesh(Mesh originalMesh, HashSet<int> trianglesToKeep)
+    {
+        Mesh newMesh = Object.Instantiate(originalMesh);
+        int[] originalTriangles = newMesh.triangles;
+        List<int> newTriangles = new List<int>();
+        Dictionary<int, int> newToOldTriangleMap = new Dictionary<int, int>();
+
+        int newTriangleIndex = 0;
+        for (int i = 0; i < originalTriangles.Length; i += 3)
+        {
+            int triangleIndex = i / 3;
+
+            if (trianglesToKeep.Contains(triangleIndex))
+            {
+                // 前面ポリゴンの追加
+                for (int j = 0; j < 3; j++)
+                {
+                    newTriangles.Add(originalTriangles[i + j]);
+                }
+                newToOldTriangleMap[newTriangleIndex] = triangleIndex;
+                newTriangleIndex++;
+
+                // 裏面ポリゴンの追加
+                newTriangles.Add(originalTriangles[i + 2]);
+                newTriangles.Add(originalTriangles[i + 1]);
+                newTriangles.Add(originalTriangles[i]);
+                newToOldTriangleMap[newTriangleIndex] = triangleIndex;
+                newTriangleIndex++;
+            }
+        }
+
+        newMesh.triangles = newTriangles.ToArray();
+        //newMesh.RecalculateNormals();
+
+        return (newMesh, newToOldTriangleMap);
     }
 
     public static int ConvertNewTriangleIndexToOld(int newTriangleIndex, Dictionary<int, int> newToOldTriangleMap)
@@ -310,4 +270,7 @@ public class MeshDeletionUtility
         }
         return -1; // 対応する元のトライアングルが見つからない場合
 }
+
+
+
 }

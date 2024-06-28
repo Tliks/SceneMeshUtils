@@ -146,16 +146,16 @@ public class IslandUtility
         return (beforeMerge, afterMerge);
     }
 
-    public List<int> GetIslandtrianglesFromTriangleIndex(int triangleIndex, bool mergeSamePosition)
+    public HashSet<int> GetIslandtrianglesFromTriangleIndex(int triangleIndex, bool mergeSamePosition)
     {   
-        List<int> foundTriangles = new List<int>();
+        HashSet<int> foundTriangles = new HashSet<int>();
         List<Island> islands = mergeSamePosition ? MergedIslands : UnMergedIslands;
 
         foreach (var island in islands)
         {
             if (island.TriangleIndices.Contains(triangleIndex))
             {
-                foundTriangles = new List<int>(island.TriangleIndices);
+                foundTriangles = new HashSet<int>(island.TriangleIndices);
                 break;
             }
         }
@@ -168,7 +168,7 @@ public class IslandUtility
         return foundTriangles;
     }
 
-    public List<int> GetIslandVerticesInCollider(Vector3[] vertices, MeshCollider collider, bool mergeSamePosition, bool checkAll, Transform transform)
+    public HashSet<int> GetIslandTrianglesInCollider(Vector3[] vertices, MeshCollider collider, bool mergeSamePosition, bool checkAll, Transform transform)
     {
         HashSet<int> foundVertices = new HashSet<int>();
         
@@ -177,11 +177,11 @@ public class IslandUtility
         {
             if (IsInsideIsland(island, checkAll))
             {
-                foundVertices.UnionWith(island.VertexIndices);
+                foundVertices.UnionWith(island.TriangleIndices);
             }
         }
 
-        return foundVertices.ToList();
+        return foundVertices;
 
         bool IsInsideIsland(Island island, bool checkAll) =>
             checkAll ? island.VertexIndices.TrueForAll(IsVertexCloseToCollider) 

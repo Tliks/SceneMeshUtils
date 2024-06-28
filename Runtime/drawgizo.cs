@@ -17,7 +17,7 @@ public class HighlightEdgesManager : MonoBehaviour
         _edges = edges;
     }
 
-    public void HighlighttriangleIndices(int[] triangles, List<int> triangleIndices, Vector3[] vertices, Color highlightColor, Transform origin)
+    public void HighlighttriangleIndices(int[] triangles, HashSet<int> triangleIndices, Vector3[] vertices, Color highlightColor, Transform origin)
     {
         _highlightColor = highlightColor;
         _origin = origin;
@@ -27,7 +27,7 @@ public class HighlightEdgesManager : MonoBehaviour
 
     }
 
-    public HashSet<(int, int)> GetMeshEdges(int[] triangles, List<int> triangleIndices)
+    public HashSet<(int, int)> GetMeshEdges(int[] triangles, HashSet<int> triangleIndices)
     {
         HashSet<(int, int)> edges = new HashSet<(int, int)>();
 
