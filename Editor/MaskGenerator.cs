@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using System;
 
 public class MeshMaskGenerator
 {
@@ -16,31 +17,45 @@ public MeshMaskGenerator(int textureSize, int expansion)
 
 }
 
-public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, List<int> vertexIndices, int colorindex)
-{
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, int colorindex)
+{   
+    Color color = (colorindex == 1) ? Color.white : Color.black;
+    Color drawColor = (colorindex == 1) ? Color.black : Color.white;
+    Color[] baseColors = new Color[_textureSize * _textureSize];
+    for (int i = 0; i < baseColors.Length; i++)
+    {
+        baseColors[i] = color;
+    }
+
     Mesh mesh = skinnedMeshRenderer.sharedMesh;
     Material[] materials = skinnedMeshRenderer.sharedMaterials;
     Dictionary<string, Texture2D> maskTextures = new Dictionary<string, Texture2D>();
 
-    Color color = (colorindex == 1) ? Color.white : Color.black;
-    Color drawColor = (colorindex == 1) ? Color.black : Color.white;
+    int[] allTriangles = mesh.triangles;
+    Dictionary<int, int> vertexToTriangleIndexMap = new Dictionary<int, int>();
+    for (int i = 0; i < allTriangles.Length; i += 3)
+    {
+        vertexToTriangleIndexMap[allTriangles[i]] = i / 3;
+        vertexToTriangleIndexMap[allTriangles[i + 1]] = i / 3;
+        vertexToTriangleIndexMap[allTriangles[i + 2]] = i / 3;
+    }
+
 
     for (int subMeshIndex = 0; subMeshIndex < mesh.subMeshCount; subMeshIndex++)
     {
         List<int> triangles = new List<int>();
-
         int[] subMeshTriangles = mesh.GetTriangles(subMeshIndex);
+        
         for (int i = 0; i < subMeshTriangles.Length; i += 3)
         {
-            int v1 = subMeshTriangles[i];
-            int v2 = subMeshTriangles[i + 1];
-            int v3 = subMeshTriangles[i + 2];
+            // Use the vertexToTriangleIndexMap for faster lookup
+            int triangleIndex = vertexToTriangleIndexMap[subMeshTriangles[i]];
 
-            if (vertexIndices.Contains(v1) && vertexIndices.Contains(v2) && vertexIndices.Contains(v3))
+            if (triangleIndices.Contains(triangleIndex))
             {
-                triangles.Add(v1);
-                triangles.Add(v2);
-                triangles.Add(v3);
+                triangles.Add(subMeshTriangles[i]);
+                triangles.Add(subMeshTriangles[i + 1]);
+                triangles.Add(subMeshTriangles[i + 2]);
             }
         }
 
@@ -50,11 +65,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
             stopwatch.Start();
 
             Texture2D maskTexture = new Texture2D(_textureSize, _textureSize);
-            Color[] colors = new Color[_textureSize * _textureSize];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                colors[i] = color;
-            }
+            Color[] colors = (Color[])baseColors.Clone();
 
             for (int i = 0; i < triangles.Count; i += 3)
             {
@@ -62,7 +73,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
                 Vector2 uv2 = mesh.uv[triangles[i + 1]];
                 Vector2 uv3 = mesh.uv[triangles[i + 2]];
 
-                DrawTriangle(maskTexture, ref colors, uv1, uv2, uv3, drawColor);
+                DrawTriangle(ref colors, uv1, uv2, uv3, drawColor);
             }
 
             maskTexture.SetPixels(colors);
@@ -77,7 +88,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
     return maskTextures;
 }
 
-private void DrawTriangle(Texture2D texture, ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color color)
+private void DrawTriangle(ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color color)
 {
     uv1 = new Vector2(uv1.x * _textureSize, uv1.y * _textureSize);
     uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);

@@ -737,7 +737,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             Debug.Log(_textFieldValue);
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices.ToList(), _areacolorindex);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
