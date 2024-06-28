@@ -865,7 +865,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (KeeptriangleIndices.Count > 0)
             {
-                (colliderMesh, _oldToNewIndexMap) = MeshDeletionUtility.ProcessMesh(_bakedMesh, KeeptriangleIndices);
+                (colliderMesh, _oldToNewIndexMap) = MeshDeletionUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
                 _PreviewMeshCollider.sharedMesh = colliderMesh;
             }
             else

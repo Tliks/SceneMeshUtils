@@ -199,13 +199,13 @@ public class MeshDeletionUtility
         skinnedMeshRenderer.sharedMaterials = usedMaterials.ToArray();
     }
 
-
-
     public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
         int[] originalTriangles = originalMesh.triangles;
-        List<int> newTriangles = new List<int>();
+
+        // triangleIndexesToKeepのサイズに基づいて初期サイズを設定
+        List<int> newTriangles = new List<int>(triangleIndexesToKeep.Count * 3);
 
         for (int i = 0; i < originalTriangles.Length; i += 3)
         {
@@ -220,17 +220,18 @@ public class MeshDeletionUtility
         }
 
         newMesh.triangles = newTriangles.ToArray();
-        //newMesh.RecalculateNormals();
-        //newMesh.RecalculateBounds();
 
         return newMesh;
     }
-    public static (Mesh, Dictionary<int, int>) ProcessMesh(Mesh originalMesh, HashSet<int> trianglesToKeep)
+
+    public static (Mesh, Dictionary<int, int>) ProcesscolliderMesh(Mesh originalMesh, HashSet<int> trianglesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
         int[] originalTriangles = newMesh.triangles;
-        List<int> newTriangles = new List<int>();
-        Dictionary<int, int> newToOldTriangleMap = new Dictionary<int, int>();
+
+        // trianglesToKeepのサイズに基づいて初期サイズを設定
+        List<int> newTriangles = new List<int>(trianglesToKeep.Count * 6);
+        Dictionary<int, int> newToOldTriangleMap = new Dictionary<int, int>(trianglesToKeep.Count * 2);
 
         int newTriangleIndex = 0;
         for (int i = 0; i < originalTriangles.Length; i += 3)
@@ -257,7 +258,6 @@ public class MeshDeletionUtility
         }
 
         newMesh.triangles = newTriangles.ToArray();
-        //newMesh.RecalculateNormals();
 
         return (newMesh, newToOldTriangleMap);
     }
@@ -269,8 +269,6 @@ public class MeshDeletionUtility
             return oldTriangleIndex;
         }
         return -1; // 対応する元のトライアングルが見つからない場合
-}
-
-
+    }
 
 }
