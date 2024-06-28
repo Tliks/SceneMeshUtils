@@ -161,7 +161,7 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
         if (Vertices.Count > 0)
         {
-            Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList(), true);
+            Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList());
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname);
             AssetDatabase.CreateAsset(newMesh, path);

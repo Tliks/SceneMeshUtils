@@ -4,13 +4,30 @@ using System.Diagnostics;
 
 public class MeshDeletionUtility
 {
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> verticesIndexes, bool keepVertices)
+    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> triangleIndexes)
     {
         Stopwatch stopwatch = new Stopwatch();
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
-        HashSet<int> verticesIndexesSet = new(verticesIndexes);
-        int newVerticesCount = keepVertices ? verticesIndexesSet.Count : originalMesh.vertexCount - verticesIndexesSet.Count;
+        HashSet<int> verticesIndexesSet = new();
+        int subMeshCount = originalMesh.subMeshCount;
+
+        // Triangle indices から削除すべき頂点インデックスセットを作成
+        for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
+        {
+            int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
+            for (int i = 0; i < originalTriangles.Length; i += 3)
+            {
+                if (triangleIndexes.Contains(i / 3))
+                {
+                    verticesIndexesSet.Add(originalTriangles[i]);
+                    verticesIndexesSet.Add(originalTriangles[i + 1]);
+                    verticesIndexesSet.Add(originalTriangles[i + 2]);
+                }
+            }
+        }
+
+        int newVerticesCount = verticesIndexesSet.Count;
 
         stopwatch.Start();
 
@@ -40,23 +57,23 @@ public class MeshDeletionUtility
         Vector2[] uv4 = originalMesh.uv4;
         BoneWeight[] boneWeights = originalMesh.boneWeights;
 
-    for (int i = 0; i < originalMesh.vertexCount; i++)
-    {
-        if ((keepVertices && verticesIndexesSet.Contains(i)) || (!keepVertices && !verticesIndexesSet.Contains(i)))
+        for (int i = 0; i < originalMesh.vertexCount; i++)
         {
-            indexMap[i] = newVerticesList.Count;
-            newVerticesList.Add(vertices[i]);
-            
-            if (normals.Length > i) newNormalsList.Add(normals[i]);
-            if (tangents.Length > i) newTangentsList.Add(tangents[i]);
-            if (uv.Length > i) newUvList.Add(uv[i]);
-            if (boneWeights.Length > i) newBoneWeight.Add(boneWeights[i]);
-            
-            if (uv2.Length > i) newUv2List.Add(uv2[i]);
-            if (uv3.Length > i) newUv3List.Add(uv3[i]);
-            if (uv4.Length > i) newUv4List.Add(uv4[i]);
+            if (verticesIndexesSet.Contains(i))
+            {
+                indexMap[i] = newVerticesList.Count;
+                newVerticesList.Add(vertices[i]);
+                
+                if (normals.Length > i) newNormalsList.Add(normals[i]);
+                if (tangents.Length > i) newTangentsList.Add(tangents[i]);
+                if (uv.Length > i) newUvList.Add(uv[i]);
+                if (boneWeights.Length > i) newBoneWeight.Add(boneWeights[i]);
+                
+                if (uv2.Length > i) newUv2List.Add(uv2[i]);
+                if (uv3.Length > i) newUv3List.Add(uv3[i]);
+                if (uv4.Length > i) newUv4List.Add(uv4[i]);
+            }
         }
-    }
 
         stopwatch.Stop();
         //UnityEngine.Debug.Log("Vertex Processing: " + stopwatch.ElapsedMilliseconds + " ms");
@@ -120,15 +137,11 @@ public class MeshDeletionUtility
             newTrianglesList.Clear();
             for (int i = 0; i < originalTriangles.Length; i += 3)
             {
-                int index0 = originalTriangles[i];
-                int index1 = originalTriangles[i + 1];
-                int index2 = originalTriangles[i + 2];
-
-                if (indexMap.ContainsKey(index0) && indexMap.ContainsKey(index1) && indexMap.ContainsKey(index2))
+                if (indexMap.ContainsKey(originalTriangles[i]) && indexMap.ContainsKey(originalTriangles[i + 1]) && indexMap.ContainsKey(originalTriangles[i + 2]))
                 {
-                    newTrianglesList.Add(indexMap[index0]);
-                    newTrianglesList.Add(indexMap[index1]);
-                    newTrianglesList.Add(indexMap[index2]);
+                    newTrianglesList.Add(indexMap[originalTriangles[i]]);
+                    newTrianglesList.Add(indexMap[originalTriangles[i + 1]]);
+                    newTrianglesList.Add(indexMap[originalTriangles[i + 2]]);
                 }
             }
 
