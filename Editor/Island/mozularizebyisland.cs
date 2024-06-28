@@ -421,7 +421,7 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 int triangleIndex = hitInfo.triangleIndex;
                 int newIndex = MeshDeletionUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
-                List<int> Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(_BacksideMesh, newIndex, _mergeSamePosition);
+                List<int> Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
                 if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToList() : Triangles.Intersect(_UnselectedTriangleIndices).ToList();
                 if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
                 {
