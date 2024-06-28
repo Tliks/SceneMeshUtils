@@ -14,11 +14,13 @@ public class ModuleCreatorIsland : EditorWindow
 {
     
     private IslandUtility _islandUtility;
-    [SerializeField] private HashSet<int> _SelectedTriangleIndices = new HashSet<int>();
-    [SerializeField] private HashSet<int> _UnselectedTriangleIndices = new HashSet<int>();
+    private HashSet<int> _SelectedTriangleIndices;
+    private HashSet<int> _UnselectedTriangleIndices;
 
     private HashSet<int> _AllTriangleIndices = new HashSet<int>();
     private HashSet<int> _PreviousTriangleIndices = new HashSet<int>();
+
+    private HistoryManager _historyManager; 
 
     private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private SkinnedMeshRenderer _PreviewSkinnedMeshRenderer;
@@ -70,6 +72,7 @@ public class ModuleCreatorIsland : EditorWindow
     public static void ShowWindowFromGameObject()
     {
         GetWindow<ModuleCreatorIsland>("Module Creator");
+        
     }
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
@@ -88,9 +91,10 @@ public class ModuleCreatorIsland : EditorWindow
         CalculateIslands();
         ToggleSelectionEnabled(true);
         ToggleSelectionSelected(false);
+        _historyManager = new HistoryManager(10); 
+        SaveUndoState();
 
         SceneView.duringSceneGui += OnSceneGUI;
-        Undo.undoRedoPerformed += OnUndoRedo;
     }
 
     private void OnDisable()
@@ -107,21 +111,12 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.lastActiveSceneView.LookAtDirect(_middleVertex - _offset, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)), cameraDistance);
 
         SceneView.duringSceneGui -= OnSceneGUI;
-        Undo.undoRedoPerformed -= OnUndoRedo;
         SceneView.RepaintAll();
     }
 
     private void SaveUndoState()
     {
-        //_stopwatch.Restart();
-        //Undo.RecordObject(this, "State Change");
-        //_stopwatch.Stop();
-        //Debug.Log(_stopwatch.ElapsedMilliseconds + "saveundo");
-    }
-
-    private void OnUndoRedo()
-    {
-        UpdateMesh();
+        _historyManager.Add(_SelectedTriangleIndices);
     }
 
     private void OnGUI()
@@ -263,7 +258,7 @@ public class ModuleCreatorIsland : EditorWindow
         Debug.Log($"Islands Merged: {_islandUtility.GetMergedIslandCount()} of {_islandUtility.GetIslandCount()} - Elapsed Time: {_stopwatch.ElapsedMilliseconds} ms");
 
         _AllTriangleIndices = Enumerable.Range(0, _bakedMesh.triangles.Count() / 3).ToHashSet();
-        _SelectedTriangleIndices.Clear();
+        _SelectedTriangleIndices = new HashSet<int>();
         _UnselectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
     }
 
@@ -306,12 +301,12 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (e.keyCode == KeyCode.Z) // Ctrl/Cmd + Z
             {
-                Undo.PerformUndo();
+                PerformUndo();
                 e.Use();
             }
             else if (e.keyCode == KeyCode.Y) // Ctrl/Cmd + Y
             {
-                Undo.PerformRedo();
+                PerformRedo();
                 e.Use();
             }
         }
@@ -668,32 +663,18 @@ public class ModuleCreatorIsland : EditorWindow
     {
         EditorGUILayout.BeginHorizontal();
 
-        bool performUndo = false;
-        bool performRedo = false;
-
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("UndoButton")))
         {
-            performUndo = true;
+            PerformUndo();
         }
 
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("RedoButton")))
         {
-            performRedo = true;
+            PerformRedo();
         }
 
         EditorGUILayout.EndHorizontal();
 
-        if (performUndo)
-        {
-            Undo.PerformUndo();
-            GUIUtility.ExitGUI();
-        }
-
-        if (performRedo)
-        {
-            Undo.PerformRedo();
-            GUIUtility.ExitGUI();
-        }
     }
 
     private void RenderCreateModuleButtons()
@@ -866,5 +847,19 @@ public class ModuleCreatorIsland : EditorWindow
         }
 
         Repaint();
+    }
+
+    private void PerformUndo()
+    {
+        _SelectedTriangleIndices = _historyManager.Undo();
+        _UnselectedTriangleIndices = _AllTriangleIndices.Except(_SelectedTriangleIndices).ToHashSet();
+        UpdateMesh();
+    }
+
+    private void PerformRedo()
+    {
+         _SelectedTriangleIndices = _historyManager.Redo();
+        _UnselectedTriangleIndices = _AllTriangleIndices.Except(_SelectedTriangleIndices).ToHashSet();
+        UpdateMesh();       
     }
 }
