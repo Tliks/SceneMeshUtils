@@ -59,7 +59,6 @@ public class ModuleCreatorIsland : EditorWindow
     private Vector3 _middleVertex;
     private const float cameraDistance = 0.3f;
     private Dictionary<int, int> _oldToNewIndexMap;
-    private Vector3[] _Degenerate_vertices;
     private string _rootname;
     private int[] optionValues = { 512, 1024, 2048 };
     private string[] displayOptions = { "512", "1024", "2048" };
@@ -455,7 +454,6 @@ public class ModuleCreatorIsland : EditorWindow
         if (isHighlight)
         {
             Color color = _isPreviewSelected ? Color.red : Color.cyan;
-            //_highlightManager.HighlightvertexIndices(_bakedMesh.triangles, Vertices, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
             _highlightManager.HighlighttriangleIndices(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
         }
         else
@@ -532,10 +530,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateSelection(HashSet<int> indices)
     {
-        _stopwatch.Restart();
         SaveUndoState();
-        _stopwatch.Start();
-
         if (_isPreviewSelected)
         {
             _SelectedTriangleIndices.ExceptWith(indices);
@@ -546,12 +541,7 @@ public class ModuleCreatorIsland : EditorWindow
             _UnselectedTriangleIndices.ExceptWith(indices);
             _SelectedTriangleIndices.UnionWith(indices);
         }
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds + "updateselection");
-        _stopwatch.Restart();
         UpdateMesh();
-        _stopwatch.Stop();
-        Debug.Log(_stopwatch.ElapsedMilliseconds + "updatemsh");
     }
 
     private void RenderPreviewSelectedToggle()
