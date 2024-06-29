@@ -183,14 +183,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_UtilityIndex == 1)
         {
-            RenderPhysBoneOptions();
-
-            EditorGUILayout.Space();
-
-            RenderCreateModuleButtons();
-            EditorGUILayout.Space();
-            
-            process_advanced_options();
+            RenderModuleCreator();
         }
         else if (_UtilityIndex == 2)
         {
@@ -202,6 +195,19 @@ public class ModuleCreatorIsland : EditorWindow
         else if (_UtilityIndex == 4)
         {
         }
+    }
+
+    private void RenderModuleCreator()
+    {
+        RenderPhysBoneOptions();
+
+        EditorGUILayout.Space();
+
+        RenderCreateModuleButtons();
+        RenderCreateBothModuleButtons();
+        EditorGUILayout.Space();
+        
+        process_advanced_options();
     }
 
     private void CreateModule(HashSet<int> Vertices)
@@ -705,10 +711,7 @@ public class ModuleCreatorIsland : EditorWindow
 
             GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("tooltip.SpecifyRootObjectLabel"));
             _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
-            
-            EditorGUILayout.Space();
-            
-            RenderCreateBothModuleButtons();
+                    
         }
 
         EditorGUILayout.Space();
@@ -758,6 +761,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void RenderGenerateMask()
     {
+        EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
         string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black") };
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
@@ -767,6 +771,7 @@ public class ModuleCreatorIsland : EditorWindow
         
         // Create Selected Islands Module
         GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
+        EditorGUILayout.Space();
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
             Debug.Log(_textFieldValue);
