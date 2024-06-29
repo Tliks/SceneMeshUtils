@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-public class MeshDeletionUtility
+public class MeshUtility
 {
     public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> triangleIndexes)
     {

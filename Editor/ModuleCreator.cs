@@ -253,7 +253,7 @@ public class ModuleCreator
         if (_Settings.newmesh) 
         {
             skinnedMeshRenderer.sharedMesh = _Settings.newmesh;
-            MeshDeletionUtility.RemoveUnusedMaterials(skinnedMeshRenderer);
+            MeshUtility.RemoveUnusedMaterials(skinnedMeshRenderer);
         }
 
         // SkinnedMeshRendererのrootBoneとanchor overrideに設定されているオブジェクトを追加

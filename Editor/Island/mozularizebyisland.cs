@@ -210,7 +210,7 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
         if (Vertices.Count > 0)
         {
-            Mesh newMesh = MeshDeletionUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList());
+            Mesh newMesh = MeshUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList());
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname);
             AssetDatabase.CreateAsset(newMesh, path);
@@ -466,7 +466,7 @@ public class ModuleCreatorIsland : EditorWindow
             if (SceneRaycastUtility.IsHitObject(_PreviewSkinnedMeshRenderer.gameObject, hitInfo))
             {
                 int triangleIndex = hitInfo.triangleIndex;
-                int newIndex = MeshDeletionUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+                int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
                 HashSet<int> Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
                 if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
                 if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
@@ -882,14 +882,14 @@ public class ModuleCreatorIsland : EditorWindow
 
         HashSet<int> KeeptriangleIndices = _isPreviewSelected ? _SelectedTriangleIndices : _UnselectedTriangleIndices;
 
-        previewMesh = MeshDeletionUtility.RemoveTriangles(_OriginskinnedMeshRenderer.sharedMesh, KeeptriangleIndices);
+        previewMesh = MeshUtility.RemoveTriangles(_OriginskinnedMeshRenderer.sharedMesh, KeeptriangleIndices);
         _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
 
         if (_isPreviewEnabled)
         {
             if (KeeptriangleIndices.Count > 0)
             {
-                (colliderMesh, _oldToNewIndexMap) = MeshDeletionUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
+                (colliderMesh, _oldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
                 _PreviewMeshCollider.sharedMesh = colliderMesh;
             }
             else
