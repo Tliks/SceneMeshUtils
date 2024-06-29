@@ -49,7 +49,16 @@ public class LocalizationEditor
         { "mask.color", new string[] {"Selected area color", "選択した箇所の色"}},
         { "mask.color.white", new string[] {"white", "白"}},
         { "mask.color.black", new string[] {"black", "黒"}},
-        { "mask.expansion", new string[] {"Padding", "パディング"}}
+        { "mask.expansion", new string[] {"Padding", "パディング"}},
+        { "SelectionMode.description", new string[] { "SelectionMode: ", "選択モード: " }},
+        { "SelectionMode.Island", new string[] { "Island", "アイランド" }},
+        { "SelectionMode.Polygon", new string[] { "Polygon", "ポリゴン" }},
+        { "Utility.description", new string[] { "Action: ", "実行内容: " }},
+        { "Utility.None", new string[] { "Please Select", "選択してください" }},
+        { "Utility.ModuleCreator", new string[] { "Create Module", "モジュールを生成" }},
+        { "Utility.GenerateMask", new string[] { "Generate Mask Texture", "マスク画像を生成" }},
+        { "Utility.DeleteMesh", new string[] { "Delete Mesh", "メッシュを削除" }},
+        { "Utility.BlendShape", new string[] { "Generate Clamp BlendShape", "貫通対策ブレンドシェイプを生成" }}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";

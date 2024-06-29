@@ -54,6 +54,8 @@ public class ModuleCreatorIsland : EditorWindow
     private const float dragThreshold = 10f;
     private bool _isAll = true;
     private Vector2 _scrollPosition;
+    private int _SelectionModeIndex = 0;
+    private int _UtilityIndex = 0;
     private bool _isPreviewSelected;
     private bool _isPreviewEnabled;
     private Scene _scene;
@@ -71,7 +73,7 @@ public class ModuleCreatorIsland : EditorWindow
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
-        GetWindow<ModuleCreatorIsland>("Module Creator");
+        GetWindow<ModuleCreatorIsland>("Utilities");
         
     }
 
@@ -121,8 +123,28 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnGUI()
     {
-        _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+        //_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
+        GUILayout.BeginHorizontal();
+        float halfWidth = position.width / 2f;
+
+        GUILayout.BeginVertical(GUILayout.Width(halfWidth));
+        RenderSelectionWinodw();
+        GUILayout.EndVertical();
+
+        GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
+        
+        GUILayout.BeginVertical();
+        RenderUtility();
+        GUILayout.EndVertical();
+
+        GUILayout.EndHorizontal();
+
+        //EditorGUILayout.EndScrollView();
+    }
+
+    private void RenderSelectionWinodw()
+    {
         LocalizationEditor.RenderLocalize();
 
         EditorGUILayout.Space();
@@ -131,23 +153,55 @@ public class ModuleCreatorIsland : EditorWindow
 
         RenderSelectionButtons();
         RenderUndoRedoButtons();
+
+        GUILayout.BeginHorizontal();
+        RenderSelectionMode();
+        RenderModeoff();
+        GUILayout.EndHorizontal();
+
         RenderDescription();
         process_options();
 
         RenderPreviewSelectedToggle();
 
-        RenderPhysBoneOptions();
+    }
 
-        EditorGUILayout.Space();
+    private void RenderUtility()
+    {
+        string[] options = 
+        { 
+            LocalizationEditor.GetLocalizedText("Utility.None"),
+            LocalizationEditor.GetLocalizedText("Utility.ModuleCreator"), 
+            LocalizationEditor.GetLocalizedText("Utility.GenerateMask"),
+            LocalizationEditor.GetLocalizedText("Utility.DeleteMesh"),
+            LocalizationEditor.GetLocalizedText("Utility.BlendShape")
+        };
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
+        _UtilityIndex = EditorGUILayout.Popup(_UtilityIndex, options);
+        GUILayout.EndHorizontal();
 
-        RenderCreateModuleButtons();
-        EditorGUILayout.Space();
-        
-        process_advanced_options();
+        if (_UtilityIndex == 1)
+        {
+            RenderPhysBoneOptions();
 
-        processexperimentalOptions();
+            EditorGUILayout.Space();
 
-        EditorGUILayout.EndScrollView();
+            RenderCreateModuleButtons();
+            EditorGUILayout.Space();
+            
+            process_advanced_options();
+        }
+        else if (_UtilityIndex == 2)
+        {
+            RenderGenerateMask();
+        }
+        else if (_UtilityIndex == 3)
+        {
+        }
+        else if (_UtilityIndex == 4)
+        {
+        }
     }
 
     private void CreateModule(HashSet<int> Vertices)
@@ -590,15 +644,28 @@ public class ModuleCreatorIsland : EditorWindow
         GUILayout.EndHorizontal();
     }
 
+    private void RenderSelectionMode()
+    {
+        string[] options = { LocalizationEditor.GetLocalizedText("SelectionMode.Island"), LocalizationEditor.GetLocalizedText("SelectionMode.Polygon") };
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectionMode.description"));
+        _SelectionModeIndex = EditorGUILayout.Popup(_SelectionModeIndex, options);
+        GUILayout.EndHorizontal();
+        //string optt = options[_SelectionModeIndex];
+    }
+
 
     private void process_options()
     {
         EditorGUILayout.Space();
 
-        _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !_mergeSamePosition);
-        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SplitMeshMoreToggle"), MessageType.Info);
-        _isAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !_isAll);
-        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SelectAllInRangeToggle"), MessageType.Info);
+        if (_SelectionModeIndex == 0)
+        {
+            _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !_mergeSamePosition);
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SplitMeshMoreToggle"), MessageType.Info);
+            _isAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !_isAll);
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SelectAllInRangeToggle"), MessageType.Info);
+        }
 
         EditorGUILayout.Space();
 
@@ -621,10 +688,7 @@ public class ModuleCreatorIsland : EditorWindow
         _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));
         if (_showAdvancedOptions)
         {
-            RenderModeoff();
-
-            EditorGUILayout.Space();
-
+            
             GUI.enabled = _Settings.IncludePhysBone;
             GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.AdditionalTransformsToggle"));
             _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
@@ -685,28 +749,16 @@ public class ModuleCreatorIsland : EditorWindow
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
         {
             CreateModule(_SelectedTriangleIndices);
-            Close();
+            //Close();
         }
 
         GUI.enabled = true;
     }
 
-    private void processexperimentalOptions()
-    {
-        _showexperimentalOptions = EditorGUILayout.Foldout(_showexperimentalOptions, LocalizationEditor.GetLocalizedText("experimentalOptions"));
-        if (_showexperimentalOptions)
-        {
-            RenderGenerateMask();
-        }
-
-    }
 
     private void RenderGenerateMask()
     {
-        EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
-
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
-
+        //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
         string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black") };
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
 
@@ -714,6 +766,7 @@ public class ModuleCreatorIsland : EditorWindow
         _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
         
         // Create Selected Islands Module
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
             Debug.Log(_textFieldValue);
@@ -740,8 +793,8 @@ public class ModuleCreatorIsland : EditorWindow
             //Selection.activeGameObject = null;
             Selection.objects = selectedObjects.ToArray();
         }
-
         GUI.enabled = true;
+
     }
 
 
@@ -754,7 +807,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             CreateModule(_SelectedTriangleIndices);
             CreateModule(_UnselectedTriangleIndices);
-            Close();
+            //Close();
         }
 
         GUI.enabled = true;
