@@ -21,6 +21,7 @@ public class ModuleCreatorIsland : EditorWindow
     private HashSet<int> _PreviousTriangleIndices = new HashSet<int>();
 
     private CreateModuleUtilty _CreateModuleUtilty;
+    private GenerateMaskUtilty _GenerateMaskUtilty;
 
     private HistoryManager _historyManager; 
 
@@ -59,11 +60,6 @@ public class ModuleCreatorIsland : EditorWindow
     private const float cameraDistance = 0.3f;
     private Dictionary<int, int> _oldToNewIndexMap;
     private string _rootname;
-    private int[] optionValues = { 512, 1024, 2048 };
-    private string[] displayOptions = { "512", "1024", "2048" };
-    private int selectedValue = 512;
-    private int _areacolorindex = 0;
-    private int _expansion = 2;
     private float _scale = 0.03f;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
@@ -95,6 +91,7 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.duringSceneGui += OnSceneGUI;
 
         _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
+        _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
     }
 
     private void OnDisable()
@@ -149,6 +146,10 @@ public class ModuleCreatorIsland : EditorWindow
         RenderVertexCount();
         EditorGUILayout.Space();
 
+        RenderPreviewSelectedToggle();
+
+        EditorGUILayout.Space();
+
         RenderSelectionButtons();
         RenderUndoRedoButtons();
 
@@ -158,8 +159,6 @@ public class ModuleCreatorIsland : EditorWindow
         GUILayout.EndHorizontal();
 
         process_options();
-
-        RenderPreviewSelectedToggle();
 
     }
 
@@ -184,7 +183,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else if (_UtilityIndex == 2)
         {
-            RenderGenerateMask();
+            _GenerateMaskUtilty.RenderGenerateMask();
         }
         else if (_UtilityIndex == 3)
         {
@@ -307,8 +306,20 @@ public class ModuleCreatorIsland : EditorWindow
         Event e = Event.current;
         //tiveSKin(e);
         HandleUndoRedoEvent(e);
+        //HandleScrollWheel(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
+    }
+
+    private void HandleScrollWheel(Event e)
+    {
+        if (_SelectionModeIndex == 1 && e.type == EventType.ScrollWheel && (e.control || e.command))
+        {
+            Debug.Log("scale");
+            _scale += e.delta.y * 0.001f;
+            _scale = Mathf.Clamp(_scale, 0.0f, 0.1f);
+            e.Use();
+        }
     }
 
     private void DontActiveSKin(Event e)
@@ -696,51 +707,6 @@ public class ModuleCreatorIsland : EditorWindow
         EditorGUILayout.EndHorizontal();
 
     }
-
-
-    private void RenderGenerateMask()
-    {
-        EditorGUILayout.Space();
-        //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
-        string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black") };
-        _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
-
-        selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
-        _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
-        
-        // Create Selected Islands Module
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
-        EditorGUILayout.Space();
-        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
-        {
-            Debug.Log(_textFieldValue);
-            MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex);
-            
-            List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
-            foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
-            {
-                string timeStamp = DateTime.Now.ToString("yyMMdd_HHmmss");
-                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{timeStamp}_{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
-                byte[] bytes = kvp.Value.EncodeToPNG();
-                File.WriteAllBytes(path, bytes);
-                AssetDatabase.Refresh();
-
-                UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
-                if (obj != null)
-                {
-                    selectedObjects.Add(obj);
-                    EditorGUIUtility.PingObject(obj);
-                    Debug.Log("Saved MaskTexture to " + path);
-                }
-            }
-            //Selection.activeGameObject = null;
-            Selection.objects = selectedObjects.ToArray();
-        }
-        GUI.enabled = true;
-
-    }
-
 
 
     public void ResetAllBlendShapes(SkinnedMeshRenderer skinnedMeshRenderer)
