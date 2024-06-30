@@ -758,29 +758,6 @@ public class ModuleCreatorIsland : EditorWindow
         SceneView.lastActiveSceneView.LookAtDirect(_middleVertex, SceneView.lastActiveSceneView.rotation, cameraDistance);
     }
 
-    public List<int> GetTriangleVertices(int[] triangles, HashSet<int> triangleIndices)
-    {
-        HashSet<int> verticesList = new HashSet<int>();
-        foreach (int triangleIndex in triangleIndices)
-        {
-            if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
-            {
-                Debug.LogError("Invalid triangle index.");
-                continue;
-            }
-
-            int index0 = triangles[triangleIndex * 3];
-            int index1 = triangles[triangleIndex * 3 + 1];
-            int index2 = triangles[triangleIndex * 3 + 2];
-
-            verticesList.Add(index0);
-            verticesList.Add(index1);
-            verticesList.Add(index2);
-        }
-
-        return verticesList.ToList();
-    }
-    
     private void UpdateMesh()
     {   
         Mesh previewMesh;
