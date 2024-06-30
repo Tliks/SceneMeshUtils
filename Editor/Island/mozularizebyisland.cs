@@ -679,7 +679,11 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else if (_SelectionModeIndex == 1)
         {
-            _scale = EditorGUILayout.Slider(LocalizationEditor.GetLocalizedText("SelectionMode.Polygon.scale"), _scale, 0.0f, 0.1f);
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectionMode.Polygon.scale"));
+                _scale = EditorGUILayout.Slider(_scale, 0.0f, 0.1f);
+            }
         }
 
         EditorGUILayout.Space();
