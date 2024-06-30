@@ -31,18 +31,19 @@ public class ClampBlendShapeUtility
             }
         }
 
+        centroid /= triangleIndices.Count * 3;
+
         Vector3[] blendShapeVertices = new Vector3[vertices.Length];
         foreach (int triIndex in triangleIndices)
         {
             for (int i = 0; i < 3; i++)
             {
                 int vertexIndex = triangles[triIndex * 3 + i];
-                blendShapeVertices[vertexIndex] = centroid;
+                blendShapeVertices[vertexIndex] = centroid - vertices[vertexIndex];
             }
         }
 
-        
-        // Create blend shape
+        // Create blend shape and ensure weight is within the 0 to 100 range
         newMesh.AddBlendShapeFrame("ClampBlendShape", 100.0f, blendShapeVertices, new Vector3[vertices.Length], new Vector3[vertices.Length]);
         return newMesh;
     }
