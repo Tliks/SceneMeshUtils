@@ -43,9 +43,36 @@ public class ClampBlendShapeUtility
             }
         }
 
-        // Create blend shape and ensure weight is within the 0 to 100 range
-        newMesh.AddBlendShapeFrame("ClampBlendShape", 100.0f, blendShapeVertices, new Vector3[vertices.Length], new Vector3[vertices.Length]);
+        string blendShapeName = "ClampBlendShape";
+        List<string> blendShapeNames = GetBlendShapeNames(newMesh);
+        string uniqueBlendShapeName = GetUniqueBlendShapeName(blendShapeNames, blendShapeName);
+
+        newMesh.AddBlendShapeFrame(uniqueBlendShapeName, 100.0f, blendShapeVertices, null, null);
+        Debug.Log($"Blend shape '{uniqueBlendShapeName}' has been added.");
         return newMesh;
+    }
+
+    private static List<string> GetBlendShapeNames(Mesh mesh)
+    {
+        List<string> blendShapeNames = new List<string>();
+        int blendShapeCount = mesh.blendShapeCount;
+        for (int i = 0; i < blendShapeCount; i++)
+        {
+            blendShapeNames.Add(mesh.GetBlendShapeName(i));
+        }
+        return blendShapeNames;
+    }
+
+    private static string GetUniqueBlendShapeName(List<string> blendShapeNames, string baseName)
+    {
+        string uniqueName = baseName;
+        int counter = 1;
+        while (blendShapeNames.Contains(uniqueName))
+        {
+            uniqueName = baseName + "_" + counter++;
+        }
+
+        return uniqueName;
     }
 
     private void ReplaceMesh()
@@ -57,7 +84,6 @@ public class ClampBlendShapeUtility
         AssetDatabase.SaveAssets();
 
         _skinnedMeshRenderer.sharedMesh = newMesh;
-        Debug.Log("Clamp blend shape generated successfully.");
     }
 
     public void RendergenerateClamp()

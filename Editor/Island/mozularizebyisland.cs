@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
-using System.IO;
 
 
 public class ModuleCreatorIsland : EditorWindow
@@ -118,22 +117,22 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnGUI()
     {
         //_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+        using (new GUILayout.HorizontalScope())
+        {
+            float halfWidth = position.width / 2f;
 
-        GUILayout.BeginHorizontal();
-        float halfWidth = position.width / 2f;
+            using (new GUILayout.VerticalScope(GUILayout.Width(halfWidth)))
+            {
+                RenderSelectionWinodw();
+            }
 
-        GUILayout.BeginVertical(GUILayout.Width(halfWidth));
-        RenderSelectionWinodw();
-        GUILayout.EndVertical();
+            GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
 
-        GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
-        
-        GUILayout.BeginVertical();
-        RenderUtility();
-        GUILayout.EndVertical();
-
-        GUILayout.EndHorizontal();
-
+            using (new GUILayout.VerticalScope())
+            {
+                RenderUtility();
+            }
+        }
         //EditorGUILayout.EndScrollView();
     }
 
@@ -173,10 +172,12 @@ public class ModuleCreatorIsland : EditorWindow
             LocalizationEditor.GetLocalizedText("Utility.DeleteMesh"),
             LocalizationEditor.GetLocalizedText("Utility.BlendShape")
         };
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
-        _UtilityIndex = EditorGUILayout.Popup(_UtilityIndex, options);
-        GUILayout.EndHorizontal();
+
+        using (new GUILayout.HorizontalScope())
+        {
+            GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
+            _UtilityIndex = EditorGUILayout.Popup(_UtilityIndex, options);
+        }
 
         if (_UtilityIndex == 1)
         {
