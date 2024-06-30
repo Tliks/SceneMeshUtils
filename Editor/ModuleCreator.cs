@@ -96,28 +96,14 @@ public class ModuleCreator
         {
             Stopwatch stopwatch = new Stopwatch();
             
-            //stopwatch.Start();
             (GameObject root, int skin_index) = CheckObjects(sourceObject);
-            stopwatch.Stop();
-            //UnityEngine.Debug.Log("CheckObjects: " + stopwatch.ElapsedMilliseconds + " ms");
 
             stopwatch.Start();
             new_root = CopyObjects(root, root.name);
-            stopwatch.Stop();
-            //UnityEngine.Debug.Log("CopyObjects: " + stopwatch.ElapsedMilliseconds + " ms");
-
-            stopwatch.Start();
-            skinnedMeshRenderer = CleanUpHierarchy(new_root, skin_index);
-            stopwatch.Stop();
-            //UnityEngine.Debug.Log("CleanUpHierarchy: " + stopwatch.ElapsedMilliseconds + " ms");
+            GameObject skin = GetSkin(new_root, skin_index);
+            skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
 
             EditorGUIUtility.PingObject(new_root);
-
-            // colider gizmoが表示される原因になる？
-            //Selection.activeGameObject = new_root;
-            
-            //Selection.objects = Selection.gameObjects.Append(new_root).ToArray();
-
         }
 
         catch (InvalidOperationException ex)
@@ -240,13 +226,19 @@ public class ModuleCreator
         return duplicatedParent;
     }
 
+    private GameObject GetSkin(GameObject new_root, int skin_index)
+    {
+        Transform[] AllChildren = GetAllChildren(new_root);
+        GameObject skin = AllChildren[skin_index].gameObject;
+        return skin;
+    }
+
     private SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index)
     {   
         HashSet<GameObject> objectsToSave = new HashSet<GameObject>();
 
         // 複製先のSkinnedMeshRendererがついたオブジェクトを追加
-        Transform[] AllChildren = GetAllChildren(new_root);
-        GameObject skin = AllChildren[skin_index].gameObject;
+        GameObject skin = GetSkin(new_root, skin_index);
         objectsToSave.Add(skin);
 
         SkinnedMeshRenderer skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
