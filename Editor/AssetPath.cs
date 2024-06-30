@@ -2,7 +2,7 @@ using UnityEditor;
 
 public static class AssetPathUtility
 {
-    public static string GenerateMeshPath(string root_name)
+    public static string GenerateMeshPath(string root_name, string mesh_name)
     {
         // Assets/ModuleCreator/{root_name}/Mesh/newMesh.asset
 
@@ -27,7 +27,7 @@ public static class AssetPathUtility
             AssetDatabase.Refresh();
         }
 
-        string fileName = "newMesh";
+        string fileName = mesh_name;
         string fileExtension = "asset";
         
         return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);

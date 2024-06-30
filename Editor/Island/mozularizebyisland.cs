@@ -22,6 +22,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private CreateModuleUtilty _CreateModuleUtilty;
     private GenerateMaskUtilty _GenerateMaskUtilty;
+    private ClampBlendShapeUtility _ClampBlendShapeUtility;
 
     private HistoryManager _historyManager; 
 
@@ -39,9 +40,6 @@ public class ModuleCreatorIsland : EditorWindow
     private HighlightEdgesManager _highlightManager;
 
     private Stopwatch _stopwatch = new Stopwatch();
-
-    private string _textFieldValue;
-
     public bool _mergeSamePosition = true;
     private MeshCollider _PreviewMeshCollider;
     private Vector2 _startPoint;
@@ -92,6 +90,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
         _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
+        _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
     }
 
     private void OnDisable()
@@ -153,6 +152,8 @@ public class ModuleCreatorIsland : EditorWindow
         RenderSelectionButtons();
         RenderUndoRedoButtons();
 
+        EditorGUILayout.Space();
+
         GUILayout.BeginHorizontal();
         RenderSelectionMode();
         RenderModeoff();
@@ -190,6 +191,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else if (_UtilityIndex == 4)
         {
+            _ClampBlendShapeUtility.RendergenerateClamp();
         }
     }
 

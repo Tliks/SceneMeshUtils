@@ -54,7 +54,7 @@ public class CreateModuleUtilty
         {
             Mesh newMesh = MeshUtility.DeleteMesh(_OriginskinnedMeshRenderer, Triangles);
 
-            string path = AssetPathUtility.GenerateMeshPath(_rootname);
+            string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
             AssetDatabase.CreateAsset(newMesh, path);
             AssetDatabase.SaveAssets();
 
