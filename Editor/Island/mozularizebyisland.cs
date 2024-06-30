@@ -21,6 +21,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private CreateModuleUtilty _CreateModuleUtilty;
     private GenerateMaskUtilty _GenerateMaskUtilty;
+    private DeleteMeshUtilty _DeleteMeshUtilty;
     private ClampBlendShapeUtility _ClampBlendShapeUtility;
 
     private HistoryManager _historyManager; 
@@ -89,6 +90,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
         _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
+        _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _rootname, _UnselectedTriangleIndices);
         _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
     }
 
@@ -189,6 +191,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else if (_UtilityIndex == 3)
         {
+            _DeleteMeshUtilty.RenderDeleteMesh();
         }
         else if (_UtilityIndex == 4)
         {
@@ -676,7 +679,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
         else if (_SelectionModeIndex == 1)
         {
-            _scale = EditorGUILayout.Slider("scale", _scale, 0.0f, 0.1f);
+            _scale = EditorGUILayout.Slider(LocalizationEditor.GetLocalizedText("SelectionMode.Polygon.scale"), _scale, 0.0f, 0.1f);
         }
 
         EditorGUILayout.Space();
