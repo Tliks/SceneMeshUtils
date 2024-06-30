@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 public class MeshUtility
 {
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, List<int> triangleIndexes)
+    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndexes)
     {
         Stopwatch stopwatch = new Stopwatch();
         Mesh originalMesh = skinnedMeshRenderer.sharedMesh;

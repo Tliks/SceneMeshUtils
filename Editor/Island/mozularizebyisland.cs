@@ -20,6 +20,8 @@ public class ModuleCreatorIsland : EditorWindow
     private HashSet<int> _AllTriangleIndices = new HashSet<int>();
     private HashSet<int> _PreviousTriangleIndices = new HashSet<int>();
 
+    private CreateModuleUtilty _CreateModuleUtilty;
+
     private HistoryManager _historyManager; 
 
     private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
@@ -27,18 +29,11 @@ public class ModuleCreatorIsland : EditorWindow
     private Mesh _bakedMesh;
     private GameObject _PreviewMeshObject;
 
-    private static ModuleCreatorSettings _Settings = new ModuleCreatorSettings
-    {
-        IncludePhysBone = true,
-        IncludePhysBoneColider = true
-    };
 
     private const int MENU_PRIORITY = 49;
     private const double raycastInterval = 0.01;
     private double _lastUpdateTime = 0;
 
-    private bool _showAdvancedOptions = false;
-    private bool _showexperimentalOptions = false;
 
     private HighlightEdgesManager _highlightManager;
 
@@ -69,6 +64,7 @@ public class ModuleCreatorIsland : EditorWindow
     private int selectedValue = 512;
     private int _areacolorindex = 0;
     private int _expansion = 2;
+    private float _scale = 0.03f;
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
@@ -97,6 +93,8 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
 
         SceneView.duringSceneGui += OnSceneGUI;
+
+        _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
     }
 
     private void OnDisable()
@@ -159,7 +157,6 @@ public class ModuleCreatorIsland : EditorWindow
         RenderModeoff();
         GUILayout.EndHorizontal();
 
-        RenderDescription();
         process_options();
 
         RenderPreviewSelectedToggle();
@@ -183,7 +180,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_UtilityIndex == 1)
         {
-            RenderModuleCreator();
+            _CreateModuleUtilty.RenderModuleCreator();
         }
         else if (_UtilityIndex == 2)
         {
@@ -197,35 +194,6 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    private void RenderModuleCreator()
-    {
-        RenderPhysBoneOptions();
-
-        EditorGUILayout.Space();
-
-        RenderCreateModuleButtons();
-        RenderCreateBothModuleButtons();
-        EditorGUILayout.Space();
-        
-        process_advanced_options();
-    }
-
-    private void CreateModule(HashSet<int> Vertices)
-    {
-        Debug.Log(_textFieldValue);
-        SaveUndoState();
-        if (Vertices.Count > 0)
-        {
-            Mesh newMesh = MeshUtility.DeleteMesh(_OriginskinnedMeshRenderer, Vertices.ToList());
-
-            string path = AssetPathUtility.GenerateMeshPath(_rootname);
-            AssetDatabase.CreateAsset(newMesh, path);
-            AssetDatabase.SaveAssets();
-
-            _Settings.newmesh = newMesh;
-            new ModuleCreator(_Settings).CheckAndCopyBones(_OriginskinnedMeshRenderer.gameObject);
-        }
-    }
 
     private void SelectAllIslands()
     {
@@ -412,7 +380,7 @@ public class ModuleCreatorIsland : EditorWindow
             else
             {
                 Vector2 endPoint = mousePos;
-                HandleDragOrHighlight(_startPoint, endPoint, false);
+                HandleDrag(_startPoint, endPoint, false);
             }
             
             _isdragging = false;
@@ -430,7 +398,7 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 _lastUpdateTime = currentTime;
                 Vector2 endPoint = mousePos;
-                HandleDragOrHighlight(_startPoint, endPoint, true);
+                HandleDrag(_startPoint, endPoint, true);
             }
             HandleUtility.Repaint();
 
@@ -473,7 +441,17 @@ public class ModuleCreatorIsland : EditorWindow
             {
                 int triangleIndex = hitInfo.triangleIndex;
                 int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
-                HashSet<int> Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
+
+                HashSet<int> Triangles = null;
+                if (_SelectionModeIndex == 0)
+                {
+                    Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
+                }
+                else if (_SelectionModeIndex == 1)
+                {
+                    Triangles = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _PreviewSkinnedMeshRenderer.transform);
+                }
+
                 if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
                 if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
                 {
@@ -497,13 +475,22 @@ public class ModuleCreatorIsland : EditorWindow
         _highlightManager.HighlightEdges(edgesToHighlight, _bakedMesh.vertices, Color.cyan, _PreviewSkinnedMeshRenderer.transform);
     }
 
-    private void HandleDragOrHighlight(Vector2 startpos, Vector2 endpos, bool isHighlight)
+    private void HandleDrag(Vector2 startpos, Vector2 endpos, bool isHighlight)
     {
         if (!_PreviewMeshCollider) return;
         if (startpos.x == endpos.x || startpos.y == endpos.y) return;
         
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
-        HashSet<int> TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(_bakedMesh.vertices, meshCollider, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
+
+        HashSet<int> TriangleIndices = null;
+        if (_SelectionModeIndex == 0)
+        {
+            TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
+        }
+        else if (_SelectionModeIndex == 1)
+        {
+            TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, _PreviewSkinnedMeshRenderer.transform);
+        }
         TriangleIndices = _isPreviewSelected ? TriangleIndices.Intersect(_SelectedTriangleIndices).ToHashSet() : TriangleIndices.Intersect(_UnselectedTriangleIndices).ToHashSet();
      
         if (isHighlight)
@@ -613,7 +600,7 @@ public class ModuleCreatorIsland : EditorWindow
         }
     }
 
-    private void RenderDescription()
+    private void RenderislandDescription()
     {
         //EditorGUILayout.Space();
         EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("description"), MessageType.Info);
@@ -667,55 +654,21 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_SelectionModeIndex == 0)
         {
+            RenderislandDescription();
             _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !_mergeSamePosition);
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SplitMeshMoreToggle"), MessageType.Info);
             _isAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !_isAll);
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SelectAllInRangeToggle"), MessageType.Info);
         }
-
-        EditorGUILayout.Space();
-
-    }
-
-    private void RenderPhysBoneOptions()
-    {
-        EditorGUILayout.Space();
-
-        _Settings.IncludePhysBone = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneToggle"), _Settings.IncludePhysBone);
-
-        GUI.enabled = _Settings.IncludePhysBone;
-        _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
-        GUI.enabled = true;
-    }
-    
-    private void process_advanced_options()
-    {   
-
-        _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));
-        if (_showAdvancedOptions)
+        else if (_SelectionModeIndex == 1)
         {
-            
-            GUI.enabled = _Settings.IncludePhysBone;
-            GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.AdditionalTransformsToggle"));
-            _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
-
-            GUIContent content_ii = new GUIContent(LocalizationEditor.GetLocalizedText("IncludeIgnoreTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.IncludeIgnoreTransformsToggle"));
-            _Settings.IncludeIgnoreTransforms = EditorGUILayout.Toggle(content_ii, _Settings.IncludeIgnoreTransforms);
-
-            GUIContent content_rr = new GUIContent(
-                LocalizationEditor.GetLocalizedText("RenameRootTransformToggle"),
-                LocalizationEditor.GetLocalizedText("tooltip.RenameRootTransformToggle"));
-            _Settings.RenameRootTransform = EditorGUILayout.Toggle(content_rr, _Settings.RenameRootTransform);
-
-            GUI.enabled = true;
-
-            GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("tooltip.SpecifyRootObjectLabel"));
-            _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
-                    
+            _scale = EditorGUILayout.Slider("scale", _scale, 0.0f, 0.1f);
         }
 
         EditorGUILayout.Space();
+
     }
+
 
     private void RenderModeoff()
     {
@@ -742,20 +695,6 @@ public class ModuleCreatorIsland : EditorWindow
 
         EditorGUILayout.EndHorizontal();
 
-    }
-
-    private void RenderCreateModuleButtons()
-    {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
-        
-        // Create Selected Islands Module
-        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
-        {
-            CreateModule(_SelectedTriangleIndices);
-            //Close();
-        }
-
-        GUI.enabled = true;
     }
 
 
@@ -803,20 +742,6 @@ public class ModuleCreatorIsland : EditorWindow
     }
 
 
-    private void RenderCreateBothModuleButtons()
-    {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
-
-        // Create Both Modules
-        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
-        {
-            CreateModule(_SelectedTriangleIndices);
-            CreateModule(_UnselectedTriangleIndices);
-            //Close();
-        }
-
-        GUI.enabled = true;
-    }
 
     public void ResetAllBlendShapes(SkinnedMeshRenderer skinnedMeshRenderer)
     {
