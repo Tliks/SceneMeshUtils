@@ -35,9 +35,6 @@ public class ModuleCreatorIsland : EditorWindow
     private const double raycastInterval = 0.01;
     private double _lastUpdateTime = 0;
 
-
-    private HighlightEdgesManager _highlightManager;
-
     private Stopwatch _stopwatch = new Stopwatch();
     public bool _mergeSamePosition = true;
     private MeshCollider _PreviewMeshCollider;
@@ -46,7 +43,6 @@ public class ModuleCreatorIsland : EditorWindow
     private bool _isdragging = false;
     private const float dragThreshold = 10f;
     private bool _isAll = true;
-    private Vector2 _scrollPosition;
     private int _SelectionModeIndex = 0;
     private int _UtilityIndex = 0;
     private bool _isPreviewSelected;
@@ -99,7 +95,6 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnGUI()
     {
-        //_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
         using (new GUILayout.HorizontalScope())
         {
             float halfWidth = position.width / 2f;
@@ -116,7 +111,6 @@ public class ModuleCreatorIsland : EditorWindow
                 RenderUtility();
             }
         }
-        //EditorGUILayout.EndScrollView();
     }
 
     private void RenderSelectionWinodw()
@@ -227,14 +221,6 @@ public class ModuleCreatorIsland : EditorWindow
         UpdateMesh();
     }
 
-    private void EnsureHighlightManagerExists()
-    {
-        if (_highlightManager == null)
-        {
-            _highlightManager = _OriginskinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
-        }
-    }
-
     private void ToggleSelectionSelected(bool newMode)
     {
         if (_isPreviewSelected == newMode)
@@ -262,14 +248,12 @@ public class ModuleCreatorIsland : EditorWindow
         if (_isPreviewEnabled)
         {
             _PreviewMeshCollider = SceneRaycastUtility.AddCollider(_OriginskinnedMeshRenderer);
-            EnsureHighlightManagerExists();
             UpdateMesh(); // コライダーのメッシュを更新
             SceneView.lastActiveSceneView.drawGizmos = true;
         }
         else
         {
             SceneRaycastUtility.DeleteCollider(_PreviewMeshCollider);
-            RemoveHighlight();
         }
 
     }
@@ -286,15 +270,6 @@ public class ModuleCreatorIsland : EditorWindow
         _UnselectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
     }
 
-    private void RemoveHighlight()
-    {
-        if (_highlightManager != null)
-        {
-            DestroyImmediate(_highlightManager);
-            SceneView.RepaintAll();
-        }
-    }
-
     private void OnSceneGUI(SceneView sceneView)
     {
         //if (_PreviewSkinnedMeshRenderer == null) Close();
@@ -306,6 +281,7 @@ public class ModuleCreatorIsland : EditorWindow
         //HandleScrollWheel(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
+        HighlightEdgesManager.DrawHighlights();
     }
 
     private void HandleScrollWheel(Event e)
@@ -360,7 +336,7 @@ public class ModuleCreatorIsland : EditorWindow
         //sceneviewの外側にある場合の初期化処理
         if (!sceneViewRect.Contains(mousePos))
         {
-            HighlightNull();
+            HighlightEdgesManager.ClearHighlights();
             if (_isdragging)
             {
                 _isdragging = false;
@@ -437,7 +413,7 @@ public class ModuleCreatorIsland : EditorWindow
     {
         UpdateSelection(_PreviousTriangleIndices);
         //Debug.Log(string.Join(", ", _PreviousIslandIndices));
-        HighlightNull();
+        HighlightEdgesManager.ClearHighlights();
     }
 
     private void PerformRaycast()
@@ -465,22 +441,16 @@ public class ModuleCreatorIsland : EditorWindow
                 {
                     _PreviousTriangleIndices = Triangles;
                     Color color = _isPreviewSelected ? Color.red : Color.cyan;
-                    _highlightManager.HighlighttriangleIndices(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, color, _OriginskinnedMeshRenderer.transform);
+                    HighlightEdgesManager.SetHighlightColor(color);
+                    HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
                     conditionMet = true;
                 }
             }
         }
         if (!conditionMet)
         {
-            HighlightNull();
+            HighlightEdgesManager.ClearHighlights();
         }
-    }
-
-    private void HighlightNull()
-    {
-        _PreviousTriangleIndices.Clear();
-        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        _highlightManager.HighlightEdges(edgesToHighlight, _bakedMesh.vertices, Color.cyan, _OriginskinnedMeshRenderer.transform);
     }
 
     private void HandleDrag(Vector2 startpos, Vector2 endpos, bool isHighlight)
@@ -504,7 +474,8 @@ public class ModuleCreatorIsland : EditorWindow
         if (isHighlight)
         {
             Color color = _isPreviewSelected ? Color.red : Color.cyan;
-            _highlightManager.HighlighttriangleIndices(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, color, _OriginskinnedMeshRenderer.transform);
+            HighlightEdgesManager.SetHighlightColor(color);
+            HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
         }
         else
         {
