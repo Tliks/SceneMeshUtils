@@ -25,55 +25,54 @@ SOFTWARE.
 using UnityEngine;
 using UnityEditor;
 
-public class MeshRestorer
+public class MeshPreview
 {
     private SkinnedMeshRenderer _targetRenderer;
     private Mesh _originalMesh;
-    private bool _isInAnimationMode;
 
-    public MeshRestorer(SkinnedMeshRenderer renderer)
+    public MeshPreview(SkinnedMeshRenderer renderer)
     {
         _targetRenderer = renderer;
         _originalMesh = renderer.sharedMesh;
-        _isInAnimationMode = false;
     }
 
-    public void RestoreOriginalMesh()
+    public void StartPreview(Mesh previewMesh)
     {
-        if (!_isInAnimationMode)
+        if (previewMesh == null)
         {
-            AnimationMode.StartAnimationMode();
-            _isInAnimationMode = true;
+            Debug.LogError("Preview mesh is null. Cannot start preview.");
+            return;
         }
 
+        AnimationMode.StartAnimationMode();
+        ApplyMesh(previewMesh);
+    }
+
+    public void StopPreview()
+    {
+        AnimationMode.StopAnimationMode();
+        _targetRenderer.sharedMesh = _originalMesh;
+    }
+
+    private void ApplyMesh(Mesh mesh)
+    {
+        AnimationMode.BeginSampling();
         try
         {
-            AnimationMode.BeginSampling();
-
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SkinnedMeshRenderer), "m_Mesh");
             var modification = new PropertyModification
             {
                 target = _targetRenderer,
                 propertyPath = "m_Mesh",
-                objectReference = _originalMesh
+                objectReference = mesh
             };
 
             AnimationMode.AddPropertyModification(binding, modification, true);
-
-            _targetRenderer.sharedMesh = _originalMesh;
+            _targetRenderer.sharedMesh = mesh;
         }
         finally
         {
             AnimationMode.EndSampling();
-        }
-    }
-
-    public void StopRestoring()
-    {
-        if (_isInAnimationMode)
-        {
-            AnimationMode.StopAnimationMode();
-            _isInAnimationMode = false;
         }
     }
 }

@@ -30,7 +30,6 @@ public class ModuleCreatorIsland : EditorWindow
     private Mesh _bakedMesh;
     private Mesh _originalMesh;
 
-
     private const int MENU_PRIORITY = 49;
     private const double raycastInterval = 0.01;
     private double _lastUpdateTime = 0;
@@ -49,14 +48,18 @@ public class ModuleCreatorIsland : EditorWindow
     private bool _isPreviewEnabled;
     private Dictionary<int, int> _oldToNewIndexMap;
     private float _scale = 0.03f;
-    private MeshRestorer _meshRestorer;
+    private MeshPreview _MeshPreview;
 
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
+        var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
+        if (existingWindow != null)
+        {
+            existingWindow.Close();
+        }
         GetWindow<ModuleCreatorIsland>("Utilities");
-        
     }
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
@@ -70,7 +73,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnEnable()
     {
         _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-        _meshRestorer = new MeshRestorer(_OriginskinnedMeshRenderer);
+        _MeshPreview = new MeshPreview(_OriginskinnedMeshRenderer);
         DuplicateAndSetup();
         CalculateIslands();
         ToggleSelectionEnabled(true);
@@ -83,8 +86,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnDisable()
     {
-        _meshRestorer.RestoreOriginalMesh();
-        _meshRestorer.StopRestoring();
+        _MeshPreview.StopPreview();
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
@@ -704,7 +706,9 @@ public class ModuleCreatorIsland : EditorWindow
         _bakedMesh = new Mesh(); 
         _OriginskinnedMeshRenderer.BakeMesh(_bakedMesh);
 
-        AnimationMode.StartAnimationMode();
+        Mesh PreviewMesh = Instantiate(_originalMesh);
+        PreviewMesh.name += "AO Preview";
+        _MeshPreview.StartPreview(PreviewMesh);
     }
 
     GameObject CheckRoot(GameObject targetObject)
@@ -730,13 +734,13 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void UpdateMesh()
     {   
-        Mesh previewMesh;
+        Mesh PreviewMesh;
         Mesh colliderMesh;
 
         HashSet<int> KeeptriangleIndices = _isPreviewSelected ? _SelectedTriangleIndices : _UnselectedTriangleIndices;
 
-        previewMesh = MeshUtility.RemoveTriangles(_originalMesh, KeeptriangleIndices);
-        _OriginskinnedMeshRenderer.sharedMesh = previewMesh;
+        PreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, KeeptriangleIndices);
+        _OriginskinnedMeshRenderer.sharedMesh = PreviewMesh;
 
         if (_isPreviewEnabled)
         {
