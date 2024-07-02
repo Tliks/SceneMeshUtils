@@ -87,11 +87,6 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
 
         SceneView.duringSceneGui += OnSceneGUI;
-
-        _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
-        _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
-        _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _rootname, _UnselectedTriangleIndices);
-        _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
     }
 
     private void OnDisable()
@@ -175,26 +170,47 @@ public class ModuleCreatorIsland : EditorWindow
             LocalizationEditor.GetLocalizedText("Utility.BlendShape")
         };
 
+        int new_index;
         using (new GUILayout.HorizontalScope())
         {
             GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
-            _UtilityIndex = EditorGUILayout.Popup(_UtilityIndex, options);
+            new_index = EditorGUILayout.Popup(_UtilityIndex, options);
         }
 
-        if (_UtilityIndex == 1)
+        if (new_index == 1)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
+                _UtilityIndex = new_index;
+            }
             _CreateModuleUtilty.RenderModuleCreator();
         }
-        else if (_UtilityIndex == 2)
+        else if (new_index == 2)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
+                _UtilityIndex = new_index;
+            }
             _GenerateMaskUtilty.RenderGenerateMask();
         }
-        else if (_UtilityIndex == 3)
+        else if (new_index == 3)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _rootname, _UnselectedTriangleIndices);
+                _UtilityIndex = new_index;
+            }
             _DeleteMeshUtilty.RenderDeleteMesh();
         }
-        else if (_UtilityIndex == 4)
+        else if (new_index == 4)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
+                _UtilityIndex = new_index;
+            }
             _ClampBlendShapeUtility.RendergenerateClamp();
         }
     }
