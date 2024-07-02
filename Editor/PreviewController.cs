@@ -29,20 +29,21 @@ public class MeshRestorer
 {
     private SkinnedMeshRenderer _targetRenderer;
     private Mesh _originalMesh;
-    private AnimationModeDriver _driver;
+    private bool _isInAnimationMode;
 
     public MeshRestorer(SkinnedMeshRenderer renderer)
     {
         _targetRenderer = renderer;
         _originalMesh = renderer.sharedMesh;
-        _driver = ScriptableObject.CreateInstance<AnimationModeDriver>();
+        _isInAnimationMode = false;
     }
 
     public void RestoreOriginalMesh()
     {
-        if (!AnimationMode.InAnimationMode(_driver))
+        if (!_isInAnimationMode)
         {
-            AnimationMode.StartAnimationMode(_driver);
+            AnimationMode.StartAnimationMode();
+            _isInAnimationMode = true;
         }
 
         try
@@ -69,19 +70,10 @@ public class MeshRestorer
 
     public void StopRestoring()
     {
-        if (AnimationMode.InAnimationMode(_driver))
+        if (_isInAnimationMode)
         {
-            AnimationMode.StopAnimationMode(_driver);
-        }
-    }
-
-    public void Dispose()
-    {
-        StopRestoring();
-        if (_driver != null)
-        {
-            Object.DestroyImmediate(_driver);
-            _driver = null;
+            AnimationMode.StopAnimationMode();
+            _isInAnimationMode = false;
         }
     }
 }

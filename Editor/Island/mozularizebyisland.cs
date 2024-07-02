@@ -84,6 +84,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnDisable()
     {
         _meshRestorer.RestoreOriginalMesh();
+        _meshRestorer.StopRestoring();
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
