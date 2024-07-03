@@ -25,54 +25,33 @@ SOFTWARE.
 using UnityEngine;
 using UnityEditor;
 
-public class MeshPreview
+public static class MeshPreview
 {
-    private SkinnedMeshRenderer _targetRenderer;
-    private Mesh _originalMesh;
-
-    public MeshPreview(SkinnedMeshRenderer renderer)
+    public static void StartPreview(SkinnedMeshRenderer rendrer)
     {
-        _targetRenderer = renderer;
-        _originalMesh = renderer.sharedMesh;
-    }
-
-    public void StartPreview(Mesh previewMesh)
-    {
-        if (previewMesh == null)
-        {
-            Debug.LogError("Preview mesh is null. Cannot start preview.");
-            return;
-        }
-
         AnimationMode.StartAnimationMode();
-        ApplyMesh(previewMesh);
-    }
-
-    public void StopPreview()
-    {
-        AnimationMode.StopAnimationMode();
-        _targetRenderer.sharedMesh = _originalMesh;
-    }
-
-    private void ApplyMesh(Mesh mesh)
-    {
         AnimationMode.BeginSampling();
         try
         {
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SkinnedMeshRenderer), "m_Mesh");
             var modification = new PropertyModification
             {
-                target = _targetRenderer,
+                target = rendrer,
                 propertyPath = "m_Mesh",
-                objectReference = mesh
+                objectReference = rendrer.sharedMesh
             };
 
             AnimationMode.AddPropertyModification(binding, modification, true);
-            _targetRenderer.sharedMesh = mesh;
         }
         finally
         {
             AnimationMode.EndSampling();
         }
     }
+
+    public static void StopPreview()
+    {
+        AnimationMode.StopAnimationMode();
+    }
+
 }

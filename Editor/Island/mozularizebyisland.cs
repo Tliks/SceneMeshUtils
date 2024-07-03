@@ -48,7 +48,6 @@ public class ModuleCreatorIsland : EditorWindow
     private bool _isPreviewEnabled;
     private Dictionary<int, int> _oldToNewIndexMap;
     private float _scale = 0.03f;
-    private MeshPreview _MeshPreview;
 
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
@@ -73,7 +72,6 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnEnable()
     {
         _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-        _MeshPreview = new MeshPreview(_OriginskinnedMeshRenderer);
         DuplicateAndSetup();
         CalculateIslands();
         ToggleSelectionEnabled(true);
@@ -86,7 +84,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnDisable()
     {
-        _MeshPreview.StopPreview();
+        MeshPreview.StopPreview();
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
@@ -708,7 +706,7 @@ public class ModuleCreatorIsland : EditorWindow
 
         Mesh PreviewMesh = Instantiate(_originalMesh);
         PreviewMesh.name += "AO Preview";
-        _MeshPreview.StartPreview(PreviewMesh);
+        MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
     }
 
     GameObject CheckRoot(GameObject targetObject)
