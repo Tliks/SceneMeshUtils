@@ -53,12 +53,12 @@ public class ModuleCreatorIsland : EditorWindow
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
-        var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
-        if (existingWindow != null)
+        if (HasOpenInstances<ModuleCreatorIsland>())
         {
+            var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
             existingWindow.Close();
         }
-        GetWindow<ModuleCreatorIsland>("Utilities");
+        CreateWindow<ModuleCreatorIsland>("Utilities");
     }
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
@@ -413,9 +413,11 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void HandleClick()
     {
+        if (_PreviousTriangleIndices == null) return;
         UpdateSelection(_PreviousTriangleIndices);
         //Debug.Log(string.Join(", ", _PreviousIslandIndices));
         HighlightEdgesManager.ClearHighlights();
+        _PreviousTriangleIndices = null;
     }
 
     private void PerformRaycast()
@@ -452,6 +454,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (!conditionMet)
         {
             HighlightEdgesManager.ClearHighlights();
+            _PreviousTriangleIndices = null;
         }
     }
 
