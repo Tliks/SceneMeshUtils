@@ -7,17 +7,19 @@ public class DeleteMeshUtilty
     private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private readonly string _rootname;
     private readonly HashSet<int> _KeepTriangles;
+    private readonly Mesh _originalMesh;
 
-    public DeleteMeshUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> KeepTriangles)
+    public DeleteMeshUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> KeepTriangles, Mesh _originalMesh)
     {
         this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
         this._KeepTriangles = KeepTriangles;
+        this._originalMesh = _originalMesh;
     }
 
     private void DeleteMesh()
     {
-        Mesh newMesh = MeshUtility.DeleteMesh(_OriginskinnedMeshRenderer, _KeepTriangles);
+        Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, _KeepTriangles);
 
         string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
         AssetDatabase.CreateAsset(newMesh, path);

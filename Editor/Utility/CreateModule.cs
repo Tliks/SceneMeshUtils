@@ -12,16 +12,18 @@ public class CreateModuleUtilty
     };
 
     private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
+    private readonly Mesh _originalMesh;
     private readonly string _rootname;
     private readonly HashSet<int> _SelectedTriangleIndices;
     private readonly HashSet<int> _UnselectedTriangleIndices;
 
-    public CreateModuleUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, HashSet<int> _UnselectedTriangleIndices)
+    public CreateModuleUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, HashSet<int> _UnselectedTriangleIndices, Mesh _originalMesh)
     {
         this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
         this._SelectedTriangleIndices = _SelectedTriangleIndices;
         this._UnselectedTriangleIndices = _UnselectedTriangleIndices;
+        this._originalMesh = _originalMesh;
     }
     
     public void RenderModuleCreator()
@@ -52,7 +54,7 @@ public class CreateModuleUtilty
     {
         if (Triangles.Count > 0)
         {
-            Mesh newMesh = MeshUtility.DeleteMesh(_OriginskinnedMeshRenderer, Triangles);
+            Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, Triangles);
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
             AssetDatabase.CreateAsset(newMesh, path);

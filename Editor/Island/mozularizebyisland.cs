@@ -162,7 +162,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _UnselectedTriangleIndices);
+                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _UnselectedTriangleIndices, _originalMesh);
                 _UtilityIndex = new_index;
             }
             _CreateModuleUtilty.RenderModuleCreator();
@@ -180,7 +180,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _UnselectedTriangleIndices);
+                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _UnselectedTriangleIndices, _originalMesh );
                 _UtilityIndex = new_index;
             }
             _DeleteMeshUtilty.RenderDeleteMesh();

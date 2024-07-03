@@ -4,10 +4,9 @@ using System.Diagnostics;
 
 public class MeshUtility
 {
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndexes)
+    public static Mesh DeleteMesh(Mesh originalMesh, HashSet<int> triangleIndexes)
     {
         Stopwatch stopwatch = new Stopwatch();
-        Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
         HashSet<int> verticesIndexesSet = new();
         int subMeshCount = originalMesh.subMeshCount;
@@ -220,17 +219,17 @@ public class MeshUtility
         // triangleIndexesToKeepのサイズに基づいて初期サイズを設定
         List<int> newTriangles = new List<int>(triangleIndexesToKeep.Count * 3);
 
-        for (int i = 0; i < originalTriangles.Length; i += 3)
-        {
-            int triangleIndex = i / 3;
-
-            if (triangleIndexesToKeep.Contains(triangleIndex))
+            for (int i = 0; i < originalTriangles.Length; i += 3)
             {
+                int triangleIndex = i / 3;
+
+                if (triangleIndexesToKeep.Contains(triangleIndex))
+                {
                 newTriangles.Add(originalTriangles[i]);
                 newTriangles.Add(originalTriangles[i + 1]);
                 newTriangles.Add(originalTriangles[i + 2]);
             }
-        }
+                }
 
         newMesh.triangles = newTriangles.ToArray();
 
