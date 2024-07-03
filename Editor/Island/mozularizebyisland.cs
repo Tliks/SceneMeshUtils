@@ -85,6 +85,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnDisable()
     {
         MeshPreview.StopPreview();
+        DestroyImmediate(_PreviewMeshCollider);
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
