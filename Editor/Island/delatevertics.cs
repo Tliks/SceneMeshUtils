@@ -214,10 +214,14 @@ public class MeshUtility
     public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
-        int[] originalTriangles = originalMesh.triangles;
+        
+        int submeshCount = originalMesh.subMeshCount;
+        List<int>[] newSubmeshTriangles = new List<int>[submeshCount];
 
-        // triangleIndexesToKeepのサイズに基づいて初期サイズを設定
-        List<int> newTriangles = new List<int>(triangleIndexesToKeep.Count * 3);
+        for (int submesh = 0; submesh < submeshCount; submesh++)
+        {
+            int[] originalTriangles = originalMesh.GetTriangles(submesh);
+            newSubmeshTriangles[submesh] = new List<int>(triangleIndexesToKeep.Count * 3);
 
             for (int i = 0; i < originalTriangles.Length; i += 3)
             {
@@ -225,13 +229,18 @@ public class MeshUtility
 
                 if (triangleIndexesToKeep.Contains(triangleIndex))
                 {
-                newTriangles.Add(originalTriangles[i]);
-                newTriangles.Add(originalTriangles[i + 1]);
-                newTriangles.Add(originalTriangles[i + 2]);
-            }
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i]);
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i + 1]);
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i + 2]);
                 }
+            }
+        }
 
-        newMesh.triangles = newTriangles.ToArray();
+        newMesh.subMeshCount = submeshCount;
+        for (int submesh = 0; submesh < submeshCount; submesh++)
+        {
+            newMesh.SetTriangles(newSubmeshTriangles[submesh], submesh);
+        }
 
         return newMesh;
     }
