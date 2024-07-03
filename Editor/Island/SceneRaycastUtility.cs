@@ -3,6 +3,8 @@ using UnityEngine;
 
 public static class SceneRaycastUtility
 {
+    private static GameObject ColiderObject; 
+    private static MeshCollider MeshCollider;
     public static bool TryRaycast(out RaycastHit hitInfo)
     {
         hitInfo = new RaycastHit();
@@ -24,7 +26,7 @@ public static class SceneRaycastUtility
         }
 
         Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-        if (HandleUtility.RaySnap(ray) is RaycastHit hit)
+        if (HandleUtility.RaySnap(ray) is RaycastHit hit && hit.transform.gameObject == ColiderObject)
         {
             hitInfo = hit;
             return true;
@@ -33,26 +35,34 @@ public static class SceneRaycastUtility
         return false;
     }
     
-    public static bool IsHitObject(GameObject targetObject, RaycastHit hitInfo)
+    public static MeshCollider AddCollider(Transform transform)
     {
-        return hitInfo.transform != null && hitInfo.transform.gameObject == targetObject;
-    }
-
-    public static MeshCollider AddCollider(SkinnedMeshRenderer skinnedMeshRenderer)
-    {
-        MeshCollider meshCollider;
-        meshCollider = skinnedMeshRenderer.gameObject.GetComponent<MeshCollider>();
-        if (meshCollider == null)
+        if (ColiderObject == null)
         {
-            meshCollider = skinnedMeshRenderer.gameObject.AddComponent<MeshCollider>();
-            meshCollider.convex = false;  
+            ColiderObject = new GameObject();
+            ColiderObject.name = "AO preview";
+            ColiderObject.transform.position = transform.position;
+            ColiderObject.transform.rotation = transform.rotation;
+            ColiderObject.transform.localScale = transform.lossyScale;
         }
-        return meshCollider;
+        
+        MeshCollider = ColiderObject.GetComponent<MeshCollider>();
+        if (MeshCollider == null)
+        {
+            MeshCollider = ColiderObject.AddComponent<MeshCollider>();
+            MeshCollider.convex = false;  
+        }
+        return MeshCollider;
     }
 
-    public static void DeleteCollider(MeshCollider meshCollider)
+    public static void DeleteCollider()
     {
-        Object.DestroyImmediate(meshCollider);
+        Object.DestroyImmediate(ColiderObject);
+    }
+
+    public static void UpdateColider(Mesh mesh)
+    {
+        MeshCollider.sharedMesh = mesh;
     }
 
 }

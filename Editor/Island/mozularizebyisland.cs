@@ -36,7 +36,6 @@ public class ModuleCreatorIsland : EditorWindow
 
     private Stopwatch _stopwatch = new Stopwatch();
     public bool _mergeSamePosition = true;
-    private MeshCollider _PreviewMeshCollider;
     private Vector2 _startPoint;
     private Rect _selectionRect = new Rect();
     private bool _isdragging = false;
@@ -85,7 +84,7 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnDisable()
     {
         MeshPreview.StopPreview();
-        DestroyImmediate(_PreviewMeshCollider);
+        SceneRaycastUtility.DeleteCollider();
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
@@ -249,13 +248,12 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_isPreviewEnabled)
         {
-            _PreviewMeshCollider = SceneRaycastUtility.AddCollider(_OriginskinnedMeshRenderer);
+            SceneRaycastUtility.AddCollider(_OriginskinnedMeshRenderer.transform);
             UpdateMesh(); // コライダーのメッシュを更新
-            SceneView.lastActiveSceneView.drawGizmos = true;
         }
         else
         {
-            SceneRaycastUtility.DeleteCollider(_PreviewMeshCollider);
+            SceneRaycastUtility.DeleteCollider();
         }
 
     }
@@ -425,30 +423,27 @@ public class ModuleCreatorIsland : EditorWindow
         bool conditionMet = false;
         if (SceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
         {
-            if (SceneRaycastUtility.IsHitObject(_OriginskinnedMeshRenderer.gameObject, hitInfo))
+            int triangleIndex = hitInfo.triangleIndex;
+            int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+
+            HashSet<int> Triangles = null;
+            if (_SelectionModeIndex == 0)
             {
-                int triangleIndex = hitInfo.triangleIndex;
-                int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+                Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
+            }
+            else if (_SelectionModeIndex == 1)
+            {
+                Triangles = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _OriginskinnedMeshRenderer.transform);
+            }
 
-                HashSet<int> Triangles = null;
-                if (_SelectionModeIndex == 0)
-                {
-                    Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
-                }
-                else if (_SelectionModeIndex == 1)
-                {
-                    Triangles = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _OriginskinnedMeshRenderer.transform);
-                }
-
-                if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
-                if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
-                {
-                    _PreviousTriangleIndices = Triangles;
-                    Color color = _isPreviewSelected ? Color.red : Color.cyan;
-                    HighlightEdgesManager.SetHighlightColor(color);
-                    HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
-                    conditionMet = true;
-                }
+            if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
+            if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
+            {
+                _PreviousTriangleIndices = Triangles;
+                Color color = _isPreviewSelected ? Color.red : Color.cyan;
+                HighlightEdgesManager.SetHighlightColor(color);
+                HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
+                conditionMet = true;
             }
         }
         if (!conditionMet)
@@ -460,7 +455,6 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void HandleDrag(Vector2 startpos, Vector2 endpos, bool isHighlight)
     {
-        if (!_PreviewMeshCollider) return;
         if (startpos.x == endpos.x || startpos.y == endpos.y) return;
         
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
@@ -711,6 +705,7 @@ public class ModuleCreatorIsland : EditorWindow
         Mesh PreviewMesh = Instantiate(_originalMesh);
         PreviewMesh.name += "AO Preview";
         MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+
     }
 
     GameObject CheckRoot(GameObject targetObject)
@@ -749,12 +744,12 @@ public class ModuleCreatorIsland : EditorWindow
             if (KeeptriangleIndices.Count > 0)
             {
                 (colliderMesh, _oldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
-                _PreviewMeshCollider.sharedMesh = colliderMesh;
+                SceneRaycastUtility.UpdateColider(colliderMesh);
             }
             else
             {
                 colliderMesh = null;
-                _PreviewMeshCollider.sharedMesh = colliderMesh;
+                SceneRaycastUtility.UpdateColider(colliderMesh);
             }
         }
 
