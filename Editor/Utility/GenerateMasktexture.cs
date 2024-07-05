@@ -29,7 +29,7 @@ public class GenerateMaskUtilty
     {
         EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
-        string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black") };
+        string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black"), LocalizationEditor.GetLocalizedText("mask.color.original") };
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
 
         selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);

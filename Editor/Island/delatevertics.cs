@@ -4,10 +4,9 @@ using System.Diagnostics;
 
 public class MeshUtility
 {
-    public static Mesh DeleteMesh(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndexes)
+    public static Mesh DeleteMesh(Mesh originalMesh, HashSet<int> triangleIndexes)
     {
         Stopwatch stopwatch = new Stopwatch();
-        Mesh originalMesh = skinnedMeshRenderer.sharedMesh;
 
         HashSet<int> verticesIndexesSet = new();
         int subMeshCount = originalMesh.subMeshCount;
@@ -215,24 +214,33 @@ public class MeshUtility
     public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);
-        int[] originalTriangles = originalMesh.triangles;
+        
+        int submeshCount = originalMesh.subMeshCount;
+        List<int>[] newSubmeshTriangles = new List<int>[submeshCount];
 
-        // triangleIndexesToKeepのサイズに基づいて初期サイズを設定
-        List<int> newTriangles = new List<int>(triangleIndexesToKeep.Count * 3);
-
-        for (int i = 0; i < originalTriangles.Length; i += 3)
+        for (int submesh = 0; submesh < submeshCount; submesh++)
         {
-            int triangleIndex = i / 3;
+            int[] originalTriangles = originalMesh.GetTriangles(submesh);
+            newSubmeshTriangles[submesh] = new List<int>(triangleIndexesToKeep.Count * 3);
 
-            if (triangleIndexesToKeep.Contains(triangleIndex))
+            for (int i = 0; i < originalTriangles.Length; i += 3)
             {
-                newTriangles.Add(originalTriangles[i]);
-                newTriangles.Add(originalTriangles[i + 1]);
-                newTriangles.Add(originalTriangles[i + 2]);
+                int triangleIndex = i / 3;
+
+                if (triangleIndexesToKeep.Contains(triangleIndex))
+                {
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i]);
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i + 1]);
+                    newSubmeshTriangles[submesh].Add(originalTriangles[i + 2]);
+                }
             }
         }
 
-        newMesh.triangles = newTriangles.ToArray();
+        newMesh.subMeshCount = submeshCount;
+        for (int submesh = 0; submesh < submeshCount; submesh++)
+        {
+            newMesh.SetTriangles(newSubmeshTriangles[submesh], submesh);
+        }
 
         return newMesh;
     }

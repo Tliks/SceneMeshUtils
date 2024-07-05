@@ -88,39 +88,8 @@ public class ModuleCreator
         return instance;
     }
 
-    public (GameObject, SkinnedMeshRenderer) PreviewMesh(GameObject sourceObject)
-    {
-        SkinnedMeshRenderer skinnedMeshRenderer = null;
-        GameObject new_root = null;
-        try
-        {
-            Stopwatch stopwatch = new Stopwatch();
-            
-            (GameObject root, int skin_index) = CheckObjects(sourceObject);
 
-            stopwatch.Start();
-            new_root = CopyObjects(root, root.name);
-            GameObject skin = GetSkin(new_root, skin_index);
-            skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
-
-            EditorGUIUtility.PingObject(new_root);
-        }
-
-        catch (InvalidOperationException ex)
-        {
-            UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
-        }
-        catch (Exception ex)
-        {
-            UnityEngine.Debug.LogError(ex.StackTrace);
-            UnityEngine.Debug.LogError(ex);
-        }
-
-        return (new_root, skinnedMeshRenderer);
-
-    }
-
-    private (GameObject, int) CheckObjects(GameObject targetObject)
+    public (GameObject, int) CheckObjects(GameObject targetObject)
     {
         Checktarget(targetObject);
         CheckPrefabAsset(targetObject);

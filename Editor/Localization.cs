@@ -49,6 +49,7 @@ public class LocalizationEditor
         { "mask.color", new string[] {"Selected area color", "選択した箇所の色"}},
         { "mask.color.white", new string[] {"white", "白"}},
         { "mask.color.black", new string[] {"black", "黒"}},
+        { "mask.color.original", new string[] {"original", "オリジナル"}},
         { "mask.expansion", new string[] {"Padding", "パディング"}},
         { "SelectionMode.description", new string[] { "SelectionMode: ", "選択モード: " }},
         { "SelectionMode.Island", new string[] { "Island", "アイランド" }},

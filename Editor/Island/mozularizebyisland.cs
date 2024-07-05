@@ -27,44 +27,37 @@ public class ModuleCreatorIsland : EditorWindow
     private HistoryManager _historyManager; 
 
     private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private SkinnedMeshRenderer _PreviewSkinnedMeshRenderer;
     private Mesh _bakedMesh;
-    private GameObject _PreviewMeshObject;
-
+    private Mesh _originalMesh;
 
     private const int MENU_PRIORITY = 49;
     private const double raycastInterval = 0.01;
     private double _lastUpdateTime = 0;
 
-
-    private HighlightEdgesManager _highlightManager;
-
     private Stopwatch _stopwatch = new Stopwatch();
     public bool _mergeSamePosition = true;
-    private MeshCollider _PreviewMeshCollider;
     private Vector2 _startPoint;
     private Rect _selectionRect = new Rect();
     private bool _isdragging = false;
     private const float dragThreshold = 10f;
     private bool _isAll = true;
-    private Vector2 _scrollPosition;
     private int _SelectionModeIndex = 0;
     private int _UtilityIndex = 0;
     private bool _isPreviewSelected;
     private bool _isPreviewEnabled;
-    private Scene _scene;
-    private Vector3 _offset;
-    private Vector3 _middleVertex;
-    private const float cameraDistance = 0.3f;
     private Dictionary<int, int> _oldToNewIndexMap;
-    private string _rootname;
     private float _scale = 0.03f;
+
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
-        GetWindow<ModuleCreatorIsland>("Utilities");
-        
+        if (HasOpenInstances<ModuleCreatorIsland>())
+        {
+            var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
+            existingWindow.Close();
+        }
+        CreateWindow<ModuleCreatorIsland>("Utilities");
     }
 
     [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
@@ -78,7 +71,6 @@ public class ModuleCreatorIsland : EditorWindow
     private void OnEnable()
     {
         _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-        _scene = Selection.activeGameObject.scene;
         DuplicateAndSetup();
         CalculateIslands();
         ToggleSelectionEnabled(true);
@@ -87,26 +79,12 @@ public class ModuleCreatorIsland : EditorWindow
         SaveUndoState();
 
         SceneView.duringSceneGui += OnSceneGUI;
-
-        _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices, _UnselectedTriangleIndices);
-        _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
-        _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _rootname, _UnselectedTriangleIndices);
-        _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _rootname, _SelectedTriangleIndices);
     }
 
     private void OnDisable()
     {
-        if (_PreviewMeshObject != null)
-        {
-            DestroyImmediate(_PreviewMeshObject);
-        }
-        //FocusCustomViewObject(_OriginskinnedMeshRenderer.transform, _OriginskinnedMeshRenderer.sharedMesh, Quaternion.LookRotation(Vector3.back));
-        //Bounds targetbounds = _instance ? _instance.GetComponentInChildren<SkinnedMeshRenderer>().bounds : _OriginskinnedMeshRenderer.bounds;
-        Bounds targetbounds = _OriginskinnedMeshRenderer.bounds;
-        SceneManager.SetActiveScene(_scene);
-        SceneView.lastActiveSceneView.Frame(targetbounds);
-        SceneView.lastActiveSceneView.LookAtDirect(_middleVertex - _offset, Quaternion.LookRotation(new Vector3(0, -0.5f, -1f)), cameraDistance);
-
+        MeshPreview.StopPreview();
+        SceneRaycastUtility.DeleteCollider();
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.RepaintAll();
     }
@@ -118,7 +96,6 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnGUI()
     {
-        //_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
         using (new GUILayout.HorizontalScope())
         {
             float halfWidth = position.width / 2f;
@@ -135,7 +112,6 @@ public class ModuleCreatorIsland : EditorWindow
                 RenderUtility();
             }
         }
-        //EditorGUILayout.EndScrollView();
     }
 
     private void RenderSelectionWinodw()
@@ -175,26 +151,47 @@ public class ModuleCreatorIsland : EditorWindow
             LocalizationEditor.GetLocalizedText("Utility.BlendShape")
         };
 
+        int new_index;
         using (new GUILayout.HorizontalScope())
         {
             GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
-            _UtilityIndex = EditorGUILayout.Popup(_UtilityIndex, options);
+            new_index = EditorGUILayout.Popup(_UtilityIndex, options);
         }
 
-        if (_UtilityIndex == 1)
+        if (new_index == 1)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _UnselectedTriangleIndices, _originalMesh);
+                _UtilityIndex = new_index;
+            }
             _CreateModuleUtilty.RenderModuleCreator();
         }
-        else if (_UtilityIndex == 2)
+        else if (new_index == 2)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices);
+                _UtilityIndex = new_index;
+            }
             _GenerateMaskUtilty.RenderGenerateMask();
         }
-        else if (_UtilityIndex == 3)
+        else if (new_index == 3)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _UnselectedTriangleIndices, _originalMesh );
+                _UtilityIndex = new_index;
+            }
             _DeleteMeshUtilty.RenderDeleteMesh();
         }
-        else if (_UtilityIndex == 4)
+        else if (new_index == 4)
         {
+            if (new_index !=_UtilityIndex)
+            {
+                _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _originalMesh);
+                _UtilityIndex = new_index;
+            }
             _ClampBlendShapeUtility.RendergenerateClamp();
         }
     }
@@ -225,25 +222,6 @@ public class ModuleCreatorIsland : EditorWindow
         UpdateMesh();
     }
 
-    private void CalculatemiddleVertex(Transform transform, Mesh mesh)
-    {
-        if (mesh != null)
-        {
-            Vector3[] vertices = mesh.vertices;
-            _middleVertex = vertices
-                .Select(v => transform.TransformPoint(v))
-                .Aggregate((acc, v) => acc + v) / vertices.Length;
-        }
-    }
-
-    private void EnsureHighlightManagerExists()
-    {
-        if (_highlightManager == null)
-        {
-            _highlightManager = _PreviewSkinnedMeshRenderer.gameObject.AddComponent<HighlightEdgesManager>();
-        }
-    }
-
     private void ToggleSelectionSelected(bool newMode)
     {
         if (_isPreviewSelected == newMode)
@@ -270,15 +248,12 @@ public class ModuleCreatorIsland : EditorWindow
 
         if (_isPreviewEnabled)
         {
-            _PreviewMeshCollider = SceneRaycastUtility.AddCollider(_PreviewSkinnedMeshRenderer);
-            EnsureHighlightManagerExists();
+            SceneRaycastUtility.AddCollider(_OriginskinnedMeshRenderer.transform);
             UpdateMesh(); // コライダーのメッシュを更新
-            SceneView.lastActiveSceneView.drawGizmos = true;
         }
         else
         {
-            SceneRaycastUtility.DeleteCollider(_PreviewMeshCollider);
-            RemoveHighlight();
+            SceneRaycastUtility.DeleteCollider();
         }
 
     }
@@ -295,18 +270,9 @@ public class ModuleCreatorIsland : EditorWindow
         _UnselectedTriangleIndices = new HashSet<int>(_AllTriangleIndices);
     }
 
-    private void RemoveHighlight()
-    {
-        if (_highlightManager != null)
-        {
-            DestroyImmediate(_highlightManager);
-            SceneView.RepaintAll();
-        }
-    }
-
     private void OnSceneGUI(SceneView sceneView)
     {
-        if (_PreviewSkinnedMeshRenderer == null) Close();
+        //if (_PreviewSkinnedMeshRenderer == null) Close();
         if (!_isPreviewEnabled) return;
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
         Event e = Event.current;
@@ -315,6 +281,7 @@ public class ModuleCreatorIsland : EditorWindow
         //HandleScrollWheel(e);
         HandleMouseEvents(e, sceneView);
         DrawSelectionRectangle();
+        HighlightEdgesManager.DrawHighlights();
     }
 
     private void HandleScrollWheel(Event e)
@@ -333,7 +300,7 @@ public class ModuleCreatorIsland : EditorWindow
         if (e != null && Selection.activeGameObject != null)
         {
             GameObject currentActiveObject = Selection.activeGameObject;
-            if (currentActiveObject == _PreviewSkinnedMeshRenderer.gameObject)
+            if (currentActiveObject == _OriginskinnedMeshRenderer.gameObject)
             {
                 Selection.activeGameObject = null;
             }
@@ -369,7 +336,7 @@ public class ModuleCreatorIsland : EditorWindow
         //sceneviewの外側にある場合の初期化処理
         if (!sceneViewRect.Contains(mousePos))
         {
-            HighlightNull();
+            HighlightEdgesManager.ClearHighlights();
             if (_isdragging)
             {
                 _isdragging = false;
@@ -444,9 +411,11 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void HandleClick()
     {
+        if (_PreviousTriangleIndices == null) return;
         UpdateSelection(_PreviousTriangleIndices);
         //Debug.Log(string.Join(", ", _PreviousIslandIndices));
-        HighlightNull();
+        HighlightEdgesManager.ClearHighlights();
+        _PreviousTriangleIndices = null;
     }
 
     private void PerformRaycast()
@@ -454,47 +423,38 @@ public class ModuleCreatorIsland : EditorWindow
         bool conditionMet = false;
         if (SceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
         {
-            if (SceneRaycastUtility.IsHitObject(_PreviewSkinnedMeshRenderer.gameObject, hitInfo))
+            int triangleIndex = hitInfo.triangleIndex;
+            int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+
+            HashSet<int> Triangles = null;
+            if (_SelectionModeIndex == 0)
             {
-                int triangleIndex = hitInfo.triangleIndex;
-                int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+                Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
+            }
+            else if (_SelectionModeIndex == 1)
+            {
+                Triangles = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _OriginskinnedMeshRenderer.transform);
+            }
 
-                HashSet<int> Triangles = null;
-                if (_SelectionModeIndex == 0)
-                {
-                    Triangles = _islandUtility.GetIslandtrianglesFromTriangleIndex(newIndex, _mergeSamePosition);
-                }
-                else if (_SelectionModeIndex == 1)
-                {
-                    Triangles = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _PreviewSkinnedMeshRenderer.transform);
-                }
-
-                if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
-                if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
-                {
-                    _PreviousTriangleIndices = Triangles;
-                    Color color = _isPreviewSelected ? Color.red : Color.cyan;
-                    _highlightManager.HighlighttriangleIndices(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
-                    conditionMet = true;
-                }
+            if (_mergeSamePosition) Triangles = _isPreviewSelected ? Triangles.Intersect(_SelectedTriangleIndices).ToHashSet() : Triangles.Intersect(_UnselectedTriangleIndices).ToHashSet();
+            if (Triangles.Count > 0 && Triangles != _PreviousTriangleIndices)
+            {
+                _PreviousTriangleIndices = Triangles;
+                Color color = _isPreviewSelected ? Color.red : Color.cyan;
+                HighlightEdgesManager.SetHighlightColor(color);
+                HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, Triangles, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
+                conditionMet = true;
             }
         }
         if (!conditionMet)
         {
-            HighlightNull();
+            HighlightEdgesManager.ClearHighlights();
+            _PreviousTriangleIndices = null;
         }
-    }
-
-    private void HighlightNull()
-    {
-        _PreviousTriangleIndices.Clear();
-        HashSet<(int, int)> edgesToHighlight = new HashSet<(int, int)>();
-        _highlightManager.HighlightEdges(edgesToHighlight, _bakedMesh.vertices, Color.cyan, _PreviewSkinnedMeshRenderer.transform);
     }
 
     private void HandleDrag(Vector2 startpos, Vector2 endpos, bool isHighlight)
     {
-        if (!_PreviewMeshCollider) return;
         if (startpos.x == endpos.x || startpos.y == endpos.y) return;
         
         MeshCollider meshCollider = GenerateColider(startpos, endpos);
@@ -502,18 +462,19 @@ public class ModuleCreatorIsland : EditorWindow
         HashSet<int> TriangleIndices = null;
         if (_SelectionModeIndex == 0)
         {
-            TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, _mergeSamePosition, _isAll, _PreviewSkinnedMeshRenderer.transform);
+            TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, _mergeSamePosition, _isAll, _OriginskinnedMeshRenderer.transform);
         }
         else if (_SelectionModeIndex == 1)
         {
-            TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, _PreviewSkinnedMeshRenderer.transform);
+            TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, _OriginskinnedMeshRenderer.transform);
         }
         TriangleIndices = _isPreviewSelected ? TriangleIndices.Intersect(_SelectedTriangleIndices).ToHashSet() : TriangleIndices.Intersect(_UnselectedTriangleIndices).ToHashSet();
      
         if (isHighlight)
         {
             Color color = _isPreviewSelected ? Color.red : Color.cyan;
-            _highlightManager.HighlighttriangleIndices(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, color, _PreviewSkinnedMeshRenderer.transform);
+            HighlightEdgesManager.SetHighlightColor(color);
+            HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
         }
         else
         {
@@ -730,78 +691,65 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {
-        Vector3 minOffset = new Vector3(5f, 0, -5f);
-        SceneManager.SetActiveScene(_scene);
-        ModuleCreatorSettings settings = new ModuleCreatorSettings
-        {
-            IncludePhysBone = false,
-            IncludePhysBoneColider = false
-        };
-        (_PreviewMeshObject, _PreviewSkinnedMeshRenderer) = new ModuleCreator(settings).PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
-        _rootname = _PreviewMeshObject.name;
+        GameObject PreviewMeshObject = CheckRoot(_OriginskinnedMeshRenderer.gameObject);
+        _originalMesh = _OriginskinnedMeshRenderer.sharedMesh;
 
-        ResetAllBlendShapes(_PreviewSkinnedMeshRenderer);
-        _offset = minOffset + new Vector3(0, 0, -_PreviewSkinnedMeshRenderer.bounds.size.z);
-        _PreviewMeshObject.transform.position = _PreviewMeshObject.transform.position + _offset;
-        _PreviewMeshObject.name = "Preview Mesh";
+        //ResetAllBlendShapes(_OriginskinnedMeshRenderer);
 
-        Vector3 parentScale = _PreviewMeshObject.transform.localScale;
-        _PreviewSkinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
+        Vector3 parentScale = PreviewMeshObject.transform.localScale;
+        _OriginskinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
 
         _bakedMesh = new Mesh(); 
-        _PreviewSkinnedMeshRenderer.BakeMesh(_bakedMesh);
-        //_BacksideMesh = MeshDeletionUtility.GenerateBacksideMesh(_bakedMesh);
+        _OriginskinnedMeshRenderer.BakeMesh(_bakedMesh);
 
-        //FocusCustomViewObject(_PreviewSkinnedMeshRenderer.transform, _bakedMesh, SceneView.lastActiveSceneView.rotation);
-        SceneView.lastActiveSceneView.Frame(_PreviewSkinnedMeshRenderer.bounds, true);
-        CalculatemiddleVertex(_PreviewSkinnedMeshRenderer.transform, _bakedMesh);
-        SceneView.lastActiveSceneView.LookAtDirect(_middleVertex, SceneView.lastActiveSceneView.rotation, cameraDistance);
+        Mesh PreviewMesh = Instantiate(_originalMesh);
+        PreviewMesh.name += "AO Preview";
+        MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+
     }
 
-    public List<int> GetTriangleVertices(int[] triangles, HashSet<int> triangleIndices)
+    GameObject CheckRoot(GameObject targetObject)
     {
-        HashSet<int> verticesList = new HashSet<int>();
-        foreach (int triangleIndex in triangleIndices)
+        //親オブジェクトが存在するか確認
+        Transform parent = targetObject.transform.parent;
+        if (parent == null)
         {
-            if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
-            {
-                Debug.LogError("Invalid triangle index.");
-                continue;
-            }
-
-            int index0 = triangles[triangleIndex * 3];
-            int index1 = triangles[triangleIndex * 3 + 1];
-            int index2 = triangles[triangleIndex * 3 + 2];
-
-            verticesList.Add(index0);
-            verticesList.Add(index1);
-            verticesList.Add(index2);
+            throw new InvalidOperationException("Please select the object with SkinnedMeshRenderer directly under the avatar/costume");
         }
 
-        return verticesList.ToList();
+        GameObject root;
+        if (PrefabUtility.IsPartOfPrefabInstance(targetObject))
+        {
+            root = PrefabUtility.GetOutermostPrefabInstanceRoot(targetObject);
+        }
+        else
+        {
+            root = parent.gameObject;
+        }
+        return root;
     }
-    
+
     private void UpdateMesh()
     {   
-        Mesh previewMesh;
+        Mesh PreviewMesh;
         Mesh colliderMesh;
 
         HashSet<int> KeeptriangleIndices = _isPreviewSelected ? _SelectedTriangleIndices : _UnselectedTriangleIndices;
 
-        previewMesh = MeshUtility.RemoveTriangles(_OriginskinnedMeshRenderer.sharedMesh, KeeptriangleIndices);
-        _PreviewSkinnedMeshRenderer.sharedMesh = previewMesh;
+        PreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, KeeptriangleIndices);
+        _OriginskinnedMeshRenderer.sharedMesh = PreviewMesh;
 
         if (_isPreviewEnabled)
         {
             if (KeeptriangleIndices.Count > 0)
             {
                 (colliderMesh, _oldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
-                _PreviewMeshCollider.sharedMesh = colliderMesh;
+                SceneRaycastUtility.UpdateColider(colliderMesh);
             }
             else
             {
                 colliderMesh = null;
-                _PreviewMeshCollider.sharedMesh = colliderMesh;
+                SceneRaycastUtility.UpdateColider(colliderMesh);
             }
         }
 

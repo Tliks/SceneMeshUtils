@@ -4,7 +4,7 @@ Test Utils
 ### 特徴
 ポリゴンの選択と選択されたポリゴンに対する操作の2つのフェーズから構成
 
-ModuleCretor-v1.0.0-betaを踏襲してポリゴン単位の選択とUtilityを追加
+ModuleCreator-v1.0.0-betaを踏襲してポリゴン単位の選択とUtilityを追加
 
 - 選択フェーズ
     - raycastを用いたシーン上における直感的な選択
