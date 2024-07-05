@@ -57,6 +57,7 @@ public static class HighlightEdgesManager
 
     public static void SetHighlightColor(Color color)
     {
+        color.a = 0.5f;
         highlightColor = color;
     }
 
