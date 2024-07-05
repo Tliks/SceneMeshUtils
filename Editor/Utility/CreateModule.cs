@@ -86,6 +86,8 @@ public class CreateModuleUtilty
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
         {
             CreateModule(_SelectedTriangleIndices);
+            MeshPreview.StopPreview();
+            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
             //Close();
         }
 

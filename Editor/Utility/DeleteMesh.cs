@@ -34,7 +34,9 @@ public class DeleteMeshUtilty
         GUI.enabled = _KeepTriangles.Count > 0;
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh")))
         {
+            MeshPreview.StopPreview();
             DeleteMesh();
+            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
         }
         GUI.enabled = true;
     }
