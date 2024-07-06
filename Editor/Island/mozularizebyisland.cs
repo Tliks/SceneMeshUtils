@@ -172,7 +172,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _SelectedTriangleIndices);
+                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _SelectedTriangleIndices, _originalMesh);
                 _UtilityIndex = new_index;
             }
             _GenerateMaskUtilty.RenderGenerateMask();

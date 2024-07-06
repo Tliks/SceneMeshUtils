@@ -17,7 +17,7 @@ public MeshMaskGenerator(int textureSize, int expansion)
 
 }
 
-public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, int colorindex)
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, int colorindex, Mesh mesh)
 {
     Color color = (colorindex == 1) ? Color.white : Color.black;
     Color drawColor = (colorindex == 1) ? Color.black : Color.white;
@@ -27,7 +27,6 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
         baseColors[i] = color;
     }
 
-    Mesh mesh = skinnedMeshRenderer.sharedMesh;
     Material[] materials = skinnedMeshRenderer.sharedMaterials;
     Dictionary<string, Texture2D> maskTextures = new Dictionary<string, Texture2D>();
 

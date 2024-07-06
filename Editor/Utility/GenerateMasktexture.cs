@@ -16,13 +16,15 @@ public class GenerateMaskUtilty
     private int selectedValue = 512;
     private int _areacolorindex = 0;
     private int _expansion = 2;
+    private Mesh _originalMesh;
 
 
-    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices)
+    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, Mesh _originalMesh)
     {
         this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
         this._SelectedTriangleIndices = _SelectedTriangleIndices;
+        this._originalMesh = _originalMesh;
     }
 
     public void RenderGenerateMask()
@@ -49,7 +51,7 @@ public class GenerateMaskUtilty
     private void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex);
+        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex, _originalMesh);
         
         List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
         foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
