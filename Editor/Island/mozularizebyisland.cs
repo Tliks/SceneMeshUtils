@@ -50,18 +50,18 @@ public class ModuleCreatorIsland : EditorWindow
     private float _scale = 0.03f;
 
 
-    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
+    [MenuItem("GameObject/AoyonAvatarUtils", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
         if (HasOpenInstances<ModuleCreatorIsland>())
         {
-            var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
+            var existingWindow = GetWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
             existingWindow.Close();
         }
-        CreateWindow<ModuleCreatorIsland>("Utilities");
+        CreateWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
     }
 
-    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
+    [MenuItem("GameObject/AoyonAvatarUtils", true)]
     private static bool ValidateShowWindowFromGameObject()
     {
         return Selection.activeGameObject != null 
