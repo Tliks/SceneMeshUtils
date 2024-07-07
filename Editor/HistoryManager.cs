@@ -16,11 +16,11 @@ public class HistoryManager
 
     public void Add(HashSet<int> item)
     {
-        if (undoStack.Count >= maxSize)
+        undoStack.Push(new HashSet<int>(item));
+        if (undoStack.Count > maxSize)
         {
             undoStack.Pop();
         }
-        undoStack.Push(new HashSet<int>(currentSet));
         currentSet = new HashSet<int>(item);
         redoStack.Clear();
     }

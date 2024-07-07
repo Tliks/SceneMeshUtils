@@ -5,14 +5,14 @@ using UnityEngine;
 
 public class ClampBlendShapeUtility
 {
-    private readonly SkinnedMeshRenderer _skinnedMeshRenderer;
+    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private readonly string _rootname;
     private readonly HashSet<int> _triangleIndices;
     private readonly Mesh _originalMesh;
 
     public ClampBlendShapeUtility(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, Mesh _originalMesh)
     {
-        this._skinnedMeshRenderer = _OriginskinnedMeshRenderer;
+        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
         this._triangleIndices = _SelectedTriangleIndices;
         this._originalMesh = _originalMesh;
@@ -141,7 +141,7 @@ public class ClampBlendShapeUtility
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
 
-        _skinnedMeshRenderer.sharedMesh = newMesh;
+        _OriginskinnedMeshRenderer.sharedMesh = newMesh;
     }
 
     public void RendergenerateClamp()
@@ -150,7 +150,9 @@ public class ClampBlendShapeUtility
         GUI.enabled = _triangleIndices.Count > 0;
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.BlendShape")))
         {
+            MeshPreview.StopPreview();
             ReplaceMesh();
+            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
         }
         GUI.enabled = true;
     }

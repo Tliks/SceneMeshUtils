@@ -26,6 +26,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private HistoryManager _historyManager; 
 
+    private GameObject _RootObject;
     private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private Mesh _bakedMesh;
     private Mesh _originalMesh;
@@ -49,18 +50,18 @@ public class ModuleCreatorIsland : EditorWindow
     private float _scale = 0.03f;
 
 
-    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", false, MENU_PRIORITY)]
+    [MenuItem("GameObject/AoyonAvatarUtils", false, MENU_PRIORITY)]
     public static void ShowWindowFromGameObject()
     {
         if (HasOpenInstances<ModuleCreatorIsland>())
         {
-            var existingWindow = GetWindow<ModuleCreatorIsland>("Utilities");
+            var existingWindow = GetWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
             existingWindow.Close();
         }
-        CreateWindow<ModuleCreatorIsland>("Utilities");
+        CreateWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
     }
 
-    [MenuItem("GameObject/Module Creator/Modularize Mesh by Island", true)]
+    [MenuItem("GameObject/AoyonAvatarUtils", true)]
     private static bool ValidateShowWindowFromGameObject()
     {
         return Selection.activeGameObject != null 
@@ -162,7 +163,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _UnselectedTriangleIndices, _originalMesh);
+                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _SelectedTriangleIndices, _UnselectedTriangleIndices, _originalMesh);
                 _UtilityIndex = new_index;
             }
             _CreateModuleUtilty.RenderModuleCreator();
@@ -171,7 +172,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices);
+                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _SelectedTriangleIndices, _originalMesh);
                 _UtilityIndex = new_index;
             }
             _GenerateMaskUtilty.RenderGenerateMask();
@@ -180,7 +181,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _UnselectedTriangleIndices, _originalMesh );
+                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _UnselectedTriangleIndices, _originalMesh );
                 _UtilityIndex = new_index;
             }
             _DeleteMeshUtilty.RenderDeleteMesh();
@@ -189,7 +190,7 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _OriginskinnedMeshRenderer.name, _SelectedTriangleIndices, _originalMesh);
+                _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _RootObject.name, _SelectedTriangleIndices, _originalMesh);
                 _UtilityIndex = new_index;
             }
             _ClampBlendShapeUtility.RendergenerateClamp();
@@ -691,12 +692,12 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void DuplicateAndSetup()
     {
-        GameObject PreviewMeshObject = CheckRoot(_OriginskinnedMeshRenderer.gameObject);
+        _RootObject = CheckRoot(_OriginskinnedMeshRenderer.gameObject);
         _originalMesh = _OriginskinnedMeshRenderer.sharedMesh;
 
         //ResetAllBlendShapes(_OriginskinnedMeshRenderer);
 
-        Vector3 parentScale = PreviewMeshObject.transform.localScale;
+        Vector3 parentScale = _RootObject.transform.localScale;
         _OriginskinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
 
         _bakedMesh = new Mesh(); 
