@@ -31,7 +31,13 @@ public class GenerateMaskUtilty
     {
         EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
-        string[] options = { LocalizationEditor.GetLocalizedText("mask.color.white"), LocalizationEditor.GetLocalizedText("mask.color.black"), LocalizationEditor.GetLocalizedText("mask.color.original") };
+        string[] options = { 
+            LocalizationEditor.GetLocalizedText("mask.color.white:black"), 
+            LocalizationEditor.GetLocalizedText("mask.color.black:white"), 
+            LocalizationEditor.GetLocalizedText("mask.color.original:black"),
+            LocalizationEditor.GetLocalizedText("mask.color.original:alpha")
+            };
+
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
 
         selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
@@ -51,7 +57,31 @@ public class GenerateMaskUtilty
     private void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, _areacolorindex, _originalMesh);
+
+        Color? targetColor = Color.white;
+        Color baseColor = Color.white;
+        if (_areacolorindex == 0)
+        {
+            targetColor = Color.white;
+            baseColor = Color.black;
+        }
+        else if (_areacolorindex == 1)
+        {
+            targetColor = Color.black;
+            baseColor = Color.white;
+        }
+        else if (_areacolorindex == 2)
+        {
+            targetColor = null;
+            baseColor = Color.black;
+        }
+        else if (_areacolorindex == 3)
+        {
+            targetColor = null;
+            baseColor = new Color(0, 0, 0, 1);
+        }
+
+        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColor, targetColor, _originalMesh);
         
         List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
         foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
