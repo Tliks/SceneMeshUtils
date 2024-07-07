@@ -40,7 +40,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
     }
 
     // 元のテクスチャを読み取り可能に取得
-    Texture2D originalTexture = GetReadableTexture(skinnedMeshRenderer.material.mainTexture as Texture2D);
+    Texture2D originalTexture = GetReadableTexture(skinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
 
     for (int subMeshIndex = 0; subMeshIndex < mesh.subMeshCount; subMeshIndex++)
     {
