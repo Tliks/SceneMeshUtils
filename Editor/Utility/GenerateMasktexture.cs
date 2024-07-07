@@ -15,6 +15,7 @@ public class GenerateMaskUtilty
     private readonly string[] displayOptions = { "512", "1024", "2048" };
     private int selectedValue = 512;
     private int _areacolorindex = 0;
+    private int _backcolorindex = 1;
     private int _expansion = 2;
     private Mesh _originalMesh;
 
@@ -32,13 +33,14 @@ public class GenerateMaskUtilty
         EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
         string[] options = { 
-            LocalizationEditor.GetLocalizedText("mask.color.white:black"), 
-            LocalizationEditor.GetLocalizedText("mask.color.black:white"), 
-            LocalizationEditor.GetLocalizedText("mask.color.original:black"),
-            LocalizationEditor.GetLocalizedText("mask.color.original:alpha")
+            LocalizationEditor.GetLocalizedText("mask.color.white"), 
+            LocalizationEditor.GetLocalizedText("mask.color.black"), 
+            LocalizationEditor.GetLocalizedText("mask.color.original"),
+            LocalizationEditor.GetLocalizedText("mask.color.alpha")
             };
 
-        _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.color"), _areacolorindex, options);
+        _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
+        _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.backcolor"), _backcolorindex, options);
 
         selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
         _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
@@ -53,34 +55,38 @@ public class GenerateMaskUtilty
         GUI.enabled = true;
 
     }
+    private Color? AssignColor(int indexValue)
+    {
+        Color? assignedColor;
+
+        switch (indexValue)
+        {
+            case 0:
+                assignedColor = Color.white;
+                break;
+            case 1:
+                assignedColor = Color.black;
+                break;
+            case 2:
+                assignedColor = null;
+                break;
+            case 3:
+                assignedColor = new Color(0, 0, 0, 0);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        return assignedColor;
+    }
 
     private void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
 
-        Color? targetColor;
-        Color baseColor;
-        switch (_areacolorindex)
-        {
-            case 0:
-                targetColor = Color.white;
-                baseColor = Color.black;
-                break;
-            case 1:
-                targetColor = Color.black;
-                baseColor = Color.white;
-                break;
-            case 2:
-                targetColor = null;
-                baseColor = Color.black;
-                break;
-            case 3:
-                targetColor = null;
-                baseColor = new Color(0, 0, 0, 0);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+
+        Color? targetColor = AssignColor(_areacolorindex);
+        Color? baseColor = AssignColor(_backcolorindex);
 
         Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColor, targetColor, _originalMesh);
         

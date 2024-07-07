@@ -17,12 +17,27 @@ public MeshMaskGenerator(int textureSize, int expansion)
 
 }
 
-public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, Color baseColor, Color? targetColor, Mesh mesh)
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, Color? baseColor, Color? targetColor, Mesh mesh)
 {
+    Texture2D originalTexture = GetReadableTexture(skinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
+
     Color[] baseColors = new Color[_textureSize * _textureSize];
-    for (int i = 0; i < baseColors.Length; i++)
+    if (baseColor.HasValue)
     {
-        baseColors[i] = baseColor;
+        for (int i = 0; i < baseColors.Length; i++)
+        {
+            baseColors[i] = baseColor.Value;
+        }
+    }
+    else
+    {
+        for (int y = 0; y < _textureSize; y++)
+        {
+            for (int x = 0; x < _textureSize; x++)
+            {
+                baseColors[y * _textureSize + x] = originalTexture.GetPixelBilinear((float)x / _textureSize, (float)y / _textureSize);
+            }
+        }
     }
 
     Material[] materials = skinnedMeshRenderer.sharedMaterials;
@@ -36,9 +51,6 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
         vertexToTriangleIndexMap[allTriangles[i + 1]] = i / 3;
         vertexToTriangleIndexMap[allTriangles[i + 2]] = i / 3;
     }
-
-    // 元のテクスチャを読み取り可能に取得
-    Texture2D originalTexture = GetReadableTexture(skinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
 
     for (int subMeshIndex = 0; subMeshIndex < mesh.subMeshCount; subMeshIndex++)
     {
