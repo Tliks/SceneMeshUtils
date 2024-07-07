@@ -58,27 +58,28 @@ public class GenerateMaskUtilty
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
 
-        Color? targetColor = Color.white;
-        Color baseColor = Color.white;
-        if (_areacolorindex == 0)
+        Color? targetColor;
+        Color baseColor;
+        switch (_areacolorindex)
         {
-            targetColor = Color.white;
-            baseColor = Color.black;
-        }
-        else if (_areacolorindex == 1)
-        {
-            targetColor = Color.black;
-            baseColor = Color.white;
-        }
-        else if (_areacolorindex == 2)
-        {
-            targetColor = null;
-            baseColor = Color.black;
-        }
-        else if (_areacolorindex == 3)
-        {
-            targetColor = null;
-            baseColor = new Color(0, 0, 0, 1);
+            case 0:
+                targetColor = Color.white;
+                baseColor = Color.black;
+                break;
+            case 1:
+                targetColor = Color.black;
+                baseColor = Color.white;
+                break;
+            case 2:
+                targetColor = null;
+                baseColor = Color.black;
+                break;
+            case 3:
+                targetColor = null;
+                baseColor = new Color(0, 0, 0, 0);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColor, targetColor, _originalMesh);
