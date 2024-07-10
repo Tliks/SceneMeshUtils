@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
 
@@ -392,6 +391,10 @@ public class ModuleCreatorIsland : EditorWindow
             TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, _isPreviewSelected);
 
             HandleTriangleClick(TriangleIndices, isclick);
+        }
+        else
+        {
+            HighlightEdgesManager.ClearHighlights();
         }
 
     }
