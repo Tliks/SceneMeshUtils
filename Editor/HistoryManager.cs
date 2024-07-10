@@ -4,16 +4,16 @@ using System.Linq;
 public class HistoryManager
 {
     private const int MaxStackSize = 20;
-    private Stack<HashSet<int>> undoStack = new Stack<HashSet<int>>();
-    private Stack<HashSet<int>> redoStack = new Stack<HashSet<int>>();
+    private List<HashSet<int>> undoStack = new List<HashSet<int>>();
+    private List<HashSet<int>> redoStack = new List<HashSet<int>>();
 
     public void AddState(HashSet<int> state)
     {
-        undoStack.Push(new HashSet<int>(state));
-        if (undoStack.Count > MaxStackSize)
+        if (undoStack.Count >= MaxStackSize)
         {
-            undoStack = new Stack<HashSet<int>>(undoStack.Take(MaxStackSize));
+            undoStack.RemoveAt(0);
         }
+        undoStack.Add(new HashSet<int>(state));
         redoStack.Clear();
     }
 
@@ -21,12 +21,13 @@ public class HistoryManager
     {
         if (undoStack.Count > 0)
         {
-            redoStack.Push(new HashSet<int>(currentState));
-            if (redoStack.Count > MaxStackSize)
+            if (redoStack.Count >= MaxStackSize)
             {
-                redoStack = new Stack<HashSet<int>>(redoStack.Take(MaxStackSize));
+                redoStack.RemoveAt(0);
             }
-            currentState = undoStack.Pop();
+            redoStack.Add(new HashSet<int>(currentState));
+            currentState = undoStack[undoStack.Count - 1];
+            undoStack.RemoveAt(undoStack.Count - 1);
         }
         return new HashSet<int>(currentState);
     }
@@ -35,12 +36,13 @@ public class HistoryManager
     {
         if (redoStack.Count > 0)
         {
-            undoStack.Push(new HashSet<int>(currentState));
-            if (undoStack.Count > MaxStackSize)
+            if (undoStack.Count >= MaxStackSize)
             {
-                undoStack = new Stack<HashSet<int>>(undoStack.Take(MaxStackSize));
+                undoStack.RemoveAt(0);
             }
-            currentState = redoStack.Pop();
+            undoStack.Add(new HashSet<int>(currentState));
+            currentState = redoStack[redoStack.Count - 1];
+            redoStack.RemoveAt(redoStack.Count - 1);
         }
         return new HashSet<int>(currentState);
     }
