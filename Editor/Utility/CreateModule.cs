@@ -14,16 +14,14 @@ public class CreateModuleUtilty
     private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private readonly Mesh _originalMesh;
     private readonly string _rootname;
-    private readonly HashSet<int> _SelectedTriangleIndices;
-    private readonly HashSet<int> _UnselectedTriangleIndices;
+    private readonly TriangleSelectionManager _triangleSelectionManager;
 
-    public CreateModuleUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, HashSet<int> _UnselectedTriangleIndices, Mesh _originalMesh)
+    public CreateModuleUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
     {
         this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
-        this._SelectedTriangleIndices = _SelectedTriangleIndices;
-        this._UnselectedTriangleIndices = _UnselectedTriangleIndices;
         this._originalMesh = _originalMesh;
+        this._triangleSelectionManager = _triangleSelectionManager;
     }
     
     public void RenderModuleCreator()
@@ -66,13 +64,13 @@ public class CreateModuleUtilty
     }
     private void RenderCreateBothModuleButtons()
     {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
 
         // Create Both Modules
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
         {
-            CreateModule(_SelectedTriangleIndices);
-            CreateModule(_UnselectedTriangleIndices);
+            CreateModule(_triangleSelectionManager.GetSelectedTriangles());
+            CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
             //Close();
         }
 
@@ -80,12 +78,12 @@ public class CreateModuleUtilty
     }
     private void RenderCreateModuleButtons()
     {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
         
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
         {
-            CreateModule(_SelectedTriangleIndices);
+            CreateModule(_triangleSelectionManager.GetSelectedTriangles());
             MeshPreview.StopPreview();
             MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
             //Close();

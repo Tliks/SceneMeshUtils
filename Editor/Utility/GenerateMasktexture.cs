@@ -9,7 +9,6 @@ public class GenerateMaskUtilty
 {
     private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private readonly string _rootname;
-    private readonly HashSet<int> _SelectedTriangleIndices;
 
     private readonly int[] optionValues = { 512, 1024, 2048 };
     private readonly string[] displayOptions = { "512", "1024", "2048" };
@@ -18,14 +17,15 @@ public class GenerateMaskUtilty
     private int _backcolorindex = 1;
     private int _expansion = 2;
     private Mesh _originalMesh;
+    private TriangleSelectionManager _triangleSelectionManager;
 
 
-    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, Mesh _originalMesh)
+    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
     {
         this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
         this._rootname = _rootname;
-        this._SelectedTriangleIndices = _SelectedTriangleIndices;
         this._originalMesh = _originalMesh;
+        this._triangleSelectionManager = _triangleSelectionManager;
     }
 
     public void RenderGenerateMask()
@@ -47,7 +47,7 @@ public class GenerateMaskUtilty
         _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
         
         // Create Selected Islands Module
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
         EditorGUILayout.Space();
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
@@ -110,7 +110,7 @@ public class GenerateMaskUtilty
         Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
         Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColors, targetColors, _originalMesh);
+        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _originalMesh);
         
         List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
         foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
