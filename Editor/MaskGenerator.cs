@@ -17,29 +17,8 @@ public MeshMaskGenerator(int textureSize, int expansion)
 
 }
 
-public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, Color? baseColor, Color? targetColor, Mesh mesh)
+public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer skinnedMeshRenderer, HashSet<int> triangleIndices, Color[] baseColors, Color[] targetColors, Mesh mesh)
 {
-    Texture2D originalTexture = GetReadableTexture(skinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
-
-    Color[] baseColors = new Color[_textureSize * _textureSize];
-    if (baseColor.HasValue)
-    {
-        for (int i = 0; i < baseColors.Length; i++)
-        {
-            baseColors[i] = baseColor.Value;
-        }
-    }
-    else
-    {
-        for (int y = 0; y < _textureSize; y++)
-        {
-            for (int x = 0; x < _textureSize; x++)
-            {
-                baseColors[y * _textureSize + x] = originalTexture.GetPixelBilinear((float)x / _textureSize, (float)y / _textureSize);
-            }
-        }
-    }
-
     Material[] materials = skinnedMeshRenderer.sharedMaterials;
     Dictionary<string, Texture2D> maskTextures = new Dictionary<string, Texture2D>();
 
@@ -80,7 +59,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
                 Vector2 uv2 = mesh.uv[triangles[i + 1]];
                 Vector2 uv3 = mesh.uv[triangles[i + 2]];
 
-                DrawTriangle(ref colors, uv1, uv2, uv3, targetColor, originalTexture);
+                DrawTriangle(ref colors, uv1, uv2, uv3, targetColors);
             }
 
             maskTexture.SetPixels(colors);
@@ -92,7 +71,7 @@ public Dictionary<string, Texture2D> GenerateMaskTextures(SkinnedMeshRenderer sk
     return maskTextures;
 }
 
-private void DrawTriangle(ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color? targetColor, Texture2D originalTexture)
+private void DrawTriangle(ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 uv3, Color[] targetColors)
 {
     uv1 = new Vector2(uv1.x * _textureSize, uv1.y * _textureSize);
     uv2 = new Vector2(uv2.x * _textureSize, uv2.y * _textureSize);
@@ -110,15 +89,7 @@ private void DrawTriangle(ref Color[] colors, Vector2 uv1, Vector2 uv2, Vector2 
             Vector2 pixel = new Vector2(x, y);
             if (IsPointInTriangle(pixel, uv1, uv2, uv3) || IsPointNearTriangle(pixel, uv1, uv2, uv3))
             {
-                Vector2 uv = new Vector2(pixel.x / _textureSize, pixel.y / _textureSize);
-                if (targetColor.HasValue)
-                {
-                    colors[y * _textureSize + x] = targetColor.Value;
-                }
-                else
-                {
-                    colors[y * _textureSize + x] = originalTexture.GetPixelBilinear(uv.x, uv.y);
-                }
+                colors[y * _textureSize + x] = targetColors[y * _textureSize + x];
             }
         }
     }
@@ -151,29 +122,4 @@ private bool IsPointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
 
     return s >= 0 && t >= 0 && (s + t) <= 1;
 }
-
-private Texture2D GetReadableTexture(Texture2D originalTexture)
-{
-    RenderTexture renderTexture = RenderTexture.GetTemporary(
-        originalTexture.width,
-        originalTexture.height,
-        0,
-        RenderTextureFormat.Default,
-        RenderTextureReadWrite.Linear);
-
-    Graphics.Blit(originalTexture, renderTexture);
-
-    RenderTexture previousRenderTexture = RenderTexture.active;
-    RenderTexture.active = renderTexture;
-
-    Texture2D readableTexture = new Texture2D(originalTexture.width, originalTexture.height);
-    readableTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-    readableTexture.Apply();
-
-    RenderTexture.active = previousRenderTexture;
-    RenderTexture.ReleaseTemporary(renderTexture);
-
-    return readableTexture;
-}
-
 }

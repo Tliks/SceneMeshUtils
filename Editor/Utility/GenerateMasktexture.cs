@@ -35,8 +35,9 @@ public class GenerateMaskUtilty
         string[] options = { 
             LocalizationEditor.GetLocalizedText("mask.color.white"), 
             LocalizationEditor.GetLocalizedText("mask.color.black"), 
+            LocalizationEditor.GetLocalizedText("mask.color.alpha"),
             LocalizationEditor.GetLocalizedText("mask.color.original"),
-            LocalizationEditor.GetLocalizedText("mask.color.alpha")
+            LocalizationEditor.GetLocalizedText("mask.color.grayscale")
             };
 
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
@@ -55,40 +56,61 @@ public class GenerateMaskUtilty
         GUI.enabled = true;
 
     }
-    private Color? AssignColor(int indexValue)
+    private Color[] CreateColorArray(int indexValue, Texture2D originalTexture, int textureSize)
     {
-        Color? assignedColor;
+        Color[] colors = new Color[textureSize * textureSize];
 
         switch (indexValue)
         {
             case 0:
-                assignedColor = Color.white;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = Color.white;
                 break;
             case 1:
-                assignedColor = Color.black;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = Color.black;
                 break;
             case 2:
-                assignedColor = null;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = new Color(0, 0, 0, 0);
                 break;
             case 3:
-                assignedColor = new Color(0, 0, 0, 0);
+                for (int y = 0; y < textureSize; y++)
+                {
+                    for (int x = 0; x < textureSize; x++)
+                    {
+                        colors[y * textureSize + x] = originalTexture.GetPixelBilinear((float)x / textureSize, (float)y / textureSize);
+                    }
+                }
+                break;
+            case 4:
+                for (int y = 0; y < textureSize; y++)
+                {
+                    for (int x = 0; x < textureSize; x++)
+                    {
+                        Color origColor = originalTexture.GetPixelBilinear((float)x / textureSize, (float)y / textureSize);
+                        float gray = origColor.grayscale;
+                        colors[y * textureSize + x] = new Color(gray, gray, gray, origColor.a);
+                    }
+                }
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
 
-        return assignedColor;
+        return colors;
     }
+
 
     private void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
+        Texture2D originalTexture = GetReadableTexture(_OriginskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
 
+        Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
+        Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-        Color? targetColor = AssignColor(_areacolorindex);
-        Color? baseColor = AssignColor(_backcolorindex);
-
-        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColor, targetColor, _originalMesh);
+        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColors, targetColors, _originalMesh);
         
         List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
         foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
@@ -110,5 +132,30 @@ public class GenerateMaskUtilty
         //Selection.activeGameObject = null;
         Selection.objects = selectedObjects.ToArray();
     }
+
+    private Texture2D GetReadableTexture(Texture2D originalTexture)
+    {
+        RenderTexture renderTexture = RenderTexture.GetTemporary(
+            originalTexture.width,
+            originalTexture.height,
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear);
+
+        Graphics.Blit(originalTexture, renderTexture);
+
+        RenderTexture previousRenderTexture = RenderTexture.active;
+        RenderTexture.active = renderTexture;
+
+        Texture2D readableTexture = new Texture2D(originalTexture.width, originalTexture.height);
+        readableTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        readableTexture.Apply();
+
+        RenderTexture.active = previousRenderTexture;
+        RenderTexture.ReleaseTemporary(renderTexture);
+
+        return readableTexture;
+    }
+
 }
 
