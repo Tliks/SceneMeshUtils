@@ -17,9 +17,9 @@ public class DeleteMeshUtilty
     }
 
     private void DeleteMesh()
-    {
-        Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, _triangleSelectionManager.GetUnselectedTriangles());
-
+    {   
+        Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
+        
         string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
@@ -30,7 +30,7 @@ public class DeleteMeshUtilty
     public void RenderDeleteMesh()
     {
         EditorGUILayout.Space();
-        GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0 && _triangleSelectionManager.GetUnselectedTriangles().Count > 0;
+        GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh")))
         {
             MeshPreview.StopPreview();
