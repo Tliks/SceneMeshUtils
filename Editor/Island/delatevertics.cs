@@ -10,20 +10,24 @@ public class MeshUtility
 
         HashSet<int> verticesIndexesSet = new();
         int subMeshCount = originalMesh.subMeshCount;
+        int globalTriangleIndexOffset = 0; // 追加
 
-        // Triangle indices から削除すべき頂点インデックスセットを作成
+        // Triangle indicesから削除すべき頂点インデックスセットを作成
         for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
         {
             int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
             for (int i = 0; i < originalTriangles.Length; i += 3)
             {
-                if (triangleIndexes.Contains(i / 3))
+                int globalTriangleIndex = (globalTriangleIndexOffset + i) / 3; // 変更
+
+                if (triangleIndexes.Contains(globalTriangleIndex))
                 {
                     verticesIndexesSet.Add(originalTriangles[i]);
                     verticesIndexesSet.Add(originalTriangles[i + 1]);
                     verticesIndexesSet.Add(originalTriangles[i + 2]);
                 }
             }
+            globalTriangleIndexOffset += originalTriangles.Length; // 追加
         }
 
         int newVerticesCount = verticesIndexesSet.Count;
@@ -92,7 +96,7 @@ public class MeshUtility
 
         stopwatch.Start();
         CopyColors(originalMesh, newMesh, indexMap);
-        CopyTriangles(originalMesh, newMesh, indexMap, ref newTrianglesList);
+        CopyTriangles(originalMesh, newMesh, triangleIndexes);
         CopyBlendShapes(originalMesh, newMesh, indexMap);
         newMesh.bindposes = originalMesh.bindposes;
         stopwatch.Stop();
@@ -124,33 +128,48 @@ public class MeshUtility
         }
     }
 
-    private static void CopyTriangles(Mesh originalMesh, Mesh newMesh, Dictionary<int, int> indexMap, ref List<int> newTrianglesList)
+private static void CopyTriangles(Mesh originalMesh, Mesh newMesh, HashSet<int> triangleIndexes)
+{
+    int subMeshCount = originalMesh.subMeshCount;
+    newMesh.subMeshCount = subMeshCount;
+
+    List<int>[] newSubmeshTriangles = new List<int>[subMeshCount];
+    Dictionary<int, int> vertexRemap = new();
+
+    int globalTriangleIndexOffset = 0;
+
+    for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
     {
-        int subMeshCount = originalMesh.subMeshCount;
-        newMesh.subMeshCount = subMeshCount;
+        int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
+        newSubmeshTriangles[subMeshIndex] = new List<int>();
 
-        for (int subMeshIndex = 0; subMeshIndex < subMeshCount; subMeshIndex++)
+        for (int i = 0; i < originalTriangles.Length; i += 3)
         {
-            int[] originalTriangles = originalMesh.GetTriangles(subMeshIndex);
+            int globalTriangleIndex = (globalTriangleIndexOffset + i) / 3;
 
-            newTrianglesList.Clear();
-            for (int i = 0; i < originalTriangles.Length; i += 3)
+            if (!triangleIndexes.Contains(globalTriangleIndex))
             {
-                if (indexMap.ContainsKey(originalTriangles[i]) && indexMap.ContainsKey(originalTriangles[i + 1]) && indexMap.ContainsKey(originalTriangles[i + 2]))
+                for (int j = 0; j < 3; j++)
                 {
-                    newTrianglesList.Add(indexMap[originalTriangles[i]]);
-                    newTrianglesList.Add(indexMap[originalTriangles[i + 1]]);
-                    newTrianglesList.Add(indexMap[originalTriangles[i + 2]]);
+                    int originalVertexIndex = originalTriangles[i + j];
+                    if (!vertexRemap.TryGetValue(originalVertexIndex, out int newVertexIndex))
+                    {
+                        newVertexIndex = vertexRemap.Count;
+                        vertexRemap[originalVertexIndex] = newVertexIndex;
+                    }
+                    newSubmeshTriangles[subMeshIndex].Add(newVertexIndex);
                 }
             }
-
-            if (newTrianglesList.Count > 0)
-            {
-                newMesh.SetTriangles(newTrianglesList.ToArray(), subMeshIndex);
-            }
         }
+
+        globalTriangleIndexOffset += originalTriangles.Length;
     }
 
+    for (int submesh = 0; submesh < subMeshCount; submesh++)
+    {
+        newMesh.SetTriangles(newSubmeshTriangles[submesh], submesh);
+    }
+}
     private static void CopyBlendShapes(Mesh originalMesh, Mesh newMesh, Dictionary<int, int> indexMap)
     {
         for (int i = 0; i < originalMesh.blendShapeCount; i++)
@@ -218,22 +237,25 @@ public class MeshUtility
         int submeshCount = originalMesh.subMeshCount;
         List<int>[] newSubmeshTriangles = new List<int>[submeshCount];
 
+        int globalTriangleIndexOffset = 0;
         for (int submesh = 0; submesh < submeshCount; submesh++)
         {
             int[] originalTriangles = originalMesh.GetTriangles(submesh);
-            newSubmeshTriangles[submesh] = new List<int>(triangleIndexesToKeep.Count * 3);
+            newSubmeshTriangles[submesh] = new List<int>();
 
             for (int i = 0; i < originalTriangles.Length; i += 3)
             {
-                int triangleIndex = i / 3;
+                int globalTriangleIndex = (globalTriangleIndexOffset + i) / 3;
 
-                if (triangleIndexesToKeep.Contains(triangleIndex))
+                if (triangleIndexesToKeep.Contains(globalTriangleIndex))
                 {
                     newSubmeshTriangles[submesh].Add(originalTriangles[i]);
                     newSubmeshTriangles[submesh].Add(originalTriangles[i + 1]);
                     newSubmeshTriangles[submesh].Add(originalTriangles[i + 2]);
                 }
             }
+
+            globalTriangleIndexOffset += originalTriangles.Length;
         }
 
         newMesh.subMeshCount = submeshCount;
@@ -244,7 +266,7 @@ public class MeshUtility
 
         return newMesh;
     }
-
+    
     public static (Mesh, Dictionary<int, int>) ProcesscolliderMesh(Mesh originalMesh, HashSet<int> trianglesToKeep)
     {
         Mesh newMesh = Object.Instantiate(originalMesh);

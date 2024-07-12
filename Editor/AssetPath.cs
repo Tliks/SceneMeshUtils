@@ -5,87 +5,56 @@ public static class AssetPathUtility
     public static string GenerateMeshPath(string root_name, string mesh_name)
     {
         // Assets/ModuleCreator/{root_name}/Mesh/newMesh.asset
-
-        string base_path = $"Assets/ModuleCreator";
-        if (!AssetDatabase.IsValidFolder(base_path))
-        {
-            AssetDatabase.CreateFolder("Assets", "ModuleCreator");
-            AssetDatabase.Refresh();
-        }
-
-        string folderPath = $"{base_path}/{root_name}";
-        if (!AssetDatabase.IsValidFolder(folderPath))
-        {
-            AssetDatabase.CreateFolder(base_path, root_name);
-            AssetDatabase.Refresh();
-        }
-
-        string folderPath1 = $"{folderPath}/Mesh";
-        if (!AssetDatabase.IsValidFolder(folderPath1))
-        {
-            AssetDatabase.CreateFolder(folderPath, "Mesh");
-            AssetDatabase.Refresh();
-        }
+        string folderpath = $"Assets/ModuleCreator/{root_name}/Mesh";
+        CreateParent(folderpath);
 
         string fileName = mesh_name;
         string fileExtension = "asset";
         
-        return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);
+        return AssetDatabase.GenerateUniqueAssetPath(folderpath + "/" + fileName + "." + fileExtension);
     }
 
     public static string GeneratePrefabPath(string root_name, string mesh_name)
     {
         // Assets/ModuleCreator/{root_name}/mesh_name.prefab
-
-        string base_path = $"Assets/ModuleCreator";
-        if (!AssetDatabase.IsValidFolder(base_path))
-        {
-            AssetDatabase.CreateFolder("Assets", "ModuleCreator");
-            AssetDatabase.Refresh();
-        }
-
-        string folderPath = $"{base_path}/{root_name}";
-        if (!AssetDatabase.IsValidFolder(folderPath))
-        {
-            AssetDatabase.CreateFolder(base_path, root_name);
-            AssetDatabase.Refresh();
-        }
+        string folderpath = $"Assets/ModuleCreator/{root_name}";
+        CreateParent(folderpath);
 
         string fileName = $"{mesh_name}_MA";
         string fileExtension = "prefab";
         
-        return AssetDatabase.GenerateUniqueAssetPath(folderPath + "/" + fileName + "." + fileExtension);
+        return AssetDatabase.GenerateUniqueAssetPath(folderpath + "/" + fileName + "." + fileExtension);
     }
 
     public static string GenerateTexturePath(string root_name, string mesh_name)
     {
-        // Assets/ModuleCreator/{root_name}/Mesh/newMesh.asset
-
-        string base_path = $"Assets/ModuleCreator";
-        if (!AssetDatabase.IsValidFolder(base_path))
-        {
-            AssetDatabase.CreateFolder("Assets", "ModuleCreator");
-            AssetDatabase.Refresh();
-        }
-
-        string folderPath = $"{base_path}/{root_name}";
-        if (!AssetDatabase.IsValidFolder(folderPath))
-        {
-            AssetDatabase.CreateFolder(base_path, root_name);
-            AssetDatabase.Refresh();
-        }
-
-        string folderPath1 = $"{folderPath}/Texture";
-        if (!AssetDatabase.IsValidFolder(folderPath1))
-        {
-            AssetDatabase.CreateFolder(folderPath, "Texture");
-            AssetDatabase.Refresh();
-        }
+        // Assets/ModuleCreator/{root_name}/Texture/newMesh.asset
+        string folderpath = $"Assets/ModuleCreator/{root_name}/Texture";
+        CreateParent(folderpath);
 
         string fileName = mesh_name;
         string fileExtension = "png";
         
-        return AssetDatabase.GenerateUniqueAssetPath(folderPath1 + "/" + fileName + "." + fileExtension);
+        return AssetDatabase.GenerateUniqueAssetPath(folderpath + "/" + fileName + "." + fileExtension);
     }
 
+
+    public static void CreateParent(string path)
+    {
+        if (!AssetDatabase.IsValidFolder(path))
+        {
+            string[] folders = path.Split('/');
+            string parentFolder = folders[0];
+            for (int i = 1; i < folders.Length; i++)
+            {
+                string folder = folders[i];
+                string newPath = parentFolder + "/" + folder;
+                if (!AssetDatabase.IsValidFolder(newPath))
+                {
+                    AssetDatabase.CreateFolder(parentFolder, folder);
+                }
+                parentFolder = newPath;
+            }
+        }
+    }
 }

@@ -5,38 +5,39 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class GenerateMaskUtilty
+public static class GenerateMaskUtilty
 {
-    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private readonly string _rootname;
-    private readonly HashSet<int> _SelectedTriangleIndices;
+    private static SkinnedMeshRenderer _OriginskinnedMeshRenderer;
+    private static string _rootname;
 
-    private readonly int[] optionValues = { 512, 1024, 2048 };
-    private readonly string[] displayOptions = { "512", "1024", "2048" };
-    private int selectedValue = 512;
-    private int _areacolorindex = 0;
-    private int _backcolorindex = 1;
-    private int _expansion = 2;
-    private Mesh _originalMesh;
+    private static int[] optionValues = { 512, 1024, 2048 };
+    private static string[] displayOptions = { "512", "1024", "2048" };
+    private static int selectedValue = 512;
+    private static int _areacolorindex = 0;
+    private static int _backcolorindex = 1;
+    private static int _expansion = 2;
+    private static Mesh _originalMesh;
+    private static TriangleSelectionManager _triangleSelectionManager;
 
 
-    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, HashSet<int> _SelectedTriangleIndices, Mesh _originalMesh)
+    public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
     {
-        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
-        this._rootname = _rootname;
-        this._SelectedTriangleIndices = _SelectedTriangleIndices;
-        this._originalMesh = _originalMesh;
+        _OriginskinnedMeshRenderer = originskinnedMeshRenderer;
+        _rootname = rootname;
+        _originalMesh = originalMesh;
+        _triangleSelectionManager = triangleSelectionManager;
     }
 
-    public void RenderGenerateMask()
+    public static void RenderGenerateMask()
     {
         EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
         string[] options = { 
             LocalizationEditor.GetLocalizedText("mask.color.white"), 
             LocalizationEditor.GetLocalizedText("mask.color.black"), 
+            LocalizationEditor.GetLocalizedText("mask.color.alpha"),
             LocalizationEditor.GetLocalizedText("mask.color.original"),
-            LocalizationEditor.GetLocalizedText("mask.color.alpha")
+            LocalizationEditor.GetLocalizedText("mask.color.grayscale")
             };
 
         _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
@@ -46,7 +47,7 @@ public class GenerateMaskUtilty
         _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
         
         // Create Selected Islands Module
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _SelectedTriangleIndices.Count > 0;
+        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
         EditorGUILayout.Space();
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
         {
@@ -55,40 +56,61 @@ public class GenerateMaskUtilty
         GUI.enabled = true;
 
     }
-    private Color? AssignColor(int indexValue)
+    private static Color[] CreateColorArray(int indexValue, Texture2D originalTexture, int textureSize)
     {
-        Color? assignedColor;
+        Color[] colors = new Color[textureSize * textureSize];
 
         switch (indexValue)
         {
             case 0:
-                assignedColor = Color.white;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = Color.white;
                 break;
             case 1:
-                assignedColor = Color.black;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = Color.black;
                 break;
             case 2:
-                assignedColor = null;
+                for (int i = 0; i < colors.Length; i++)
+                    colors[i] = new Color(0, 0, 0, 0);
                 break;
             case 3:
-                assignedColor = new Color(0, 0, 0, 0);
+                for (int y = 0; y < textureSize; y++)
+                {
+                    for (int x = 0; x < textureSize; x++)
+                    {
+                        colors[y * textureSize + x] = originalTexture.GetPixelBilinear((float)x / textureSize, (float)y / textureSize);
+                    }
+                }
+                break;
+            case 4:
+                for (int y = 0; y < textureSize; y++)
+                {
+                    for (int x = 0; x < textureSize; x++)
+                    {
+                        Color origColor = originalTexture.GetPixelBilinear((float)x / textureSize, (float)y / textureSize);
+                        float gray = origColor.grayscale;
+                        colors[y * textureSize + x] = new Color(gray, gray, gray, origColor.a);
+                    }
+                }
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
 
-        return assignedColor;
+        return colors;
     }
 
-    private void GenerateMask()
+
+    private static void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
+        Texture2D originalTexture = GetReadableTexture(_OriginskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
 
+        Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
+        Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-        Color? targetColor = AssignColor(_areacolorindex);
-        Color? baseColor = AssignColor(_backcolorindex);
-
-        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _SelectedTriangleIndices, baseColor, targetColor, _originalMesh);
+        Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _originalMesh);
         
         List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
         foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
@@ -110,5 +132,30 @@ public class GenerateMaskUtilty
         //Selection.activeGameObject = null;
         Selection.objects = selectedObjects.ToArray();
     }
+
+    private static Texture2D GetReadableTexture(Texture2D originalTexture)
+    {
+        RenderTexture renderTexture = RenderTexture.GetTemporary(
+            originalTexture.width,
+            originalTexture.height,
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear);
+
+        Graphics.Blit(originalTexture, renderTexture);
+
+        RenderTexture previousRenderTexture = RenderTexture.active;
+        RenderTexture.active = renderTexture;
+
+        Texture2D readableTexture = new Texture2D(originalTexture.width, originalTexture.height);
+        readableTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        readableTexture.Apply();
+
+        RenderTexture.active = previousRenderTexture;
+        RenderTexture.ReleaseTemporary(renderTexture);
+
+        return readableTexture;
+    }
+
 }
 
