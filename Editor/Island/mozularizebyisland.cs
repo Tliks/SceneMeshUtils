@@ -13,11 +13,6 @@ public class ModuleCreatorIsland : EditorWindow
     
     private IslandUtility _islandUtility;
 
-    private CreateModuleUtilty _CreateModuleUtilty;
-    private GenerateMaskUtilty _GenerateMaskUtilty;
-    private DeleteMeshUtilty _DeleteMeshUtilty;
-    private ClampBlendShapeUtility _ClampBlendShapeUtility;
-
     private TriangleSelectionManager _triangleSelectionManager; 
 
     private GameObject _RootObject;
@@ -154,37 +149,37 @@ public class ModuleCreatorIsland : EditorWindow
         {
             if (new_index !=_UtilityIndex)
             {
-                _CreateModuleUtilty = new CreateModuleUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
                 _UtilityIndex = new_index;
             }
-            _CreateModuleUtilty.RenderModuleCreator();
+            CreateModuleUtilty.RenderModuleCreator();
         }
         else if (new_index == 2)
         {
             if (new_index !=_UtilityIndex)
             {
-                _GenerateMaskUtilty = new GenerateMaskUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
                 _UtilityIndex = new_index;
             }
-            _GenerateMaskUtilty.RenderGenerateMask();
+            GenerateMaskUtilty.RenderGenerateMask();
         }
         else if (new_index == 3)
         {
             if (new_index !=_UtilityIndex)
             {
-                _DeleteMeshUtilty = new DeleteMeshUtilty(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager );
+                DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager );
                 _UtilityIndex = new_index;
             }
-            _DeleteMeshUtilty.RenderDeleteMesh();
+            DeleteMeshUtilty.RenderDeleteMesh();
         }
         else if (new_index == 4)
         {
             if (new_index !=_UtilityIndex)
             {
-                _ClampBlendShapeUtility = new ClampBlendShapeUtility(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
                 _UtilityIndex = new_index;
             }
-            _ClampBlendShapeUtility.RendergenerateClamp();
+            ClampBlendShapeUtility.RendergenerateClamp();
         }
     }
 

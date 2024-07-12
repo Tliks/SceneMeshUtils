@@ -2,29 +2,29 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class CreateModuleUtilty
+public static class CreateModuleUtilty
 {
-    private bool _showAdvancedOptions = false;
+    private static bool _showAdvancedOptions = false;
     private static ModuleCreatorSettings _Settings = new ModuleCreatorSettings
     {
         IncludePhysBone = true,
         IncludePhysBoneColider = true
     };
 
-    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private readonly Mesh _originalMesh;
-    private readonly string _rootname;
-    private readonly TriangleSelectionManager _triangleSelectionManager;
+    private static SkinnedMeshRenderer _originskinnedMeshRenderer;
+    private static Mesh _originalMesh;
+    private static string _rootname;
+    private static TriangleSelectionManager _triangleSelectionManager;
 
-    public CreateModuleUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
+    public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
     {
-        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
-        this._rootname = _rootname;
-        this._originalMesh = _originalMesh;
-        this._triangleSelectionManager = _triangleSelectionManager;
+        _originskinnedMeshRenderer = originskinnedMeshRenderer;
+        _rootname = rootname;
+        _originalMesh = originalMesh;
+        _triangleSelectionManager = triangleSelectionManager;
     }
     
-    public void RenderModuleCreator()
+    public static void RenderModuleCreator()
     {
         RenderPhysBoneOptions();
 
@@ -38,7 +38,7 @@ public class CreateModuleUtilty
     }
 
 
-    private void RenderPhysBoneOptions()
+    private static void RenderPhysBoneOptions()
     {
         EditorGUILayout.Space();
 
@@ -48,7 +48,7 @@ public class CreateModuleUtilty
         _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
         GUI.enabled = true;
     }
-    private void CreateModule(HashSet<int> Triangles)
+    private static void CreateModule(HashSet<int> Triangles)
     {
         if (Triangles.Count > 0)
         {
@@ -59,12 +59,12 @@ public class CreateModuleUtilty
             AssetDatabase.SaveAssets();
 
             _Settings.newmesh = newMesh;
-            new ModuleCreator(_Settings).CheckAndCopyBones(_OriginskinnedMeshRenderer.gameObject);
+            new ModuleCreator(_Settings).CheckAndCopyBones(_originskinnedMeshRenderer.gameObject);
         }
     }
-    private void RenderCreateBothModuleButtons()
+    private static void RenderCreateBothModuleButtons()
     {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
+        GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
 
         // Create Both Modules
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
@@ -76,23 +76,23 @@ public class CreateModuleUtilty
 
         GUI.enabled = true;
     }
-    private void RenderCreateModuleButtons()
+    private static void RenderCreateModuleButtons()
     {
-        GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
+        GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
         
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
         {
             CreateModule(_triangleSelectionManager.GetSelectedTriangles());
             MeshPreview.StopPreview();
-            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+            MeshPreview.StartPreview(_originskinnedMeshRenderer);
             //Close();
         }
 
         GUI.enabled = true;
     }
 
-    private void process_advanced_options()
+    private static void process_advanced_options()
     {   
 
         _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));

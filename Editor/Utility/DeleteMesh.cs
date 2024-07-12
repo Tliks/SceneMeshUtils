@@ -1,33 +1,33 @@
 using UnityEditor;
 using UnityEngine;
 
-public class DeleteMeshUtilty
+public static class DeleteMeshUtilty
 {
-    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private readonly string _rootname;
-    private readonly Mesh _originalMesh;
-    private TriangleSelectionManager _triangleSelectionManager;
+    private static SkinnedMeshRenderer _originskinnedMeshRenderer;
+    private static string _rootname;
+    private static Mesh _originalMesh;
+    private static TriangleSelectionManager _triangleSelectionManager;
 
-    public DeleteMeshUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
+    public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
     {
-        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
-        this._rootname = _rootname;
-        this._originalMesh = _originalMesh;
-        this._triangleSelectionManager = _triangleSelectionManager;
+        _originskinnedMeshRenderer = originskinnedMeshRenderer;
+        _rootname = rootname;
+        _originalMesh = originalMesh;
+        _triangleSelectionManager = triangleSelectionManager;
     }
 
-    private void DeleteMesh()
+    private static void DeleteMesh()
     {   
         Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
-        
+
         string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
 
-        _OriginskinnedMeshRenderer.sharedMesh = newMesh;
+        _originskinnedMeshRenderer.sharedMesh = newMesh;
     }
 
-    public void RenderDeleteMesh()
+    public static void RenderDeleteMesh()
     {
         EditorGUILayout.Space();
         GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
@@ -35,7 +35,7 @@ public class DeleteMeshUtilty
         {
             MeshPreview.StopPreview();
             DeleteMesh();
-            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+            MeshPreview.StartPreview(_originskinnedMeshRenderer);
         }
         GUI.enabled = true;
     }

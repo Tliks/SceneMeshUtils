@@ -5,30 +5,30 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class GenerateMaskUtilty
+public static class GenerateMaskUtilty
 {
-    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private readonly string _rootname;
+    private static SkinnedMeshRenderer _OriginskinnedMeshRenderer;
+    private static string _rootname;
 
-    private readonly int[] optionValues = { 512, 1024, 2048 };
-    private readonly string[] displayOptions = { "512", "1024", "2048" };
-    private int selectedValue = 512;
-    private int _areacolorindex = 0;
-    private int _backcolorindex = 1;
-    private int _expansion = 2;
-    private Mesh _originalMesh;
-    private TriangleSelectionManager _triangleSelectionManager;
+    private static int[] optionValues = { 512, 1024, 2048 };
+    private static string[] displayOptions = { "512", "1024", "2048" };
+    private static int selectedValue = 512;
+    private static int _areacolorindex = 0;
+    private static int _backcolorindex = 1;
+    private static int _expansion = 2;
+    private static Mesh _originalMesh;
+    private static TriangleSelectionManager _triangleSelectionManager;
 
 
-    public GenerateMaskUtilty(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
+    public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
     {
-        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
-        this._rootname = _rootname;
-        this._originalMesh = _originalMesh;
-        this._triangleSelectionManager = _triangleSelectionManager;
+        _OriginskinnedMeshRenderer = originskinnedMeshRenderer;
+        _rootname = rootname;
+        _originalMesh = originalMesh;
+        _triangleSelectionManager = triangleSelectionManager;
     }
 
-    public void RenderGenerateMask()
+    public static void RenderGenerateMask()
     {
         EditorGUILayout.Space();
         //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
@@ -56,7 +56,7 @@ public class GenerateMaskUtilty
         GUI.enabled = true;
 
     }
-    private Color[] CreateColorArray(int indexValue, Texture2D originalTexture, int textureSize)
+    private static Color[] CreateColorArray(int indexValue, Texture2D originalTexture, int textureSize)
     {
         Color[] colors = new Color[textureSize * textureSize];
 
@@ -102,7 +102,7 @@ public class GenerateMaskUtilty
     }
 
 
-    private void GenerateMask()
+    private static void GenerateMask()
     {
         MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
         Texture2D originalTexture = GetReadableTexture(_OriginskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
@@ -133,7 +133,7 @@ public class GenerateMaskUtilty
         Selection.objects = selectedObjects.ToArray();
     }
 
-    private Texture2D GetReadableTexture(Texture2D originalTexture)
+    private static Texture2D GetReadableTexture(Texture2D originalTexture)
     {
         RenderTexture renderTexture = RenderTexture.GetTemporary(
             originalTexture.width,

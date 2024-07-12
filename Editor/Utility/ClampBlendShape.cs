@@ -5,17 +5,17 @@ using UnityEngine;
 
 public class ClampBlendShapeUtility
 {
-    private readonly SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-    private readonly string _rootname;
-    private readonly Mesh _originalMesh;
-    private readonly TriangleSelectionManager _triangleSelectionManager;
+    private static SkinnedMeshRenderer _originskinnedMeshRenderer;
+    private static string _rootname;
+    private static Mesh _originalMesh;
+    private static TriangleSelectionManager _triangleSelectionManager;
 
-    public ClampBlendShapeUtility(SkinnedMeshRenderer _OriginskinnedMeshRenderer, string _rootname, Mesh _originalMesh, TriangleSelectionManager _triangleSelectionManager)
+    public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
     {
-        this._OriginskinnedMeshRenderer = _OriginskinnedMeshRenderer;
-        this._rootname = _rootname;
-        this._originalMesh = _originalMesh;
-        this._triangleSelectionManager = _triangleSelectionManager;
+        _originskinnedMeshRenderer = origSkinnedMeshRenderer;
+        _rootname = rootname;
+        _originalMesh = originalMesh;
+        _triangleSelectionManager = triangleSelectionManager;
     }
 
     private static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
@@ -133,7 +133,7 @@ public class ClampBlendShapeUtility
         return uniqueName;
     }
 
-    private void ReplaceMesh()
+    private static void ReplaceMesh()
     {
         Mesh newMesh = GenerateClampBlendShape(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
 
@@ -141,10 +141,10 @@ public class ClampBlendShapeUtility
         AssetDatabase.CreateAsset(newMesh, path);
         AssetDatabase.SaveAssets();
 
-        _OriginskinnedMeshRenderer.sharedMesh = newMesh;
+        _originskinnedMeshRenderer.sharedMesh = newMesh;
     }
 
-    public void RendergenerateClamp()
+    public static void RendergenerateClamp()
     {
         EditorGUILayout.Space();
         GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
@@ -152,7 +152,7 @@ public class ClampBlendShapeUtility
         {
             MeshPreview.StopPreview();
             ReplaceMesh();
-            MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+            MeshPreview.StartPreview(_originskinnedMeshRenderer);
         }
         GUI.enabled = true;
     }
