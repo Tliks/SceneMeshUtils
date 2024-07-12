@@ -145,41 +145,43 @@ public class ModuleCreatorIsland : EditorWindow
             new_index = EditorGUILayout.Popup(_UtilityIndex, options);
         }
 
-        if (new_index == 1)
+        switch (new_index)
         {
-            if (new_index !=_UtilityIndex)
-            {
-                CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
-                _UtilityIndex = new_index;
-            }
-            CreateModuleUtilty.RenderModuleCreator();
-        }
-        else if (new_index == 2)
-        {
-            if (new_index !=_UtilityIndex)
-            {
-                GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
-                _UtilityIndex = new_index;
-            }
-            GenerateMaskUtilty.RenderGenerateMask();
-        }
-        else if (new_index == 3)
-        {
-            if (new_index !=_UtilityIndex)
-            {
-                DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager );
-                _UtilityIndex = new_index;
-            }
-            DeleteMeshUtilty.RenderDeleteMesh();
-        }
-        else if (new_index == 4)
-        {
-            if (new_index !=_UtilityIndex)
-            {
-                ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
-                _UtilityIndex = new_index;
-            }
-            ClampBlendShapeUtility.RendergenerateClamp();
+            case 1:
+                if (new_index != _UtilityIndex)
+                {
+                    CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    _UtilityIndex = new_index;
+                }
+                CreateModuleUtilty.RenderModuleCreator();
+                break;
+
+            case 2:
+                if (new_index != _UtilityIndex)
+                {
+                    GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    _UtilityIndex = new_index;
+                }
+                GenerateMaskUtilty.RenderGenerateMask();
+                break;
+
+            case 3:
+                if (new_index != _UtilityIndex)
+                {
+                    DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    _UtilityIndex = new_index;
+                }
+                DeleteMeshUtilty.RenderDeleteMesh();
+                break;
+
+            case 4:
+                if (new_index != _UtilityIndex)
+                {
+                    ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    _UtilityIndex = new_index;
+                }
+                ClampBlendShapeUtility.RendergenerateClamp();
+                break;
         }
     }
 
