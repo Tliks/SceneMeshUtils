@@ -63,7 +63,8 @@ public class LocalizationEditor
         { "Utility.ModuleCreator", new string[] { "Create Module", "モジュールを生成" }},
         { "Utility.GenerateMask", new string[] { "Generate Mask Texture", "マスク画像を生成" }},
         { "Utility.DeleteMesh", new string[] { "Delete Mesh", "メッシュを削除" }},
-        { "Utility.BlendShape", new string[] { "Generate Clamp BlendShape", "縮小ブレンドシェイプを生成" }}
+        { "Utility.BlendShape", new string[] { "Generate Clamp BlendShape", "縮小ブレンドシェイプを生成" }},
+        { "Utility.TransformPolygon", new string[] { "Transform Polygon", "ポリゴンを移動" }}
     };
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";
