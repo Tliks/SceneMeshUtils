@@ -270,4 +270,34 @@ public class MeshUtility
         return -1; // 対応する元のトライアングルが見つからない場合
     }
 
+    public static HashSet<int> GetPolygonVertexIndices(Mesh mesh, HashSet<int> triangleIndices)
+    {
+        // メッシュの三角形と頂点配列を取得
+        int[] triangles = mesh.triangles;
+        Vector3[] vertices = mesh.vertices;
+
+        if (triangles == null || triangleIndices == null || vertices == null) return null;
+
+        HashSet<int> vertexIndices = new HashSet<int>();
+
+        foreach (int triangleIndex in triangleIndices)
+        {
+            if (triangleIndex < 0 || triangleIndex >= triangles.Length / 3)
+            {
+                continue;
+            }
+
+            int index0 = triangles[triangleIndex * 3];
+            int index1 = triangles[triangleIndex * 3 + 1];
+            int index2 = triangles[triangleIndex * 3 + 2];
+
+            vertexIndices.Add(index0);
+            vertexIndices.Add(index1);
+            vertexIndices.Add(index2);
+        }
+
+        return vertexIndices;
+    }
+
+
 }

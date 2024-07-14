@@ -135,7 +135,8 @@ public class ModuleCreatorIsland : EditorWindow
             LocalizationEditor.GetLocalizedText("Utility.ModuleCreator"), 
             LocalizationEditor.GetLocalizedText("Utility.GenerateMask"),
             LocalizationEditor.GetLocalizedText("Utility.DeleteMesh"),
-            LocalizationEditor.GetLocalizedText("Utility.BlendShape")
+            LocalizationEditor.GetLocalizedText("Utility.BlendShape"),
+            LocalizationEditor.GetLocalizedText("Utility.TransformPolygon")
         };
 
         int new_index;
@@ -181,6 +182,14 @@ public class ModuleCreatorIsland : EditorWindow
                     _UtilityIndex = new_index;
                 }
                 ClampBlendShapeUtility.RendergenerateClamp();
+                break;
+            case 5:
+                if (new_index != _UtilityIndex)
+                {
+                    TransformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    _UtilityIndex = new_index;
+                }
+                TransformPolygonUtility.Render();
                 break;
         }
     }
