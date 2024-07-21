@@ -83,7 +83,7 @@ public static class CreateModuleUtilty
         // Create Selected Islands Module
         if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
         {
-            CreateModule(_triangleSelectionManager.GetSelectedTriangles());
+            CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
             MeshPreview.StopPreview();
             MeshPreview.StartPreview(_originskinnedMeshRenderer);
             //Close();
