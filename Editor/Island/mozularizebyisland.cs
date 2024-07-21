@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
+using com.aoyon.modulecreator.runtime;
 
 
 public class ModuleCreatorIsland : EditorWindow
@@ -15,6 +16,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     private TriangleSelectionManager _triangleSelectionManager; 
 
+    private GameObject _targetObject;
     private GameObject _RootObject;
     private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
     private Mesh _bakedMesh;
@@ -60,7 +62,8 @@ public class ModuleCreatorIsland : EditorWindow
 
     private void OnEnable()
     {
-        _OriginskinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+        _targetObject = Selection.activeGameObject;
+        _OriginskinnedMeshRenderer = _targetObject.GetComponent<SkinnedMeshRenderer>();
         DuplicateAndSetup();
         CalculateIslands();
 
@@ -186,10 +189,10 @@ public class ModuleCreatorIsland : EditorWindow
             case 5:
                 if (new_index != _UtilityIndex)
                 {
-                    TransformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager);
+                    TransformPolygonUtility TransformPolygonUtility = _targetObject.AddComponent<TransformPolygonUtility>();
+                    TransformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager.GetSelectedTriangles());
                     _UtilityIndex = new_index;
                 }
-                TransformPolygonUtility.Render();
                 break;
         }
     }
