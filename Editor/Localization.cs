@@ -69,14 +69,13 @@ public class LocalizationEditor
     
     private const string PreferenceKey = "com.aoyon.module-creator.lang";
     public static string[] availableLanguages = new[] { "English", "日本語" };
-    public static int selectedLanguage = Array.IndexOf(availableLanguages, EditorPrefs.GetString(PreferenceKey, availableLanguages[0]));
+    public static int selectedLanguageIndex = Array.IndexOf(availableLanguages, EditorPrefs.GetString(PreferenceKey, availableLanguages[0]));
 
     public static string GetLocalizedText(string key)
     {
-        int languageIndex = selectedLanguage;
         if (_LocalizedText.ContainsKey(key))
         {
-            return _LocalizedText[key][languageIndex];
+            return _LocalizedText[key][selectedLanguageIndex];
         }
 
         return $"[Missing: {key}]";
@@ -84,14 +83,14 @@ public class LocalizationEditor
 
     public static void SetLanguage(int languageIndex)
     {
-        selectedLanguage = languageIndex;
-        EditorPrefs.SetString(PreferenceKey, availableLanguages[languageIndex]);
+        selectedLanguageIndex = languageIndex;
+        EditorPrefs.SetString(PreferenceKey, availableLanguages[selectedLanguageIndex]);
     }
 
     public static void RenderLocalize()
     {
-        selectedLanguage = EditorGUILayout.Popup("Language", selectedLanguage, availableLanguages);
-        SetLanguage(selectedLanguage);
+        int LanguageIndex = EditorGUILayout.Popup("Language", selectedLanguageIndex, availableLanguages);
+        SetLanguage(LanguageIndex);
     }
 
 }

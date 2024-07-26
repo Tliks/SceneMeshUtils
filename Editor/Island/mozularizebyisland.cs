@@ -639,7 +639,9 @@ public class ModuleCreatorIsland : EditorWindow
         _RootObject = CheckRoot(_OriginskinnedMeshRenderer.gameObject);
         _originalMesh = _OriginskinnedMeshRenderer.sharedMesh;
 
-        //ResetAllBlendShapes(_OriginskinnedMeshRenderer);
+        Mesh PreviewMesh = Instantiate(_originalMesh);
+        PreviewMesh.name += "AO Preview";
+        MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
 
         Vector3 parentScale = _RootObject.transform.localScale;
         _OriginskinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
@@ -647,9 +649,7 @@ public class ModuleCreatorIsland : EditorWindow
         _bakedMesh = new Mesh(); 
         _OriginskinnedMeshRenderer.BakeMesh(_bakedMesh);
 
-        Mesh PreviewMesh = Instantiate(_originalMesh);
-        PreviewMesh.name += "AO Preview";
-        MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
+        ResetAllBlendShapes(_OriginskinnedMeshRenderer);
 
     }
 
