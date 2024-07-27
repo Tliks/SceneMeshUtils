@@ -657,8 +657,7 @@ public class ModuleCreatorIsland : EditorWindow
 
     public void OpenCustomSceneView()
     {
-        selectedsceneView = CreateWindow<SceneView>();
-        selectedsceneView.titleContent = new GUIContent("Selected Mesh Preview");
+        CustomSceneViewWindow customSceneViewWindow = CustomSceneViewWindow.ShowWindow(unselectedsceneView);
         //unselectedsceneView.Show();
         //unselectedsceneView.Focus();
 
@@ -667,7 +666,7 @@ public class ModuleCreatorIsland : EditorWindow
             selectedmeshObject = Instantiate(unselectedmeshObject, unselectedmeshObject.transform.position + Vector3.right * 10, Quaternion.identity);
             SelectedSkinnedMeshRenderer = selectedmeshObject.GetComponentInChildren<SkinnedMeshRenderer>();
 
-            FocusCustomViewObject(selectedsceneView, SelectedSkinnedMeshRenderer);
+            FocusCustomViewObject(customSceneViewWindow, SelectedSkinnedMeshRenderer);
 
             var emptyVerticesList = new List<int>();
             SelectedMesh = MeshDeletionUtility.KeepVerticesUsingDegenerateTriangles(OriginskinnedMeshRenderer, GetVerticesFromIndices(selected_Island_Index));
