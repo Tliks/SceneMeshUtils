@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
-using com.aoyon.modulecreator.runtime;
+using com.aoyon.modulecreator;
 
 
 public class ModuleCreatorIsland : EditorWindow
