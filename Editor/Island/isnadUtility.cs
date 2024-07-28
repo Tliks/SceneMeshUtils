@@ -2,261 +2,265 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-public class UnionFind
+namespace com.aoyon.modulecreator
 {
-    private int[] parent;
-    private int[] rank;
 
-    public UnionFind(int size)
+    public class UnionFind
     {
-        parent = new int[size];
-        rank = new int[size];
+        private int[] parent;
+        private int[] rank;
 
-        for (int i = 0; i < size; i++)
+        public UnionFind(int size)
         {
-            parent[i] = i;
-            rank[i] = 0;
-        }
-    }
+            parent = new int[size];
+            rank = new int[size];
 
-    public int Find(int x)
-    {
-        if (parent[x] == x)
-            return x;
-        else
-            return parent[x] = Find(parent[x]);
-    }
-
-    public void Unite(int x, int y)
-    {
-        int rootX = Find(x);
-        int rootY = Find(y);
-        if (rootX == rootY) return;
-
-        if (rank[rootX] < rank[rootY])
-        {
-            parent[rootX] = rootY;
-        }
-        else if (rank[rootX] > rank[rootY])
-        {
-            parent[rootY] = rootX;
-        }
-        else
-        {
-            parent[rootX] = rootY;
-            rank[rootY]++;
-        }
-    }
-}
-
-
-public struct Island
-{
-    public List<int> VertexIndices { get; }
-    public List<int> TriangleIndices { get; }
-
-    public Island(List<int> vertexIndices, List<int> triangleIndices)
-    {
-        VertexIndices = vertexIndices;
-        TriangleIndices = triangleIndices;
-    }
-}
-
-public class IslandUtility
-{
-    private int[] Triangles { get; }
-    private Vector3[] Vertices { get; }
-    private List<Island> MergedIslands { get; }
-    private List<Island> UnMergedIslands { get; }
-
-    public IslandUtility(Mesh mesh)
-    {
-        Triangles = mesh.triangles;
-        Vertices = mesh.vertices;
-        (UnMergedIslands, MergedIslands) = GetIslands();
-    }
-
-    public (List<Island>, List<Island>) GetIslands()
-    {
-        int triCount = Triangles.Length;
-        int vertCount = Vertices.Length;
-
-        UnionFind unionFind = new UnionFind(vertCount);
-
-        // 三角形の頂点をUnionFindで結合
-        for (int i = 0; i < triCount; i += 3)
-        {
-            unionFind.Unite(Triangles[i], Triangles[i + 1]);
-            unionFind.Unite(Triangles[i + 1], Triangles[i + 2]);
-        }
-
-        // 結合前のアイランドを作成
-        Dictionary<int, Island> islandDict = new Dictionary<int, Island>();
-        for (int i = 0; i < vertCount; i++)
-        {
-            int root = unionFind.Find(i);
-            if (!islandDict.TryGetValue(root, out Island island))
+            for (int i = 0; i < size; i++)
             {
-                island = new Island(new List<int>(), new List<int>());
-                islandDict[root] = island;
+                parent[i] = i;
+                rank[i] = 0;
             }
-            island.VertexIndices.Add(i);
         }
 
-        // 三角形インデックスを追加
-        for (int i = 0; i < triCount; i += 3)
+        public int Find(int x)
         {
-            int root = unionFind.Find(Triangles[i]);
-            islandDict[root].TriangleIndices.Add(i / 3);
+            if (parent[x] == x)
+                return x;
+            else
+                return parent[x] = Find(parent[x]);
         }
 
-        // 結合前のアイランドを作成
-        List<Island> beforeMerge = new List<Island>(islandDict.Values);
-
-        // 同一座標の頂点を結合
-        Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>(vertCount);
-        for (int i = 0; i < vertCount; i++)
+        public void Unite(int x, int y)
         {
-            if (vertexMap.TryGetValue(Vertices[i], out int existingIndex))
+            int rootX = Find(x);
+            int rootY = Find(y);
+            if (rootX == rootY) return;
+
+            if (rank[rootX] < rank[rootY])
             {
-                unionFind.Unite(existingIndex, i);
+                parent[rootX] = rootY;
+            }
+            else if (rank[rootX] > rank[rootY])
+            {
+                parent[rootY] = rootX;
             }
             else
             {
-                vertexMap[Vertices[i]] = i;
+                parent[rootX] = rootY;
+                rank[rootY]++;
             }
-        }
-
-        // 結合後のアイランドを作成
-        Dictionary<int, Island> mergedIslandDict = new Dictionary<int, Island>();
-        foreach (var kvp in islandDict)
-        {
-            int mergedRoot = unionFind.Find(kvp.Key);
-            if (!mergedIslandDict.TryGetValue(mergedRoot, out Island mergedIsland))
-            {
-                mergedIsland = new Island(new List<int>(), new List<int>());
-                mergedIslandDict[mergedRoot] = mergedIsland;
-            }
-            mergedIsland.VertexIndices.AddRange(kvp.Value.VertexIndices);
-            mergedIsland.TriangleIndices.AddRange(kvp.Value.TriangleIndices);
-        }
-
-        List<Island> afterMerge = new List<Island>(mergedIslandDict.Values);
-
-        return (beforeMerge, afterMerge);
-    }
-
-    public HashSet<int> GetIslandtrianglesFromTriangleIndex(int triangleIndex, bool mergeSamePosition)
-    {
-        HashSet<int> foundTriangles = new HashSet<int>();
-        List<Island> islands = mergeSamePosition ? MergedIslands : UnMergedIslands;
-
-        foreach (var island in islands)
-        {
-            if (island.TriangleIndices.Contains(triangleIndex))
-            {
-                foundTriangles = new HashSet<int>(island.TriangleIndices);
-                break;
-            }
-        }
-
-        if (foundTriangles.Count == 0)
-        {
-        Debug.LogWarning($"No island found for triangleIndex: {triangleIndex}");
-        }
-
-        return foundTriangles;
-    }
-
-    public HashSet<int> GetIslandTrianglesInCollider(MeshCollider collider, bool mergeSamePosition, bool checkAll, Transform transform)
-    {
-        HashSet<int> foundVertices = new HashSet<int>();
-        
-        List<Island> islands = mergeSamePosition ? MergedIslands : UnMergedIslands;
-        foreach (var island in islands)
-        {
-            if (IsInsideIsland(island, checkAll))
-            {
-                foundVertices.UnionWith(island.TriangleIndices);
-            }
-        }
-
-        return foundVertices;
-
-        bool IsInsideIsland(Island island, bool checkAll) =>
-            checkAll ? island.VertexIndices.TrueForAll(IsVertexCloseToCollider) 
-                    : island.VertexIndices.Exists(IsVertexCloseToCollider);
-
-        bool IsVertexCloseToCollider(int vertexIndex)
-        {
-            Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
-            Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
-            return Vector3.Distance(closestPoint, vertexWorldPos) < 0.001f;
         }
     }
 
-    public HashSet<int> GetTrianglesNearPositionInIsland(int triangleIndex, Vector3 position, float threshold, Transform transform)
+
+    public struct Island
     {
-        List<Island> islands = MergedIslands;
-        Island? island = islands.FirstOrDefault(i => i.TriangleIndices.Contains(triangleIndex));
-        
-        if (island is null)
+        public List<int> VertexIndices { get; }
+        public List<int> TriangleIndices { get; }
+
+        public Island(List<int> vertexIndices, List<int> triangleIndices)
         {
-            return new HashSet<int> { triangleIndex };
+            VertexIndices = vertexIndices;
+            TriangleIndices = triangleIndices;
+        }
+    }
+
+    public class IslandUtility
+    {
+        private int[] Triangles { get; }
+        private Vector3[] Vertices { get; }
+        private List<Island> MergedIslands { get; }
+        private List<Island> UnMergedIslands { get; }
+
+        public IslandUtility(Mesh mesh)
+        {
+            Triangles = mesh.triangles;
+            Vertices = mesh.vertices;
+            (UnMergedIslands, MergedIslands) = GetIslands();
         }
 
-        var foundTriangles = island.Value.TriangleIndices
-            .Where(triIndex =>
-                Enumerable.Range(0, 3).All(i =>
+        public (List<Island>, List<Island>) GetIslands()
+        {
+            int triCount = Triangles.Length;
+            int vertCount = Vertices.Length;
+
+            UnionFind unionFind = new UnionFind(vertCount);
+
+            // 三角形の頂点をUnionFindで結合
+            for (int i = 0; i < triCount; i += 3)
+            {
+                unionFind.Unite(Triangles[i], Triangles[i + 1]);
+                unionFind.Unite(Triangles[i + 1], Triangles[i + 2]);
+            }
+
+            // 結合前のアイランドを作成
+            Dictionary<int, Island> islandDict = new Dictionary<int, Island>();
+            for (int i = 0; i < vertCount; i++)
+            {
+                int root = unionFind.Find(i);
+                if (!islandDict.TryGetValue(root, out Island island))
                 {
-                    int vertexIndex = Triangles[triIndex * 3 + i];
-                    Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
-                    return Vector3.Distance(position, vertexWorldPos) < threshold;
-                })
-            )
-            .ToHashSet();
-        
-        foundTriangles.Add(triangleIndex);
+                    island = new Island(new List<int>(), new List<int>());
+                    islandDict[root] = island;
+                }
+                island.VertexIndices.Add(i);
+            }
 
-        return foundTriangles;
-    }
-
-    public HashSet<int> GetTrianglesInsideCollider(MeshCollider collider, Transform transform)
-    {
-        HashSet<int> insideTriangles = new HashSet<int>();
-
-        for (int i = 0; i < Triangles.Length; i += 3)
-        {
-            bool isInside = true;
-            for (int j = 0; j < 3; j++)
+            // 三角形インデックスを追加
+            for (int i = 0; i < triCount; i += 3)
             {
-                int vertexIndex = Triangles[i + j];
-                Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
-                Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
-                if (Vector3.Distance(closestPoint, vertexWorldPos) >= 0.001f)
+                int root = unionFind.Find(Triangles[i]);
+                islandDict[root].TriangleIndices.Add(i / 3);
+            }
+
+            // 結合前のアイランドを作成
+            List<Island> beforeMerge = new List<Island>(islandDict.Values);
+
+            // 同一座標の頂点を結合
+            Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>(vertCount);
+            for (int i = 0; i < vertCount; i++)
+            {
+                if (vertexMap.TryGetValue(Vertices[i], out int existingIndex))
                 {
-                    isInside = false;
+                    unionFind.Unite(existingIndex, i);
+                }
+                else
+                {
+                    vertexMap[Vertices[i]] = i;
+                }
+            }
+
+            // 結合後のアイランドを作成
+            Dictionary<int, Island> mergedIslandDict = new Dictionary<int, Island>();
+            foreach (var kvp in islandDict)
+            {
+                int mergedRoot = unionFind.Find(kvp.Key);
+                if (!mergedIslandDict.TryGetValue(mergedRoot, out Island mergedIsland))
+                {
+                    mergedIsland = new Island(new List<int>(), new List<int>());
+                    mergedIslandDict[mergedRoot] = mergedIsland;
+                }
+                mergedIsland.VertexIndices.AddRange(kvp.Value.VertexIndices);
+                mergedIsland.TriangleIndices.AddRange(kvp.Value.TriangleIndices);
+            }
+
+            List<Island> afterMerge = new List<Island>(mergedIslandDict.Values);
+
+            return (beforeMerge, afterMerge);
+        }
+
+        public HashSet<int> GetIslandtrianglesFromTriangleIndex(int triangleIndex, bool mergeSamePosition)
+        {
+            HashSet<int> foundTriangles = new HashSet<int>();
+            List<Island> islands = mergeSamePosition ? MergedIslands : UnMergedIslands;
+
+            foreach (var island in islands)
+            {
+                if (island.TriangleIndices.Contains(triangleIndex))
+                {
+                    foundTriangles = new HashSet<int>(island.TriangleIndices);
                     break;
                 }
             }
-            
-            if (isInside)
+
+            if (foundTriangles.Count == 0)
             {
-                insideTriangles.Add(i / 3);
+            Debug.LogWarning($"No island found for triangleIndex: {triangleIndex}");
+            }
+
+            return foundTriangles;
+        }
+
+        public HashSet<int> GetIslandTrianglesInCollider(MeshCollider collider, bool mergeSamePosition, bool checkAll, Transform transform)
+        {
+            HashSet<int> foundVertices = new HashSet<int>();
+            
+            List<Island> islands = mergeSamePosition ? MergedIslands : UnMergedIslands;
+            foreach (var island in islands)
+            {
+                if (IsInsideIsland(island, checkAll))
+                {
+                    foundVertices.UnionWith(island.TriangleIndices);
+                }
+            }
+
+            return foundVertices;
+
+            bool IsInsideIsland(Island island, bool checkAll) =>
+                checkAll ? island.VertexIndices.TrueForAll(IsVertexCloseToCollider) 
+                        : island.VertexIndices.Exists(IsVertexCloseToCollider);
+
+            bool IsVertexCloseToCollider(int vertexIndex)
+            {
+                Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
+                return Vector3.Distance(closestPoint, vertexWorldPos) < 0.001f;
             }
         }
 
-        return insideTriangles;
+        public HashSet<int> GetTrianglesNearPositionInIsland(int triangleIndex, Vector3 position, float threshold, Transform transform)
+        {
+            List<Island> islands = MergedIslands;
+            Island? island = islands.FirstOrDefault(i => i.TriangleIndices.Contains(triangleIndex));
+            
+            if (island is null)
+            {
+                return new HashSet<int> { triangleIndex };
+            }
+
+            var foundTriangles = island.Value.TriangleIndices
+                .Where(triIndex =>
+                    Enumerable.Range(0, 3).All(i =>
+                    {
+                        int vertexIndex = Triangles[triIndex * 3 + i];
+                        Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                        return Vector3.Distance(position, vertexWorldPos) < threshold;
+                    })
+                )
+                .ToHashSet();
+            
+            foundTriangles.Add(triangleIndex);
+
+            return foundTriangles;
+        }
+
+        public HashSet<int> GetTrianglesInsideCollider(MeshCollider collider, Transform transform)
+        {
+            HashSet<int> insideTriangles = new HashSet<int>();
+
+            for (int i = 0; i < Triangles.Length; i += 3)
+            {
+                bool isInside = true;
+                for (int j = 0; j < 3; j++)
+                {
+                    int vertexIndex = Triangles[i + j];
+                    Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                    Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
+                    if (Vector3.Distance(closestPoint, vertexWorldPos) >= 0.001f)
+                    {
+                        isInside = false;
+                        break;
+                    }
+                }
+                
+                if (isInside)
+                {
+                    insideTriangles.Add(i / 3);
+                }
+            }
+
+            return insideTriangles;
+        }
+
+        public int GetIslandCount()
+        {
+            return UnMergedIslands.Count;
+        }
+
+        public int GetMergedIslandCount()
+        {
+            return MergedIslands.Count;
+        }    
+
     }
-
-    public int GetIslandCount()
-    {
-        return UnMergedIslands.Count;
-    }
-
-    public int GetMergedIslandCount()
-    {
-        return MergedIslands.Count;
-    }    
-
 }
