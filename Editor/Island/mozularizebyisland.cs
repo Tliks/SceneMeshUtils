@@ -6,8 +6,6 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
-using com.aoyon.modulecreator;
-
 
 namespace com.aoyon.modulecreator
 {
@@ -18,11 +16,17 @@ namespace com.aoyon.modulecreator
 
         private TriangleSelectionManager _triangleSelectionManager; 
 
-        private GameObject _targetObject;
         private GameObject _RootObject;
+        private GameObject _selectedmeshObject;
+
         private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
+        private SkinnedMeshRenderer _selectedMeshRenderer;
+
         private Mesh _bakedMesh;
         private Mesh _originalMesh;
+        
+        private SceneView _defaultSceneView;
+        private CustomSceneViewWindow _selectedSceneView;
 
         private const int MENU_PRIORITY = 49;
         private const double raycastInterval = 0.01;
@@ -37,9 +41,9 @@ namespace com.aoyon.modulecreator
         private bool _isAll = true;
         private int _SelectionModeIndex = 0;
         private int _UtilityIndex = 0;
-        private bool _isPreviewSelected;
         private bool _isPreviewEnabled;
-        private Dictionary<int, int> _oldToNewIndexMap;
+        private Dictionary<int, int> _selectedoldToNewIndexMap;
+        private Dictionary<int, int> _unselectedoldToNewIndexMap;
         private float _scale = 0.03f;
 
 
@@ -64,8 +68,8 @@ namespace com.aoyon.modulecreator
 
         private void OnEnable()
         {
-            _targetObject = Selection.activeGameObject;
-            _OriginskinnedMeshRenderer = _targetObject.GetComponent<SkinnedMeshRenderer>();
+            GameObject targetObject = Selection.activeGameObject;
+            _OriginskinnedMeshRenderer = targetObject.GetComponent<SkinnedMeshRenderer>();
             DuplicateAndSetup();
             CalculateIslands();
 
@@ -73,9 +77,10 @@ namespace com.aoyon.modulecreator
             _triangleSelectionManager = new TriangleSelectionManager(allTriangleIndices);
 
             ToggleSelectionEnabled(true);
-            ToggleSelectionSelected(false);
 
             SceneView.duringSceneGui += OnSceneGUI;
+
+            _defaultSceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
         }
 
         private void OnDisable()
@@ -84,12 +89,20 @@ namespace com.aoyon.modulecreator
             SceneRaycastUtility.DeleteCollider();
             SceneView.duringSceneGui -= OnSceneGUI;
             SceneView.RepaintAll();
+            _selectedSceneView.Close();
+            DestroyImmediate(_selectedmeshObject);
         }
 
         private void OnGUI()
         {
             using (new GUILayout.HorizontalScope())
-            {
+            {   
+                using (new GUILayout.VerticalScope())
+                {
+                    RenderSelectionWinodw();
+                }
+
+                /*
                 float halfWidth = position.width / 2f;
 
                 using (new GUILayout.VerticalScope(GUILayout.Width(halfWidth)))
@@ -103,6 +116,8 @@ namespace com.aoyon.modulecreator
                 {
                     RenderUtility();
                 }
+                */
+
             }
         }
 
@@ -112,10 +127,6 @@ namespace com.aoyon.modulecreator
 
             EditorGUILayout.Space();
             RenderVertexCount();
-            EditorGUILayout.Space();
-
-            RenderPreviewSelectedToggle();
-
             EditorGUILayout.Space();
 
             RenderSelectionButtons();
@@ -191,27 +202,14 @@ namespace com.aoyon.modulecreator
                 case 5:
                     if (new_index != _UtilityIndex)
                     {
-                        TransformPolygonUtility TransformPolygonUtility = _targetObject.AddComponent<TransformPolygonUtility>();
-                        TransformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager.GetSelectedTriangles());
+                        TransformPolygonUtility transformPolygonUtility = _OriginskinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
+                        transformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _originalMesh, _triangleSelectionManager.GetSelectedTriangles());
                         _UtilityIndex = new_index;
                     }
                     break;
             }
         }
 
-
-        private void ToggleSelectionSelected(bool newMode)
-        {
-            if (_isPreviewSelected == newMode)
-            {
-                //Debug.LogWarning("current mode is already specified mode");
-            }
-            else
-            {
-                _isPreviewSelected = newMode;
-            }
-            UpdateMesh();
-        }
 
         private void ToggleSelectionEnabled(bool newMode)
         {
@@ -226,7 +224,7 @@ namespace com.aoyon.modulecreator
 
             if (_isPreviewEnabled)
             {
-                SceneRaycastUtility.AddCollider(_OriginskinnedMeshRenderer.transform);
+                SceneRaycastUtility.AddCollider(_selectedMeshRenderer.transform, _OriginskinnedMeshRenderer.transform);
                 UpdateMesh(); // コライダーのメッシュを更新
             }
             else
@@ -254,7 +252,7 @@ namespace com.aoyon.modulecreator
             HandleUndoRedoEvent(e);
             //HandleScrollWheel(e);
             HandleMouseEvents(e, sceneView);
-            DrawSelectionRectangle();
+            DrawSelectionRectangle(sceneView);
             HighlightEdgesManager.DrawHighlights();
         }
 
@@ -300,81 +298,84 @@ namespace com.aoyon.modulecreator
 
         private void HandleMouseEvents(Event e, SceneView sceneView)
         {
-            Vector2 mousePos = e.mousePosition;
-            //consoleがrectに入っているので多分あまり正確ではない
-            float xoffset = 10f;
-            float yoffset = 30f; 
-            Rect sceneViewRect = new Rect(0, 0, sceneView.position.width -xoffset, sceneView.position.height - yoffset);
-            //Debug.Log($"{mousePos.x}/{sceneView.position.width - xoffset}, {mousePos.y}/{sceneView.position.height - yoffset}");
-
-            //sceneviewの外側にある場合の初期化処理
-            if (!sceneViewRect.Contains(mousePos))
+            if (e.isMouse)
             {
-                HighlightEdgesManager.ClearHighlights();
-                if (_isdragging)
+                Vector2 mousePos = e.mousePosition;
+                //consoleがrectに入っているので多分あまり正確ではない
+                float xoffset = 10f;
+                float yoffset = 30f; 
+                Rect sceneViewRect = new Rect(0, 0, sceneView.position.width -xoffset, sceneView.position.height - yoffset);
+
+                //sceneviewの外側にある場合の初期化処理
+                if (!sceneViewRect.Contains(mousePos))
                 {
+                    HighlightEdgesManager.ClearHighlights();
+                    if (_isdragging)
+                    {
+                        _isdragging = false;
+                        _selectionRect = new Rect();
+                        HandleUtility.Repaint();
+                        DrawSelectionRectangle(sceneView);
+                    }
+                    return;
+                }
+
+                //左クリック
+                if (e.type == EventType.MouseDown && e.button == 0)
+                {
+                    _startPoint = mousePos;
+                }
+                //左クリック解放
+                else if (e.type == EventType.MouseUp && e.button == 0)
+                {
+                    //クリック
+                    if (!_isdragging)
+                    {
+                        HandleClick(true);
+                    }
+                    //ドラッグ解放
+                    else
+                    {
+                        Vector2 endPoint = mousePos;
+                        HandleDrag(_startPoint, endPoint, true);
+                    }
+                    
                     _isdragging = false;
                     _selectionRect = new Rect();
+                    DrawSelectionRectangle(sceneView);
+
+                }
+                //ドラッグ中
+                else if (e.type == EventType.MouseDrag && e.button == 0 && Vector2.Distance(_startPoint, mousePos) >= dragThreshold)
+                {
+                    _isdragging = true;
+                    _selectionRect = new Rect(_startPoint.x, _startPoint.y, mousePos.x - _startPoint.x, mousePos.y - _startPoint.y);
+                    double currentTime = EditorApplication.timeSinceStartup;
+                    if (currentTime - _lastUpdateTime >= raycastInterval)
+                    {
+                        _lastUpdateTime = currentTime;
+                        Vector2 endPoint = mousePos;
+                        HandleDrag(_startPoint, endPoint, false);
+                    }
                     HandleUtility.Repaint();
-                    DrawSelectionRectangle();
-                }
-                return;
-            }
 
-            //左クリック
-            if (e.type == EventType.MouseDown && e.button == 0)
-            {
-                _startPoint = mousePos;
-            }
-            //左クリック解放
-            else if (e.type == EventType.MouseUp && e.button == 0)
-            {
-                //クリック
-                if (!_isdragging)
-                {
-                    HandleClick(true);
                 }
-                //ドラッグ解放
-                else
+                //ドラッグしていないとき
+                else if (!_isdragging)
                 {
-                    Vector2 endPoint = mousePos;
-                    HandleDrag(_startPoint, endPoint, true);
-                }
-                
-                _isdragging = false;
-                _selectionRect = new Rect();
-                DrawSelectionRectangle();
-
-            }
-            //ドラッグ中
-            else if (e.type == EventType.MouseDrag && e.button == 0 && Vector2.Distance(_startPoint, mousePos) >= dragThreshold)
-            {
-                _isdragging = true;
-                _selectionRect = new Rect(_startPoint.x, _startPoint.y, mousePos.x - _startPoint.x, mousePos.y - _startPoint.y);
-                double currentTime = EditorApplication.timeSinceStartup;
-                if (currentTime - _lastUpdateTime >= raycastInterval)
-                {
-                    _lastUpdateTime = currentTime;
-                    Vector2 endPoint = mousePos;
-                    HandleDrag(_startPoint, endPoint, false);
-                }
-                HandleUtility.Repaint();
-
-            }
-            //ドラッグしていないとき
-            else if (!_isdragging)
-            {
-                double currentTime = EditorApplication.timeSinceStartup;
-                if (currentTime - _lastUpdateTime >= raycastInterval)
-                {
-                    _lastUpdateTime = currentTime;
-                    HandleClick(false);
+                    double currentTime = EditorApplication.timeSinceStartup;
+                    if (currentTime - _lastUpdateTime >= raycastInterval)
+                    {
+                        _lastUpdateTime = currentTime;
+                        HandleClick(false);
+                    }
                 }
             }
         }
 
-        private void DrawSelectionRectangle()
+        private void DrawSelectionRectangle(SceneView sceneView)
         {
+            Handles.SetCamera(sceneView.camera); 
             Handles.BeginGUI();
             //Color selectionColor = _isPreviewSelected ? new Color(1, 0, 0, 0.2f) : new Color(0, 1, 1, 0.2f);
             Color selectionColor = new Color(0.6f, 0.7f, 0.8f, 0.25f); 
@@ -387,8 +388,12 @@ namespace com.aoyon.modulecreator
         {
             if (SceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
             {
+                bool IsSelected = SceneRaycastUtility.IsSelected(hitInfo);
+                Transform origin = IsSelected ? _selectedMeshRenderer.transform : _OriginskinnedMeshRenderer.transform;
+                var indexmap = IsSelected ? _selectedoldToNewIndexMap : _unselectedoldToNewIndexMap;
+
                 int triangleIndex = hitInfo.triangleIndex;
-                int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, _oldToNewIndexMap);
+                int newIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, indexmap);
 
                 HashSet<int> TriangleIndices = null;
                 if (_SelectionModeIndex == 0)
@@ -397,11 +402,11 @@ namespace com.aoyon.modulecreator
                 }
                 else if (_SelectionModeIndex == 1)
                 {
-                    TriangleIndices = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, _OriginskinnedMeshRenderer.transform);
+                    TriangleIndices = _islandUtility.GetTrianglesNearPositionInIsland(newIndex, hitInfo.point, _scale, origin);
                 }
-                TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, _isPreviewSelected);
+                TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
 
-                HandleTriangleClick(TriangleIndices, isclick);
+                HandleTriangleClick(TriangleIndices, isclick, IsSelected);
             }
             else
             {
@@ -413,37 +418,42 @@ namespace com.aoyon.modulecreator
         private void HandleDrag(Vector2 startpos, Vector2 endpos, bool isclick)
         {
             if (startpos.x == endpos.x || startpos.y == endpos.y) return;
+
+            bool IsSelected = CustomSceneViewWindow.IsSelected();
+            Transform origin = IsSelected ? _selectedMeshRenderer.transform : _OriginskinnedMeshRenderer.transform;
             
             MeshCollider meshCollider = GenerateColider(startpos, endpos);
 
             HashSet<int> TriangleIndices = null;
             if (_SelectionModeIndex == 0)
             {
-                TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, _mergeSamePosition, _isAll, _OriginskinnedMeshRenderer.transform);
+                TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, _mergeSamePosition, _isAll, origin);
             }
             else if (_SelectionModeIndex == 1)
             {
-                TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, _OriginskinnedMeshRenderer.transform);
+                TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, origin);
             }
             DestroyImmediate(meshCollider.gameObject);
-            TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, _isPreviewSelected);
+            TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
 
-            HandleTriangleClick(TriangleIndices, isclick);   
+            HandleTriangleClick(TriangleIndices, isclick, IsSelected);   
         }
 
-        private void HandleTriangleClick(HashSet<int> TriangleIndices, bool isclick)
+        private void HandleTriangleClick(HashSet<int> TriangleIndices, bool isclick, bool IsSelected)
         {
             if (isclick)
             {
-                _triangleSelectionManager.UpdateSelection(TriangleIndices, _isPreviewSelected);
+                _triangleSelectionManager.UpdateSelection(TriangleIndices, IsSelected);
                 UpdateMesh();
                 HighlightEdgesManager.ClearHighlights();
             }
             else
             {
-                Color color = _isPreviewSelected ? Color.red : Color.cyan;
+                Color color = IsSelected ? Color.red : Color.cyan;
                 HighlightEdgesManager.SetHighlightColor(color);
-                HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, _OriginskinnedMeshRenderer.transform);
+
+                Transform origin = IsSelected ? _selectedMeshRenderer.transform : _OriginskinnedMeshRenderer.transform;
+                HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, origin);
             }
         }
     
@@ -511,19 +521,6 @@ namespace com.aoyon.modulecreator
             return meshCollider;
         }
 
-        private void RenderPreviewSelectedToggle()
-        {
-            GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-            labelStyle.fontSize = 14; // 文字のサイズを大きくする
-
-            GUILayout.Label(LocalizationEditor.GetLocalizedText("PreviewModeLabel") + (_isPreviewSelected ? LocalizationEditor.GetLocalizedText("SelectedMesh") : LocalizationEditor.GetLocalizedText("UnselectedMesh")), labelStyle);
-
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("SwitchPreviewModeButton")))
-            {
-                bool isselected = !_isPreviewSelected;
-                ToggleSelectionSelected(isselected);
-            }
-        }
 
         private void RenderislandDescription()
         {
@@ -641,7 +638,7 @@ namespace com.aoyon.modulecreator
 
         private void DuplicateAndSetup()
         {
-            _RootObject = CheckRoot(_OriginskinnedMeshRenderer.gameObject);
+            _RootObject = CheckUtility.CheckRoot(_OriginskinnedMeshRenderer.gameObject);
             _originalMesh = _OriginskinnedMeshRenderer.sharedMesh;
 
             Mesh PreviewMesh = Instantiate(_originalMesh);
@@ -656,53 +653,81 @@ namespace com.aoyon.modulecreator
 
             ResetAllBlendShapes(_OriginskinnedMeshRenderer);
 
+            OpenCustomSceneView();
         }
 
-        private GameObject CheckRoot(GameObject targetObject)
+        private void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
         {
-            //親オブジェクトが存在するか確認
-            Transform parent = targetObject.transform.parent;
-            if (parent == null)
+            if (!customRenderer) return;
+            Mesh mesh = customRenderer.sharedMesh;
+            Vector3 middleVertex = Vector3.zero;
+
+            if (mesh != null)
             {
-                throw new InvalidOperationException("Please select the object with SkinnedMeshRenderer directly under the avatar/costume");
+                Vector3[] vertices = mesh.vertices;
+                middleVertex = vertices
+                    .Select(v => customRenderer.transform.TransformPoint(v))
+                    .Aggregate((acc, v) => acc + v) / vertices.Length;
             }
 
-            GameObject root;
-            if (PrefabUtility.IsPartOfPrefabInstance(targetObject))
-            {
-                root = PrefabUtility.GetOutermostPrefabInstanceRoot(targetObject);
-            }
-            else
-            {
-                root = parent.gameObject;
-            }
-            return root;
+            float cameraDistance = 1f;
+            Vector3 direction = sceneView.camera.transform.forward;
+            Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
+
+            sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
+            sceneView.Repaint();
+        }
+
+        public void OpenCustomSceneView()
+        {
+            (_selectedmeshObject,  _selectedMeshRenderer) = ModuleCreator.PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
+            _selectedmeshObject.transform.position += new Vector3(10, 0, -10);
+
+            _selectedSceneView = CustomSceneViewWindow.ShowWindow(_defaultSceneView);
+            FocusCustomViewObject(_selectedSceneView, _selectedMeshRenderer);
+
+            Mesh SelectedMesh = MeshUtility.RemoveTriangles(_originalMesh, new HashSet<int>());
+            _selectedMeshRenderer.sharedMesh = SelectedMesh;
         }
 
         private void UpdateMesh()
         {   
-            Mesh PreviewMesh;
-            Mesh colliderMesh;
+            HashSet<int> selectedtriangleIndices = _triangleSelectionManager.GetSelectedTriangles();
+            HashSet<int> unselectedtriangleIndices = _triangleSelectionManager.GetUnselectedTriangles();
 
-            HashSet<int> KeeptriangleIndices = _isPreviewSelected ?
-                _triangleSelectionManager.GetSelectedTriangles() : 
-                _triangleSelectionManager.GetUnselectedTriangles();
+            Mesh selectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, selectedtriangleIndices);
+            Mesh unselectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, unselectedtriangleIndices);
 
-            PreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, KeeptriangleIndices);
-            _OriginskinnedMeshRenderer.sharedMesh = PreviewMesh;
+            _selectedMeshRenderer.sharedMesh = selectedPreviewMesh;
+            _OriginskinnedMeshRenderer.sharedMesh = unselectedPreviewMesh;
 
             if (_isPreviewEnabled)
             {
-                if (KeeptriangleIndices.Count > 0)
+                Mesh selectedcolliderMesh;
+                Mesh unselectedcolliderMesh;
+
+                if (selectedtriangleIndices.Count > 0)
                 {
-                    (colliderMesh, _oldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, KeeptriangleIndices);
-                    SceneRaycastUtility.UpdateColider(colliderMesh);
+                    (selectedcolliderMesh, _selectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, selectedtriangleIndices);
+                    SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
                 }
                 else
                 {
-                    colliderMesh = null;
-                    SceneRaycastUtility.UpdateColider(colliderMesh);
+                    selectedcolliderMesh = null;
+                    SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
                 }
+
+                if (unselectedtriangleIndices.Count > 0)
+                {
+                    (unselectedcolliderMesh,  _unselectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, unselectedtriangleIndices);
+                    SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
+                }
+                else
+                {
+                    unselectedcolliderMesh = null;
+                    SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
+                }
+                
             }
 
             Repaint();

@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,8 +7,11 @@ namespace com.aoyon.modulecreator
 
     public static class SceneRaycastUtility
     {
-        private static GameObject ColiderObject; 
-        private static MeshCollider MeshCollider;
+        private static GameObject selectedColiderObject; 
+        private static GameObject unselectedColiderObject; 
+        private static MeshCollider selectedMeshCollider;
+        private static MeshCollider ubselectedMeshCollider;
+
         public static bool TryRaycast(out RaycastHit hitInfo)
         {
             hitInfo = new RaycastHit();
@@ -29,7 +33,7 @@ namespace com.aoyon.modulecreator
             }
 
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            if (HandleUtility.RaySnap(ray) is RaycastHit hit && hit.transform.gameObject == ColiderObject)
+            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
             {
                 hitInfo = hit;
                 return true;
@@ -37,35 +41,75 @@ namespace com.aoyon.modulecreator
 
             return false;
         }
-        
-        public static MeshCollider AddCollider(Transform transform)
+
+        public static bool IsSelected(RaycastHit hitInfo)
         {
-            if (ColiderObject == null)
+            GameObject hitGameobject = hitInfo.transform.gameObject;
+            if (hitGameobject == selectedColiderObject)
             {
-                ColiderObject = new GameObject();
-                ColiderObject.name = "AO preview";
-                ColiderObject.transform.position = transform.position;
-                ColiderObject.transform.rotation = transform.rotation;
-                ColiderObject.transform.localScale = transform.lossyScale;
+                return true;
+            }
+            else if (hitGameobject == unselectedColiderObject)
+            {
+                return false;
+            }
+            else
+            {
+                throw new InvalidOperationException("hit invalid object");
+            }
+        }
+        
+        public static void AddCollider(Transform selectedtransform, Transform unselectedtransform)
+        {   
+            AddcoliderObject(ref selectedColiderObject, selectedtransform);
+            AddcoliderObject(ref unselectedColiderObject, unselectedtransform);
+
+            selectedMeshCollider = AddMeshCollider(selectedColiderObject);
+            ubselectedMeshCollider = AddMeshCollider(unselectedColiderObject);
+
+            return;
+
+            void AddcoliderObject(ref GameObject obj, Transform transform)
+            {
+                if (obj == null)
+                {
+                    obj = new GameObject();
+                    obj.name = "AAU preview";
+                    obj.transform.position = transform.position;
+                    obj.transform.rotation = transform.rotation;
+                    obj.transform.localScale = transform.lossyScale;
+                }
             }
             
-            MeshCollider = ColiderObject.GetComponent<MeshCollider>();
-            if (MeshCollider == null)
+            MeshCollider AddMeshCollider(GameObject obj)
             {
-                MeshCollider = ColiderObject.AddComponent<MeshCollider>();
-                MeshCollider.convex = false;  
+                MeshCollider meshCollider = obj.GetComponent<MeshCollider>();
+                if (meshCollider == null)
+                {
+                    meshCollider = obj.AddComponent<MeshCollider>();
+                    meshCollider.convex = false;
+                }
+                return meshCollider;
             }
-            return MeshCollider;
+            
         }
 
         public static void DeleteCollider()
         {
-            Object.DestroyImmediate(ColiderObject);
+            UnityEngine.Object.DestroyImmediate(selectedColiderObject);
+            UnityEngine.Object.DestroyImmediate(unselectedColiderObject);
         }
 
-        public static void UpdateColider(Mesh mesh)
+        public static void UpdateColider(Mesh mesh, bool IsSelected)
         {
-            MeshCollider.sharedMesh = mesh;
+            if (IsSelected)
+            {
+                selectedMeshCollider.sharedMesh = mesh;
+            }
+            else
+            {
+                ubselectedMeshCollider.sharedMesh = mesh;
+            }
         }
 
     }

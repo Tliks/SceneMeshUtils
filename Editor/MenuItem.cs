@@ -17,9 +17,7 @@ namespace com.aoyon.modulecreator
             GameObject sourceObject = menuCommand.context as GameObject;
 
             ModuleCreatorSettings settings = new ModuleCreatorSettings();
-            ModuleCreator moduleCreator = new ModuleCreator(settings);
-
-            moduleCreator.CheckAndCopyBones(sourceObject);
+            ModuleCreator.CheckAndCopyBones(sourceObject, settings);
         }
 
         [MenuItem("GameObject/Module Creator/Modularize Mesh", true)]
@@ -87,8 +85,7 @@ namespace com.aoyon.modulecreator
             GUI.enabled = skinnedMeshRenderer != null;
             if (GUILayout.Button("Create Module"))
             {
-                ModuleCreator moduleCreator = new ModuleCreator(Settings);
-                moduleCreator.CheckAndCopyBones(skinnedMeshRenderer.gameObject);
+                ModuleCreator.CheckAndCopyBones(skinnedMeshRenderer.gameObject, Settings);
             }
             GUI.enabled = true;
         }

@@ -61,9 +61,10 @@ namespace com.aoyon.modulecreator
                 AssetDatabase.SaveAssets();
 
                 _Settings.newmesh = newMesh;
-                new ModuleCreator(_Settings).CheckAndCopyBones(_originskinnedMeshRenderer.gameObject);
+                ModuleCreator.CheckAndCopyBones(_originskinnedMeshRenderer.gameObject, _Settings);
             }
         }
+
         private static void RenderCreateBothModuleButtons()
         {
             GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
@@ -78,6 +79,7 @@ namespace com.aoyon.modulecreator
 
             GUI.enabled = true;
         }
+        
         private static void RenderCreateModuleButtons()
         {
             GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
