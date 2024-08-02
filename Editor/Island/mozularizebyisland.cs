@@ -656,35 +656,31 @@ namespace com.aoyon.modulecreator
             OpenCustomSceneView();
         }
 
-        private void FocusCustomViewObject(SceneView sceneView, SkinnedMeshRenderer customRenderer)
+        private void FocusCustomViewObject(SceneView sceneView, Mesh mesh, Transform origin)
         {
-            if (!customRenderer) return;
-            Mesh mesh = customRenderer.sharedMesh;
+            if (!mesh) return;
+
             Vector3 middleVertex = Vector3.zero;
+            Vector3[] vertices = mesh.vertices;
 
-            if (mesh != null)
+            for (int i = 0; i < vertices.Length; i++)
             {
-                Vector3[] vertices = mesh.vertices;
-                middleVertex = vertices
-                    .Select(v => customRenderer.transform.TransformPoint(v))
-                    .Aggregate((acc, v) => acc + v) / vertices.Length;
+                middleVertex += origin.TransformPoint(vertices[i]);
             }
+            middleVertex /= vertices.Length;
 
-            float cameraDistance = 1f;
-            Vector3 direction = sceneView.camera.transform.forward;
-            Vector3 newCameraPosition = middleVertex - direction * cameraDistance;
-
+            float cameraDistance = 0.5f;
             sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
             sceneView.Repaint();
         }
 
-        public void OpenCustomSceneView()
+        private void OpenCustomSceneView()
         {
             (_selectedmeshObject,  _selectedMeshRenderer) = ModuleCreator.PreviewMesh(_OriginskinnedMeshRenderer.gameObject);
-            _selectedmeshObject.transform.position += new Vector3(10, 0, -10);
+            _selectedmeshObject.transform.position += new Vector3(100, 0, -100);
 
             _selectedSceneView = CustomSceneViewWindow.ShowWindow(_defaultSceneView);
-            FocusCustomViewObject(_selectedSceneView, _selectedMeshRenderer);
+            FocusCustomViewObject(_selectedSceneView, _bakedMesh, _selectedMeshRenderer.transform);
 
             Mesh SelectedMesh = MeshUtility.RemoveTriangles(_originalMesh, new HashSet<int>());
             _selectedMeshRenderer.sharedMesh = SelectedMesh;
