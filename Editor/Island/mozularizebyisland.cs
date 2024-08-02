@@ -699,31 +699,19 @@ namespace com.aoyon.modulecreator
 
             if (_isPreviewEnabled)
             {
-                Mesh selectedcolliderMesh;
-                Mesh unselectedcolliderMesh;
-
+                Mesh selectedcolliderMesh = null;
                 if (selectedtriangleIndices.Count > 0)
                 {
                     (selectedcolliderMesh, _selectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, selectedtriangleIndices);
-                    SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
                 }
-                else
-                {
-                    selectedcolliderMesh = null;
                     SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
-                }
 
+                Mesh unselectedcolliderMesh = null;
                 if (unselectedtriangleIndices.Count > 0)
                 {
                     (unselectedcolliderMesh,  _unselectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, unselectedtriangleIndices);
-                    SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
                 }
-                else
-                {
-                    unselectedcolliderMesh = null;
                     SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
-                }
-                
             }
 
             Repaint();
