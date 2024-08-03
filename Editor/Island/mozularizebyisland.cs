@@ -28,7 +28,6 @@ namespace com.aoyon.modulecreator
         private SceneView _defaultSceneView;
         private CustomSceneViewWindow _selectedSceneView;
 
-        private const int MENU_PRIORITY = 49;
         private const double raycastInterval = 0.01;
         private double _lastUpdateTime = 0;
 
@@ -46,25 +45,6 @@ namespace com.aoyon.modulecreator
         private Dictionary<int, int> _unselectedoldToNewIndexMap;
         private float _scale = 0.03f;
 
-
-        [MenuItem("GameObject/AoyonAvatarUtils", false, MENU_PRIORITY)]
-        public static void ShowWindowFromGameObject()
-        {
-            if (HasOpenInstances<ModuleCreatorIsland>())
-            {
-                var existingWindow = GetWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
-                existingWindow.Close();
-            }
-            CreateWindow<ModuleCreatorIsland>("AoyonAvatarUtils");
-        }
-
-        [MenuItem("GameObject/AoyonAvatarUtils", true)]
-        private static bool ValidateShowWindowFromGameObject()
-        {
-            return Selection.activeGameObject != null 
-                && Selection.activeGameObject.transform.parent != null 
-                && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
-        }
 
         private void OnEnable()
         {
