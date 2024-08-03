@@ -25,33 +25,36 @@ SOFTWARE.
 using UnityEngine;
 using UnityEditor;
 
-public static class MeshPreview
+namespace com.aoyon.modulecreator
 {
-    public static void StartPreview(SkinnedMeshRenderer rendrer)
+    public static class MeshPreview
     {
-        AnimationMode.StartAnimationMode();
-        AnimationMode.BeginSampling();
-        try
+        public static void StartPreview(SkinnedMeshRenderer rendrer)
         {
-            var binding = EditorCurveBinding.PPtrCurve("", typeof(SkinnedMeshRenderer), "m_Mesh");
-            var modification = new PropertyModification
+            AnimationMode.StartAnimationMode();
+            AnimationMode.BeginSampling();
+            try
             {
-                target = rendrer,
-                propertyPath = "m_Mesh",
-                objectReference = rendrer.sharedMesh
-            };
+                var binding = EditorCurveBinding.PPtrCurve("", typeof(SkinnedMeshRenderer), "m_Mesh");
+                var modification = new PropertyModification
+                {
+                    target = rendrer,
+                    propertyPath = "m_Mesh",
+                    objectReference = rendrer.sharedMesh
+                };
 
-            AnimationMode.AddPropertyModification(binding, modification, true);
+                AnimationMode.AddPropertyModification(binding, modification, true);
+            }
+            finally
+            {
+                AnimationMode.EndSampling();
+            }
         }
-        finally
+
+        public static void StopPreview()
         {
-            AnimationMode.EndSampling();
+            AnimationMode.StopAnimationMode();
         }
-    }
 
-    public static void StopPreview()
-    {
-        AnimationMode.StopAnimationMode();
     }
-
 }

@@ -1,68 +1,116 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
-public static class SceneRaycastUtility
+namespace com.aoyon.modulecreator
 {
-    private static GameObject ColiderObject; 
-    private static MeshCollider MeshCollider;
-    public static bool TryRaycast(out RaycastHit hitInfo)
-    {
-        hitInfo = new RaycastHit();
 
-        if (Event.current == null)
+    public static class SceneRaycastUtility
+    {
+        private static GameObject selectedColiderObject; 
+        private static GameObject unselectedColiderObject; 
+        private static MeshCollider selectedMeshCollider;
+        private static MeshCollider ubselectedMeshCollider;
+
+        public static bool TryRaycast(out RaycastHit hitInfo)
         {
+            hitInfo = new RaycastHit();
+
+            if (Event.current == null)
+            {
+                return false;
+            }
+
+            switch (Event.current.type)
+            {
+                case EventType.Layout:
+                case EventType.Repaint:
+                case EventType.ExecuteCommand:
+                    break;
+                default:
+                    HandleUtility.PickGameObject(Event.current.mousePosition, false);
+                    break;
+            }
+
+            Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
+            {
+                hitInfo = hit;
+                return true;
+            }
+
             return false;
         }
 
-        switch (Event.current.type)
+        public static bool IsSelected(RaycastHit hitInfo)
         {
-            case EventType.Layout:
-            case EventType.Repaint:
-            case EventType.ExecuteCommand:
-                break;
-            default:
-                HandleUtility.PickGameObject(Event.current.mousePosition, false);
-                break;
-        }
-
-        Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-        if (HandleUtility.RaySnap(ray) is RaycastHit hit && hit.transform.gameObject == ColiderObject)
-        {
-            hitInfo = hit;
-            return true;
-        }
-
-        return false;
-    }
-    
-    public static MeshCollider AddCollider(Transform transform)
-    {
-        if (ColiderObject == null)
-        {
-            ColiderObject = new GameObject();
-            ColiderObject.name = "AO preview";
-            ColiderObject.transform.position = transform.position;
-            ColiderObject.transform.rotation = transform.rotation;
-            ColiderObject.transform.localScale = transform.lossyScale;
+            GameObject hitGameobject = hitInfo.transform.gameObject;
+            if (hitGameobject == selectedColiderObject)
+            {
+                return true;
+            }
+            else if (hitGameobject == unselectedColiderObject)
+            {
+                return false;
+            }
+            else
+            {
+                throw new InvalidOperationException("hit invalid object");
+            }
         }
         
-        MeshCollider = ColiderObject.GetComponent<MeshCollider>();
-        if (MeshCollider == null)
-        {
-            MeshCollider = ColiderObject.AddComponent<MeshCollider>();
-            MeshCollider.convex = false;  
+        public static void AddCollider(Transform selectedtransform, Transform unselectedtransform)
+        {   
+            AddcoliderObject(ref selectedColiderObject, selectedtransform);
+            AddcoliderObject(ref unselectedColiderObject, unselectedtransform);
+
+            selectedMeshCollider = AddMeshCollider(selectedColiderObject);
+            ubselectedMeshCollider = AddMeshCollider(unselectedColiderObject);
+
+            return;
+
+            void AddcoliderObject(ref GameObject obj, Transform transform)
+            {
+                if (obj == null)
+                {
+                    obj = new GameObject();
+                    obj.name = "AAU preview";
+                    obj.transform.position = transform.position;
+                    obj.transform.rotation = transform.rotation;
+                    obj.transform.localScale = transform.lossyScale;
+                }
+            }
+            
+            MeshCollider AddMeshCollider(GameObject obj)
+            {
+                MeshCollider meshCollider = obj.GetComponent<MeshCollider>();
+                if (meshCollider == null)
+                {
+                    meshCollider = obj.AddComponent<MeshCollider>();
+                    meshCollider.convex = false;
+                }
+                return meshCollider;
+            }
+            
         }
-        return MeshCollider;
-    }
 
-    public static void DeleteCollider()
-    {
-        Object.DestroyImmediate(ColiderObject);
-    }
+        public static void DeleteCollider()
+        {
+            UnityEngine.Object.DestroyImmediate(selectedColiderObject);
+            UnityEngine.Object.DestroyImmediate(unselectedColiderObject);
+        }
 
-    public static void UpdateColider(Mesh mesh)
-    {
-        MeshCollider.sharedMesh = mesh;
-    }
+        public static void UpdateColider(Mesh mesh, bool IsSelected)
+        {
+            if (IsSelected)
+            {
+                selectedMeshCollider.sharedMesh = mesh;
+            }
+            else
+            {
+                ubselectedMeshCollider.sharedMesh = mesh;
+            }
+        }
 
+    }
 }

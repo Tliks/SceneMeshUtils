@@ -1,130 +1,109 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using com.aoyon.modulecreator;
 
-public class TransformPolygonUtility
+namespace com.aoyon.modulecreator
 {
-    private static SkinnedMeshRenderer _originskinnedMeshRenderer;
-    private static string _rootname;
-    private static Mesh _originalMesh;
-    private static TriangleSelectionManager _triangleSelectionManager;
 
-    private static Vector3 position = Vector3.zero;
-    private static Vector3 rotation = Vector3.zero;
-    private static Vector3 scale = Vector3.one;
-
-    private static Vector3 newPosition, newRotation, newScale;
-
-
-    public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+    [CustomEditor(typeof(TransformPolygonUtility))]
+    public class TransformPolygonUtilityEditor : Editor
     {
-        _originskinnedMeshRenderer = origSkinnedMeshRenderer;
-        _rootname = rootname;
-        _originalMesh = originalMesh;
-        _triangleSelectionManager = triangleSelectionManager;
-    }
-
-    public static void Render()
-    {
-        EditorGUILayout.Space();
-        GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
-        RenderTransfrom();
-        EditorGUILayout.Space();
-        if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.TransformPolygon")))
-        {
-            MeshPreview.StopPreview();
-            SaveMesh();
-            MeshPreview.StartPreview(_originskinnedMeshRenderer);
-        }
-        GUI.enabled = true;
-    }
-
-    private static void RenderTransfrom()
-    {
-        GUILayout.Label("Transformation Parameters", EditorStyles.boldLabel);
         
-        using (new GUILayout.VerticalScope())
+        private void OnEnable()
         {
-            using (new GUILayout.HorizontalScope("Box"))
-            {
-                GUILayout.Label("Position", EditorStyles.boldLabel);
-                newPosition.x = EditorGUILayout.FloatField(position.x);
-                newPosition.y = EditorGUILayout.FloatField(position.y);
-                newPosition.z = EditorGUILayout.FloatField(position.z);
-            }
-            
-            using (new GUILayout.HorizontalScope("Box"))
-            {
-                GUILayout.Label("Rotation", EditorStyles.boldLabel);
-                newRotation.x = EditorGUILayout.FloatField(rotation.x);
-                newRotation.y = EditorGUILayout.FloatField(rotation.y);
-                newRotation.z = EditorGUILayout.FloatField(rotation.z);
-            }
-            
-            using (new GUILayout.HorizontalScope("Box"))
-            {
-                GUILayout.Label("Scale", EditorStyles.boldLabel);
-                newScale.x = EditorGUILayout.FloatField(scale.x);
-                newScale.y = EditorGUILayout.FloatField(scale.y);
-                newScale.z = EditorGUILayout.FloatField(scale.z);
-            }
+            Undo.undoRedoPerformed += UpdateMesh;
         }
 
-        if (newPosition != position || newRotation != rotation || newScale != scale)
+        private void OnDisable()
         {
-            position = newPosition;
-            rotation = newRotation;
-            scale = newScale;
+            Undo.undoRedoPerformed -= UpdateMesh;
+        }
+        
+        private void UpdateMesh()
+        {
+            TransformPolygonUtility targetScript = (TransformPolygonUtility)target;
+            HashSet<int> vertexIndices = MeshUtility.GetPolygonVertexIndices(targetScript.originalMesh, targetScript.triangleIndices);
+            Mesh newMesh = TransformVertices(targetScript.originalMesh, vertexIndices, targetScript.position, targetScript.rotation, targetScript.scale);
+            targetScript.origSkinnedMeshRenderer.sharedMesh = newMesh;
+        }
+
+        /*
+        private void SaveMesh(TransformPolygonUtility targetScript)
+        {
             UpdateMesh();
+            string path = AssetPathUtility.GenerateMeshPath(targetScript.rootname, "TransformedMesh");
+            AssetDatabase.CreateAsset(targetScript.origSkinnedMeshRenderer.sharedMesh, path);
+            AssetDatabase.SaveAssets();
         }
-    }
+        */
 
-    private static Mesh UpdateMesh()
-    {
-        HashSet<int> vertexIndices = MeshUtility.GetPolygonVertexIndices(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
-        Mesh newMesh = TransformVertices(_originalMesh, vertexIndices, position, rotation, scale);
-        
-        _originskinnedMeshRenderer.sharedMesh = newMesh;
-        return newMesh;
-    }
-
-    private static void SaveMesh()
-    {
-        Mesh mesh = UpdateMesh();
-        string path = AssetPathUtility.GenerateMeshPath(_rootname, "TransformedMesh");
-        AssetDatabase.CreateAsset(mesh, path);
-        AssetDatabase.SaveAssets();
-    }
-
-    private static Mesh TransformVertices(Mesh mesh, HashSet<int> vertexIndices, Vector3 position, Vector3 rotation, Vector3 scale)
-    {
-        Mesh newMesh = Object.Instantiate(mesh);
-        Vector3[] vertices = newMesh.vertices;
-        Quaternion rotationQuat = Quaternion.Euler(rotation);
-
-        foreach (int index in vertexIndices)
+        private Mesh TransformVertices(Mesh mesh, HashSet<int> vertexIndices, Vector3 position, Vector3 rotation, Vector3 scale)
         {
-            Vector3 vertex = vertices[index];
+            Mesh newMesh = Object.Instantiate(mesh);
+            Vector3[] vertices = newMesh.vertices;
+            Quaternion rotationQuat = Quaternion.Euler(rotation);
 
-            // 移動
-            vertex += position;
+            foreach (int index in vertexIndices)
+            {
+                Vector3 vertex = vertices[index];
 
-            // 回転
-            vertex = rotationQuat * vertex;
+                vertex += position;
+                vertex = rotationQuat * vertex;
+                vertex = Vector3.Scale(vertex, scale);
 
-            // スケール
-            vertex = Vector3.Scale(vertex, scale);
+                vertices[index] = vertex;
+            }
 
-            vertices[index] = vertex;
+            // 変更した頂点をメッシュに設定
+            newMesh.vertices = vertices;
+
+            // メッシュを更新
+            newMesh.RecalculateBounds();
+            newMesh.RecalculateNormals();
+            return newMesh;
         }
 
-        // 変更した頂点をメッシュに設定
-        newMesh.vertices = vertices;
+        protected virtual void OnSceneGUI()
+        {
+            TransformPolygonUtility targetScript = (TransformPolygonUtility)target;
 
-        // メッシュを更新
-        newMesh.RecalculateBounds();
-        newMesh.RecalculateNormals();
-        return newMesh;
+            EditorGUI.BeginChangeCheck();
+
+            switch (Tools.current)
+            {
+                case Tool.Move:
+                    Vector3 newPosition = Handles.PositionHandle(targetScript.position, Quaternion.Euler(targetScript.rotation));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(targetScript, "Move Handle Change");
+                        targetScript.position = newPosition;
+                        UpdateMesh();
+                    }
+                    break;
+
+                case Tool.Rotate:
+                    Quaternion newRotation = Handles.RotationHandle(Quaternion.Euler(targetScript.rotation), targetScript.position);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(targetScript, "Rotate Handle Change");
+                        targetScript.rotation = newRotation.eulerAngles;
+                        UpdateMesh();
+                    }
+                    break;
+
+                case Tool.Scale:
+                    Vector3 newScale = Handles.ScaleHandle(targetScript.scale, targetScript.position, Quaternion.Euler(targetScript.rotation));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(targetScript, "Scale Handle Change");
+                        targetScript.scale = newScale;
+                        UpdateMesh();
+                    }
+                    break;
+            }
+        }
     }
+    #endif
 }
