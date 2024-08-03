@@ -97,12 +97,14 @@ namespace com.aoyon.modulecreator
         {
             using (new GUILayout.HorizontalScope())
             {   
+                /*
                 using (new GUILayout.VerticalScope())
                 {
                     RenderSelectionWinodw();
                 }
+                */
 
-                /*
+                
                 float halfWidth = position.width / 2f;
 
                 using (new GUILayout.VerticalScope(GUILayout.Width(halfWidth)))
@@ -116,7 +118,7 @@ namespace com.aoyon.modulecreator
                 {
                     RenderUtility();
                 }
-                */
+                
 
             }
         }
@@ -648,10 +650,10 @@ namespace com.aoyon.modulecreator
             Vector3 parentScale = _RootObject.transform.localScale;
             _OriginskinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
 
+            //ResetAllBlendShapes(_OriginskinnedMeshRenderer);
+
             _bakedMesh = new Mesh(); 
             _OriginskinnedMeshRenderer.BakeMesh(_bakedMesh);
-
-            ResetAllBlendShapes(_OriginskinnedMeshRenderer);
 
             OpenCustomSceneView();
         }
@@ -704,14 +706,14 @@ namespace com.aoyon.modulecreator
                 {
                     (selectedcolliderMesh, _selectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, selectedtriangleIndices);
                 }
-                    SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
+                SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
 
                 Mesh unselectedcolliderMesh = null;
                 if (unselectedtriangleIndices.Count > 0)
                 {
                     (unselectedcolliderMesh,  _unselectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, unselectedtriangleIndices);
                 }
-                    SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
+                SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
             }
 
             Repaint();
