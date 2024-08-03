@@ -225,6 +225,7 @@ namespace com.aoyon.modulecreator
             if (_isPreviewEnabled)
             {
                 SceneRaycastUtility.AddCollider(_selectedMeshRenderer.transform, _OriginskinnedMeshRenderer.transform);
+                HighlightEdgesManager.AddComponent();
                 UpdateMesh(); // コライダーのメッシュを更新
             }
             else
@@ -253,7 +254,6 @@ namespace com.aoyon.modulecreator
             //HandleScrollWheel(e);
             HandleMouseEvents(e, sceneView);
             DrawSelectionRectangle(sceneView);
-            HighlightEdgesManager.DrawHighlights();
         }
 
         private void HandleScrollWheel(Event e)

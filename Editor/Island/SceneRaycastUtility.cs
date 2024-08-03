@@ -7,8 +7,8 @@ namespace com.aoyon.modulecreator
 
     public static class SceneRaycastUtility
     {
-        private static GameObject selectedColiderObject; 
-        private static GameObject unselectedColiderObject; 
+        public static GameObject selectedColiderObject; 
+        public static GameObject unselectedColiderObject; 
         private static MeshCollider selectedMeshCollider;
         private static MeshCollider ubselectedMeshCollider;
 
