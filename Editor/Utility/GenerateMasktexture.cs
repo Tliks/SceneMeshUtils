@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,8 +13,7 @@ namespace com.aoyon.modulecreator
         private static SkinnedMeshRenderer _OriginskinnedMeshRenderer;
         private static string _rootname;
 
-        private static int[] optionValues = { 512, 1024, 2048 };
-        private static string[] displayOptions = { "512", "1024", "2048" };
+        private static int[] optionValues = { 128, 256, 512, 1024, 2048 };
         private static int selectedValue = 512;
         private static int _areacolorindex = 0;
         private static int _backcolorindex = 1;
