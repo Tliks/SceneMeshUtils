@@ -45,7 +45,7 @@ namespace com.aoyon.modulecreator
             _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
             _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.backcolor"), _backcolorindex, options);
 
-            selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
+            selectedValue = EditorGUILayoutIntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, optionValues);
             _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
             
             // Create Selected Islands Module
@@ -159,6 +159,10 @@ namespace com.aoyon.modulecreator
             return readableTexture;
         }
 
-    }
+        private static int EditorGUILayoutIntPopup(string label, int selectedValue, int[] optionValues)
+        {
+            return EditorGUILayout.IntPopup(label, selectedValue, optionValues.Select(i => i.ToString()).ToArray(), optionValues);
+        }
 
+    }
 }
