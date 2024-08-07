@@ -94,16 +94,15 @@ namespace com.aoyon.modulecreator
             }
 
             // 結合前のアイランドを作成
-            Dictionary<int, Island> islandDict = new Dictionary<int, Island>();
+            Dictionary<int, Island> islandDict = new Dictionary<int, Island>(vertCount);
             for (int i = 0; i < vertCount; i++)
             {
                 int root = unionFind.Find(i);
-                if (!islandDict.TryGetValue(root, out Island island))
+                if (!islandDict.ContainsKey(root))
                 {
-                    island = new Island(new List<int>(), new List<int>());
-                    islandDict[root] = island;
+                    islandDict[root] = new Island(new List<int>(), new List<int>());
                 }
-                island.VertexIndices.Add(i);
+                islandDict[root].VertexIndices.Add(i);
             }
 
             // 三角形インデックスを追加
@@ -120,16 +119,11 @@ namespace com.aoyon.modulecreator
             Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>(vertCount);
             for (int i = 0; i < vertCount; i++)
             {
-                if (vertexMap.TryGetValue(Vertices[i], out int existingIndex))
+                if (!vertexMap.TryAdd(Vertices[i], i))
                 {
-                    unionFind.Unite(existingIndex, i);
-                }
-                else
-                {
-                    vertexMap[Vertices[i]] = i;
+                    unionFind.Unite(vertexMap[Vertices[i]], i);
                 }
             }
-
             // 結合後のアイランドを作成
             Dictionary<int, Island> mergedIslandDict = new Dictionary<int, Island>();
             foreach (var kvp in islandDict)
