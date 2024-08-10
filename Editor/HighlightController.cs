@@ -10,10 +10,10 @@ namespace com.aoyon.modulecreator
         static HighlightRenderer selectedhighlightRenderer;
         static HighlightRenderer unselectedhighlightRenderer;
 
-        public static void AddComponent()
+        public static void AddComponent(GameObject selectedObject, GameObject unselectedObject)
         {
-            selectedhighlightRenderer = SceneRaycastUtility.selectedColiderObject.AddComponent<HighlightRenderer>();
-            unselectedhighlightRenderer = SceneRaycastUtility.unselectedColiderObject.AddComponent<HighlightRenderer>();
+            selectedhighlightRenderer = selectedObject.AddComponent<HighlightRenderer>();
+            unselectedhighlightRenderer = unselectedObject.AddComponent<HighlightRenderer>();
         }
 
         public static void PrepareTriangleHighlights(int[] triangles, HashSet<int> triangleIndices, Vector3[] vertices, Transform origin)

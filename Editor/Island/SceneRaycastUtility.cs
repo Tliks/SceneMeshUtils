@@ -7,8 +7,6 @@ namespace com.aoyon.modulecreator
 
     public static class SceneRaycastUtility
     {
-        public static GameObject selectedColiderObject; 
-        public static GameObject unselectedColiderObject; 
         private static MeshCollider selectedMeshCollider;
         private static MeshCollider ubselectedMeshCollider;
 
@@ -40,7 +38,7 @@ namespace com.aoyon.modulecreator
             for (int i = 0; i < hitCount; i++)
             {
                 RaycastHit hit = hits[i];
-                if (hit.collider.gameObject == selectedColiderObject || hit.collider.gameObject == unselectedColiderObject)
+                if (hit.collider == selectedMeshCollider || hit.collider == ubselectedMeshCollider)
                 {
                     hitInfo = hit;
                     return true;
@@ -52,8 +50,8 @@ namespace com.aoyon.modulecreator
 
         public static bool IsSelected(RaycastHit hitInfo)
         {
-            GameObject hitGameobject = hitInfo.transform.gameObject;
-            if (hitGameobject == selectedColiderObject)
+            MeshCollider hitcolider = hitInfo.collider as MeshCollider;
+            if (hitcolider == selectedMeshCollider)
             {
                 return true;
             }
@@ -63,26 +61,12 @@ namespace com.aoyon.modulecreator
             }
         }
         
-        public static void AddCollider(Transform selectedtransform, Transform unselectedtransform)
+        public static void AddCollider(GameObject selectedObject, GameObject unselectedObject)
         {   
-            AddcoliderObject(ref selectedColiderObject, selectedtransform);
-            AddcoliderObject(ref unselectedColiderObject, unselectedtransform);
-
-            selectedMeshCollider = AddMeshCollider(selectedColiderObject);
-            ubselectedMeshCollider = AddMeshCollider(unselectedColiderObject);
+            selectedMeshCollider = AddMeshCollider(selectedObject);
+            ubselectedMeshCollider = AddMeshCollider(unselectedObject);
 
             return;
-
-            void AddcoliderObject(ref GameObject obj, Transform transform)
-            {
-                if (obj == null)
-                {
-                    obj = new GameObject();
-                    obj.name = "AAU preview";
-                    obj.transform.position = transform.position;
-                    obj.transform.rotation = transform.rotation;
-                }
-            }
             
             MeshCollider AddMeshCollider(GameObject obj)
             {
@@ -95,12 +79,6 @@ namespace com.aoyon.modulecreator
                 return meshCollider;
             }
             
-        }
-
-        public static void DeleteCollider()
-        {
-            UnityEngine.Object.DestroyImmediate(selectedColiderObject);
-            UnityEngine.Object.DestroyImmediate(unselectedColiderObject);
         }
 
         public static void UpdateColider(Mesh mesh, bool IsSelected)

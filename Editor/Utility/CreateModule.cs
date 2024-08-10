@@ -88,8 +88,8 @@ namespace com.aoyon.modulecreator
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
             {
                 CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
-                MeshPreview.StopPreview();
-                MeshPreview.StartPreview(_originskinnedMeshRenderer);
+                PreviewController.StopAnimationMode();
+                PreviewController.StartAnimationMode(_originskinnedMeshRenderer);
                 //Close();
             }
 
