@@ -648,7 +648,7 @@ namespace com.aoyon.modulecreator
             }
             middleVertex /= vertices.Length;
 
-            float cameraDistance = 0.5f;
+            float cameraDistance = 0.3f;
             sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
             sceneView.Repaint();
         }
