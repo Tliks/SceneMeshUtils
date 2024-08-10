@@ -77,12 +77,14 @@ namespace com.aoyon.modulecreator
         {
             using (new GUILayout.HorizontalScope())
             {   
+                /*
                 using (new GUILayout.VerticalScope())
                 {
                     RenderSelectionWinodw();
                 }
+                */
 
-                /*
+                
                 float halfWidth = position.width / 2f;
 
                 using (new GUILayout.VerticalScope(GUILayout.Width(halfWidth)))
@@ -96,7 +98,7 @@ namespace com.aoyon.modulecreator
                 {
                     RenderUtility();
                 }
-                */
+                
 
             }
         }
