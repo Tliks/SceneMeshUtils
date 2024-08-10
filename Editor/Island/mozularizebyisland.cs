@@ -625,9 +625,6 @@ namespace com.aoyon.modulecreator
             PreviewMesh.name += "AO Preview";
             MeshPreview.StartPreview(_OriginskinnedMeshRenderer);
 
-            Vector3 parentScale = _RootObject.transform.localScale;
-            _OriginskinnedMeshRenderer.transform.localScale = new Vector3(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
-
             _bakedMesh = new Mesh(); 
             _OriginskinnedMeshRenderer.BakeMesh(_bakedMesh);
 

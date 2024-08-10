@@ -186,7 +186,7 @@ namespace com.aoyon.modulecreator
 
             bool IsVertexCloseToCollider(int vertexIndex)
             {
-                Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                 Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
                 return Vector3.Distance(closestPoint, vertexWorldPos) < 0.001f;
             }
@@ -207,7 +207,7 @@ namespace com.aoyon.modulecreator
                     Enumerable.Range(0, 3).All(i =>
                     {
                         int vertexIndex = Triangles[triIndex * 3 + i];
-                        Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                        Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                         return Vector3.Distance(position, vertexWorldPos) < threshold;
                     })
                 )
@@ -228,7 +228,7 @@ namespace com.aoyon.modulecreator
                 for (int j = 0; j < 3; j++)
                 {
                     int vertexIndex = Triangles[i + j];
-                    Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                    Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                     Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
                     if (Vector3.Distance(closestPoint, vertexWorldPos) >= 0.001f)
                     {

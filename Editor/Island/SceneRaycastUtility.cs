@@ -77,7 +77,6 @@ namespace com.aoyon.modulecreator
                     obj.name = "AAU preview";
                     obj.transform.position = transform.position;
                     obj.transform.rotation = transform.rotation;
-                    obj.transform.localScale = transform.lossyScale;
                 }
             }
             

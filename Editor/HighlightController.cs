@@ -34,9 +34,9 @@ namespace com.aoyon.modulecreator
                 int index1 = triangles[triangleIndex * 3 + 1];
                 int index2 = triangles[triangleIndex * 3 + 2];
 
-                Vector3 v0 = origin.TransformPoint(vertices[index0]);
-                Vector3 v1 = origin.TransformPoint(vertices[index1]);
-                Vector3 v2 = origin.TransformPoint(vertices[index2]);
+                Vector3 v0 = origin.position + origin.rotation * vertices[index0];
+                Vector3 v1 = origin.position + origin.rotation * vertices[index1];
+                Vector3 v2 = origin.position + origin.rotation * vertices[index2];
 
                 linePoints.Add(v0); linePoints.Add(v1);
                 linePoints.Add(v1); linePoints.Add(v2);
