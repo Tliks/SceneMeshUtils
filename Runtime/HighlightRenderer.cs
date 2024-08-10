@@ -5,8 +5,8 @@ namespace com.aoyon.modulecreator
 {
     public class HighlightRenderer : MonoBehaviour
     {
-        public List<Vector3> linePoints = new List<Vector3>();
-        public Color highlightColor = Color.red;
+        [HideInInspector] public List<Vector3> linePoints = new List<Vector3>();
+        [HideInInspector] public Color highlightColor = Color.red;
 
         void OnDrawGizmos()
         {
