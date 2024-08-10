@@ -12,6 +12,8 @@ namespace com.aoyon.modulecreator
         private static MeshCollider selectedMeshCollider;
         private static MeshCollider ubselectedMeshCollider;
 
+        private static RaycastHit[] hits = new RaycastHit[20];
+
         public static bool TryRaycast(out RaycastHit hitInfo)
         {
             hitInfo = new RaycastHit();
@@ -33,10 +35,16 @@ namespace com.aoyon.modulecreator
             }
 
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
+            
+            int hitCount = Physics.RaycastNonAlloc(ray, hits, Mathf.Infinity);
+            for (int i = 0; i < hitCount; i++)
             {
-                hitInfo = hit;
-                return true;
+                RaycastHit hit = hits[i];
+                if (hit.collider.gameObject == selectedColiderObject || hit.collider.gameObject == unselectedColiderObject)
+                {
+                    hitInfo = hit;
+                    return true;
+                }
             }
 
             return false;
@@ -49,13 +57,9 @@ namespace com.aoyon.modulecreator
             {
                 return true;
             }
-            else if (hitGameobject == unselectedColiderObject)
-            {
-                return false;
-            }
             else
             {
-                throw new InvalidOperationException("hit invalid object");
+                return false;
             }
         }
         
