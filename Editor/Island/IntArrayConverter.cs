@@ -1,80 +1,51 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace com.aoyon.modulecreator
 {
-    public class IntArrayConverter
+    public static class IntArrayConverter
     {
-        public static string Encode(int[] data)
+        public static Vector3[] Decode(Mesh mesh, int[] triangleIndices)
         {
-            if (Array.Exists(data, element => element < 0))
+            Vector3[] vertices = mesh.vertices;
+            Vector3[] positions = new Vector3[triangleIndices.Length * 3]; // triangleIndicesは三角形のインデックスなので、頂点数は3倍
+
+            for (int i = 0; i < triangleIndices.Length; i++)
             {
-                throw new ArgumentException("負の値はエンコードできません。");
+                int triangleIndex = triangleIndices[i];
+                positions[i * 3] = vertices[mesh.triangles[triangleIndex * 3]];
+                positions[i * 3 + 1] = vertices[mesh.triangles[triangleIndex * 3 + 1]];
+                positions[i * 3 + 2] = vertices[mesh.triangles[triangleIndex * 3 + 2]];
             }
 
-            // 差分エンコーディング
-            int[] diffEncoded = new int[data.Length];
-            diffEncoded[0] = data[0];
-            for (int i = 1; i < data.Length; i++)
-            {
-                int diff = data[i] - data[i - 1];
-                if (diff < 0)
-                {
-                    throw new ArgumentException("負の差分はエンコードできません。");
-                }
-                diffEncoded[i] = diff;
-            }
-
-            List<byte> compressed = new List<byte>();
-            for (int i = 0; i < diffEncoded.Length; i++)
-            {
-                int value = diffEncoded[i];
-                int runLength = 1;
-                while (i + 1 < diffEncoded.Length && diffEncoded[i + 1] == value)
-                {
-                    runLength++;
-                    i++;
-                }
-
-                compressed.Add((byte)value);
-                compressed.Add((byte)runLength);
-            }
-
-            return Convert.ToBase64String(compressed.ToArray());
+            return positions;
         }
 
-        public static int[] Decode(string compressedData)
+        public static int[] Encode(Mesh mesh, Vector3[] positions)
         {
-            byte[] compressedBytes = Convert.FromBase64String(compressedData);
-            if (compressedBytes.Length % 2 != 0)
-            {
-                throw new ArgumentException("圧縮データの形式が正しくありません。");
-            }
+            int[] triangles = mesh.triangles;
+            List<int> triangleIndices = new List<int>();
 
-            List<int> decompressed = new List<int>();
-            for (int i = 0; i < compressedBytes.Length; i += 2)
+            for (int i = 0; i < positions.Length; i += 3) // positionsは3つずつが1つの三角形を表す
             {
-                int value = compressedBytes[i];
-                int runLength = compressedBytes[i + 1];
-                for (int j = 0; j < runLength; j++)
+                Vector3 p0 = positions[i];
+                Vector3 p1 = positions[i + 1];
+                Vector3 p2 = positions[i + 2];
+
+                for (int j = 0; j < triangles.Length; j += 3)
                 {
-                    decompressed.Add(value);
+                    if (mesh.vertices[triangles[j]] == p0 &&
+                        mesh.vertices[triangles[j + 1]] == p1 &&
+                        mesh.vertices[triangles[j + 2]] == p2)
+                    {
+                        triangleIndices.Add(j / 3); // jは頂点インデックスなので、3で割って三角形インデックスに変換
+                        break;
+                    }
                 }
             }
 
-            if (decompressed.Count == 0)
-            {
-                throw new ArgumentException("圧縮データの形式が正しくありません。");
-            }
-
-            int[] original = new int[decompressed.Count];
-            original[0] = decompressed[0];
-            for (int i = 1; i < decompressed.Count; i++)
-            {
-                original[i] = original[i - 1] + decompressed[i];
-            }
-
-            return original;
+            return triangleIndices.ToArray();
         }
-    }
+        }
 }
