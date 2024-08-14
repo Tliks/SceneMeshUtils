@@ -172,7 +172,9 @@ namespace com.aoyon.modulecreator
                     if (new_index != _UtilityIndex)
                     {
                         TransformPolygonUtility transformPolygonUtility = _OriginskinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
-                        transformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager.GetSelectedTriangles());
+                        Mesh bakedMesh = new Mesh();
+                        _OriginskinnedMeshRenderer.bakedMesh(bakedMesh);
+                        transformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, bakedMesh, _previewController._triangleSelectionManager.GetSelectedTriangles());
                         _UtilityIndex = new_index;
                     }
                     break;
