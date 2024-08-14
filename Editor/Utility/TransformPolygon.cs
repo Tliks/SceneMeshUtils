@@ -10,6 +10,25 @@ namespace com.aoyon.modulecreator
     [CustomEditor(typeof(TransformPolygonUtility))]
     public class TransformPolygonUtilityEditor : Editor
     {
+
+        public staic void Initialize(SkinnedMeshRenderer orignalSkinnedMeshRenderer, string rootname, HashSet<int> triangleIndices)
+        {
+            TransformPolygonUtility transformPolygonUtility = orignalSkinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
+            Mesh bakedMesh = new Mesh();
+            orignalSkinnedMeshRenderer.bakedMesh(bakedMesh);
+
+            Vector3 middleVertex = Vector3.zero;
+            Vector3[] vertices = bakedMesh.vertices;
+
+            Vector3 origin = orignalSkinnedMeshRenderer.transform;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                middleVertex += origin.position + origin.rotation * vertices[i];
+            }
+            middleVertex /= vertices.Length;
+
+            transformPolygonUtility.Initialize(orignalSkinnedMeshRenderer, rootname, bakedMesh, triangleIndices, middleVertex);
+        }
         
         private void OnEnable()
         {
@@ -74,7 +93,7 @@ namespace com.aoyon.modulecreator
             switch (Tools.current)
             {
                 case Tool.Move:
-                    Vector3 newPosition = Handles.PositionHandle(targetScript.position, Quaternion.Euler(targetScript.rotation));
+                    Vector3 newPosition = Handles.PositionHandle(targetScript.position + targetScript.centroid, Quaternion.Euler(targetScript.rotation));
                     if (EditorGUI.EndChangeCheck())
                     {
                         Undo.RecordObject(targetScript, "Move Handle Change");

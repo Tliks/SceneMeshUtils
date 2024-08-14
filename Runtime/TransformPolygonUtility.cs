@@ -20,12 +20,13 @@ namespace com.aoyon.modulecreator
         [HideInInspector]
         public Vector3 centroid = Vector3.zero;
         
-        public void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, HashSet<int> triangleIndices)
+        public void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, HashSet<int> triangleIndices, Vector3 centroid)
         {
             this.origSkinnedMeshRenderer = origSkinnedMeshRenderer;
             this.rootname = rootname;
             this.originalMesh = originalMesh;
             this.triangleIndices = triangleIndices;
+            this.centroid = centroid;
         }
     }
     
