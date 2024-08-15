@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace com.aoyon.modulecreator
@@ -21,7 +22,7 @@ namespace com.aoyon.modulecreator
                 positions.Add(vertices[triagnles[triangleIndex * 3 + 2]]);
             }
 
-            return positions.ToArray();
+            return positions.ToList().ToArray();
         }
 
         public static int[] Decode(Mesh mesh, Vector3[] positions)
