@@ -9,15 +9,13 @@ namespace com.aoyon.modulecreator
     {
         private static SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
-        private static Mesh _originalMesh;
         private static TriangleSelectionManager _triangleSelectionManager;
 
-        public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _originskinnedMeshRenderer = origSkinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
             _triangleSelectionManager = triangleSelectionManager;
+            _rootname = CheckUtility.CheckRoot(origSkinnedMeshRenderer.gameObject).name;
         }
 
         private static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
@@ -137,7 +135,7 @@ namespace com.aoyon.modulecreator
 
         private static void ReplaceMesh()
         {
-            Mesh newMesh = GenerateClampBlendShape(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
+            Mesh newMesh = GenerateClampBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname, "ClampMesh");
             AssetDatabase.CreateAsset(newMesh, path);

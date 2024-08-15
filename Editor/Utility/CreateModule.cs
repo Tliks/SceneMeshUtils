@@ -14,15 +14,13 @@ namespace com.aoyon.modulecreator
         };
 
         private static SkinnedMeshRenderer _originskinnedMeshRenderer;
-        private static Mesh _originalMesh;
         private static string _rootname;
         private static TriangleSelectionManager _triangleSelectionManager;
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _originskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
+            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
             _triangleSelectionManager = triangleSelectionManager;
         }
         
@@ -54,7 +52,7 @@ namespace com.aoyon.modulecreator
         {
             if (Triangles.Count > 0)
             {
-                Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, Triangles);
+                Mesh newMesh = MeshUtility.DeleteMesh(_originskinnedMeshRenderer.sharedMesh, Triangles);
 
                 string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
                 AssetDatabase.CreateAsset(newMesh, path);
@@ -87,8 +85,8 @@ namespace com.aoyon.modulecreator
             // Create Selected Islands Module
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
             {
-                CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
                 PreviewController.StopAnimationMode();
+                CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
                 PreviewController.StartAnimationMode(_originskinnedMeshRenderer);
                 //Close();
             }

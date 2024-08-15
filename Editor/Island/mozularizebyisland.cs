@@ -136,7 +136,7 @@ namespace com.aoyon.modulecreator
                 case 1:
                     if (new_index != _UtilityIndex)
                     {
-                        CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager);
+                        CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
                         _UtilityIndex = new_index;
                     }
                     CreateModuleUtilty.RenderModuleCreator();
@@ -145,7 +145,7 @@ namespace com.aoyon.modulecreator
                 case 2:
                     if (new_index != _UtilityIndex)
                     {
-                        GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager);
+                        GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
                         _UtilityIndex = new_index;
                     }
                     GenerateMaskUtilty.RenderGenerateMask();
@@ -154,7 +154,7 @@ namespace com.aoyon.modulecreator
                 case 3:
                     if (new_index != _UtilityIndex)
                     {
-                        DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager);
+                        DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
                         _UtilityIndex = new_index;
                     }
                     DeleteMeshUtilty.RenderDeleteMesh();
@@ -163,7 +163,7 @@ namespace com.aoyon.modulecreator
                 case 4:
                     if (new_index != _UtilityIndex)
                     {
-                        ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager);
+                        ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
                         _UtilityIndex = new_index;
                     }
                     ClampBlendShapeUtility.RendergenerateClamp();
@@ -171,8 +171,7 @@ namespace com.aoyon.modulecreator
                 case 5:
                     if (new_index != _UtilityIndex)
                     {
-                        TransformPolygonUtility transformPolygonUtility = _OriginskinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
-                        transformPolygonUtility.Initialize(_OriginskinnedMeshRenderer, _RootObject.name, _OriginskinnedMeshRenderer.sharedMesh, _previewController._triangleSelectionManager.GetSelectedTriangles());
+                        TransformPolygonUtilityEditor.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager.GetSelectedTriangles());
                         _UtilityIndex = new_index;
                     }
                     break;

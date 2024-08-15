@@ -18,15 +18,13 @@ namespace com.aoyon.modulecreator
         private static int _areacolorindex = 0;
         private static int _backcolorindex = 1;
         private static int _expansion = 2;
-        private static Mesh _originalMesh;
         private static TriangleSelectionManager _triangleSelectionManager;
 
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _OriginskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
+            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
             _triangleSelectionManager = triangleSelectionManager;
         }
 
@@ -112,7 +110,7 @@ namespace com.aoyon.modulecreator
             Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
             Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _originalMesh);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _OriginskinnedMeshRenderer.sharedMesh);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
