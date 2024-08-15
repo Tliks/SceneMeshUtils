@@ -1,9 +1,5 @@
 using UnityEngine;
-using UnityEditor;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Debug = UnityEngine.Debug;
-using System;
 
 namespace com.aoyon.modulecreator
 {

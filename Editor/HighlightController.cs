@@ -6,22 +6,14 @@ namespace com.aoyon.modulecreator
 {
     public static class HighlightEdgesManager
     {
-        static List<Vector3> linePoints = new List<Vector3>();
-        private static Color highlightColor = Color.cyan;
+        private static List<Vector3> linePoints = new List<Vector3>();
+        static HighlightRenderer selectedhighlightRenderer;
+        static HighlightRenderer unselectedhighlightRenderer;
 
-        public static void PrepareEdgeHighlights(HashSet<(int, int)> edges, Vector3[] vertices, Transform origin)
+        public static void AddComponent(GameObject selectedObject, GameObject unselectedObject)
         {
-            if (edges == null || vertices == null || origin == null) return;
-
-            linePoints.Clear();
-
-            foreach (var edge in edges)
-            {
-                Vector3 v0 = origin.TransformPoint(vertices[edge.Item1]);
-                Vector3 v1 = origin.TransformPoint(vertices[edge.Item2]);
-                linePoints.Add(v0);
-                linePoints.Add(v1);
-            }
+            selectedhighlightRenderer = selectedObject.AddComponent<HighlightRenderer>();
+            unselectedhighlightRenderer = unselectedObject.AddComponent<HighlightRenderer>();
         }
 
         public static void PrepareTriangleHighlights(int[] triangles, HashSet<int> triangleIndices, Vector3[] vertices, Transform origin)
@@ -42,31 +34,36 @@ namespace com.aoyon.modulecreator
                 int index1 = triangles[triangleIndex * 3 + 1];
                 int index2 = triangles[triangleIndex * 3 + 2];
 
-                Vector3 v0 = origin.TransformPoint(vertices[index0]);
-                Vector3 v1 = origin.TransformPoint(vertices[index1]);
-                Vector3 v2 = origin.TransformPoint(vertices[index2]);
+                Vector3 v0 = origin.position + origin.rotation * vertices[index0];
+                Vector3 v1 = origin.position + origin.rotation * vertices[index1];
+                Vector3 v2 = origin.position + origin.rotation * vertices[index2];
 
                 linePoints.Add(v0); linePoints.Add(v1);
                 linePoints.Add(v1); linePoints.Add(v2);
                 linePoints.Add(v2); linePoints.Add(v0);
+
+                UpdateLinepoints();
             }
         }
 
         public static void ClearHighlights()
         {
             linePoints.Clear();
+            UpdateLinepoints();
         }
 
         public static void SetHighlightColor(Color color)
         {
-            color.a = 0.5f;
-            highlightColor = color;
+            selectedhighlightRenderer.highlightColor = color;
+            unselectedhighlightRenderer.highlightColor = color;
         }
 
-        public static void DrawHighlights()
+        private static void UpdateLinepoints()
         {
-            Handles.color = highlightColor;
-            Handles.DrawLines(linePoints.ToArray());
+            selectedhighlightRenderer.linePoints = linePoints;
+            unselectedhighlightRenderer.linePoints = linePoints;
         }
+
+
     }
 }

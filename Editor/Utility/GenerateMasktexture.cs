@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,21 +13,18 @@ namespace com.aoyon.modulecreator
         private static SkinnedMeshRenderer _OriginskinnedMeshRenderer;
         private static string _rootname;
 
-        private static int[] optionValues = { 512, 1024, 2048 };
-        private static string[] displayOptions = { "512", "1024", "2048" };
+        private static int[] optionValues = { 128, 256, 512, 1024, 2048 };
         private static int selectedValue = 512;
         private static int _areacolorindex = 0;
         private static int _backcolorindex = 1;
         private static int _expansion = 2;
-        private static Mesh _originalMesh;
         private static TriangleSelectionManager _triangleSelectionManager;
 
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _OriginskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
+            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
             _triangleSelectionManager = triangleSelectionManager;
         }
 
@@ -45,7 +43,7 @@ namespace com.aoyon.modulecreator
             _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
             _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.backcolor"), _backcolorindex, options);
 
-            selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
+            selectedValue = EditorGUILayoutIntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, optionValues);
             _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
             
             // Create Selected Islands Module
@@ -112,7 +110,7 @@ namespace com.aoyon.modulecreator
             Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
             Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _originalMesh);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _OriginskinnedMeshRenderer.sharedMesh);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
@@ -159,6 +157,10 @@ namespace com.aoyon.modulecreator
             return readableTexture;
         }
 
-    }
+        private static int EditorGUILayoutIntPopup(string label, int selectedValue, int[] optionValues)
+        {
+            return EditorGUILayout.IntPopup(label, selectedValue, optionValues.Select(i => i.ToString()).ToArray(), optionValues);
+        }
 
+    }
 }

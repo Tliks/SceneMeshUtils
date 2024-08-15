@@ -68,9 +68,9 @@ namespace com.aoyon.modulecreator
             return instance;
         }
 
-        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(GameObject sourceObject)
+        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(SkinnedMeshRenderer sourceRenderer)
         {
-            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            (GameObject root, int skin_index) = CheckObjects(sourceRenderer.gameObject);
             GameObject new_root = CopyObjects(root, "AAU Preview");
             SkinnedMeshRenderer skinnedMeshRenderer = CheckUtility.CleanUpHierarchy(new_root, skin_index);
             return (new_root, skinnedMeshRenderer);
