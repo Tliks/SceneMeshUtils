@@ -63,7 +63,8 @@ namespace com.aoyon.modulecreator
             _unselectedMeshRenderer = renderer;
             GameObject selectedroot;
             (selectedroot, _selectedMeshRenderer) = ModuleCreator.PreviewMesh(renderer);
-            selectedroot.transform.SetParent(_selectedObject.transform, false);
+            selectedroot.transform.position += new Vector3(100, 0, -100);
+            selectedroot.transform.SetParent(_selectedObject.transform, true);            
 
             OpenCustomSceneView();
 
