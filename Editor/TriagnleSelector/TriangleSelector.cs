@@ -9,9 +9,17 @@ using Color = UnityEngine.Color;
 
 namespace com.aoyon.modulecreator
 {
-    public class ModuleCreatorIsland : EditorWindow
+
+    public class TriangleSelectorContext : ScriptableObject
     {
-        
+        public SkinnedMeshRenderer SkinnedMeshRenderer;
+        public HashSet<int> selectedTriangleIndices = new();
+    }
+
+    public class TriangleSelector : EditorWindow
+    {
+        private TriangleSelectorContext _triangleSelectorContext;
+
         private PreviewController _previewController;
         private GameObject _RootObject;
 
@@ -33,10 +41,10 @@ namespace com.aoyon.modulecreator
 
         private bool _isPreviewEnabled = true;
 
-        private void OnEnable()
+        public void Initialize(TriangleSelectorContext _triangleSelectorContext)
         {
-            GameObject targetObject = Selection.activeGameObject;
-            _OriginskinnedMeshRenderer = targetObject.GetComponent<SkinnedMeshRenderer>();
+            this._triangleSelectorContext = _triangleSelectorContext;
+            _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
             _previewController = new();
             _previewController.Initialize(_OriginskinnedMeshRenderer);
             SceneView.duringSceneGui += OnSceneGUI;
@@ -46,6 +54,7 @@ namespace com.aoyon.modulecreator
         {
             _previewController.Dispose();
             SceneView.duringSceneGui -= OnSceneGUI;
+            _triangleSelectorContext.selectedTriangleIndices = _previewController._triangleSelectionManager.GetSelectedTriangles();
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -60,36 +69,6 @@ namespace com.aoyon.modulecreator
         }
 
         private void OnGUI()
-        {
-            using (new GUILayout.HorizontalScope())
-            {   
-                /*
-                using (new GUILayout.VerticalScope())
-                {
-                    RenderSelectionWinodw();
-                }
-                */
-
-                
-                float halfWidth = position.width / 2f;
-
-                using (new GUILayout.VerticalScope(GUILayout.Width(halfWidth)))
-                {
-                    RenderSelectionWinodw();
-                }
-
-                GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
-
-                using (new GUILayout.VerticalScope())
-                {
-                    RenderUtility();
-                }
-                
-
-            }
-        }
-
-        private void RenderSelectionWinodw()
         {
             LocalizationEditor.RenderLocalize();
 
