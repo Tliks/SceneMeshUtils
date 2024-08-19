@@ -18,7 +18,7 @@ namespace com.aoyon.modulecreator
         private int _selectedIndex = 0;
         private TriangleSelectorContext _context;
 
-        private bool _ispreview = false;
+        private bool _isAutoPreview = true;
 
         private void OnEnable()
         {
@@ -48,7 +48,7 @@ namespace com.aoyon.modulecreator
         {
             serializedObject.Update();
 
-            int selectedIndex = EditorGUILayout.Popup("Select Triangle Selection", _selectedIndex, _displayedOptions);
+            int selectedIndex = EditorGUILayout.Popup("Triangle Selection", _selectedIndex, _displayedOptions);
             if (selectedIndex != _selectedIndex)
             {   
                 _selectedIndex = selectedIndex;
@@ -85,9 +85,9 @@ namespace com.aoyon.modulecreator
                 StartPreview();
             }
 
-            if (GUILayout.Button(_ispreview ? "Stop Preview" : "Preview"))
+            if (GUILayout.Button(_isAutoPreview ? "Disable Auto Preview" : "Enable Auto Preview"))
             {
-                Togglepreview();
+                ToggleAutoPreview();
             }
 
             /*
@@ -98,9 +98,8 @@ namespace com.aoyon.modulecreator
 
         private void StartPreview()
         {
-            if (_triangleSelection != null && _triangleSelection.selection.Count > 0)
+            if (_isAutoPreview && _triangleSelection != null && _triangleSelection.selection.Count > 0)
             {
-                _ispreview = true;
                 CustomAnimationMode.StopAnimationMode();
                 CustomAnimationMode.StartAnimationMode(_skinnedMeshRenderer);
                 _skinnedMeshRenderer.sharedMesh = MeshUtility.RemoveTriangles(_mesh, _triangleSelection.selection.ToHashSet());
@@ -109,14 +108,21 @@ namespace com.aoyon.modulecreator
 
         private void StopPrview()
         {
-            _ispreview = false;
             CustomAnimationMode.StopAnimationMode();
         }
 
-        private void Togglepreview()
+        private void ToggleAutoPreview()
         {
-            if ( !_ispreview) StartPreview();
-            else StopPrview();
+            if ( !_isAutoPreview)
+            {
+                _isAutoPreview = true;
+                StartPreview();
+            }
+            else
+            {
+                _isAutoPreview = false;
+                StopPrview();
+            }
         }
 
         private int FindIndex(List<TriangleSelection> triangleSelections, TriangleSelection triangleSelection)
