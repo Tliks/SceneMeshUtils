@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Linq;
+using System.IO;
 
 namespace com.aoyon.modulecreator
 {
@@ -44,15 +45,16 @@ namespace com.aoyon.modulecreator
         private static TriangleSelectionContainer CreateAsset(Mesh mesh)
         {
             var instance = ScriptableObject.CreateInstance<TriangleSelectionContainer>();
-            AssetDatabase.CreateAsset(instance, $"{SAVE_PATH}/{mesh.name}.asset");
+            instance.mesh = mesh;
+
+            if (!Directory.Exists(SAVE_PATH)) Directory.CreateDirectory(SAVE_PATH);
+            string uniquePath = AssetDatabase.GenerateUniqueAssetPath($"{SAVE_PATH}/{mesh.name}.asset");
+            AssetDatabase.CreateAsset(instance, uniquePath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            instance.mesh = mesh;
-            EditorUtility.SetDirty(instance);
-            AssetDatabase.SaveAssets();
-
-            return instance;
+            var loadedInstance = (TriangleSelectionContainer)AssetDatabase.LoadAssetAtPath(uniquePath, typeof(TriangleSelectionContainer));
+            return loadedInstance;
         }
     }
 }
