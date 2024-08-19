@@ -21,7 +21,7 @@ namespace com.aoyon.modulecreator
         private TriangleSelectorContext _triangleSelectorContext;
 
         private PreviewController _previewController;
-        private GameObject _RootObject;
+        //private GameObject _RootObject;
 
         private SkinnedMeshRenderer _OriginskinnedMeshRenderer;
 
@@ -31,8 +31,6 @@ namespace com.aoyon.modulecreator
         private bool _isdragging = false;
         private const float dragThreshold = 10f;
         private Vector2 _startPoint;
-
-        private int _UtilityIndex = 0;
 
         public bool _mergeSamePosition = true;
         private bool _checkAll = true;
