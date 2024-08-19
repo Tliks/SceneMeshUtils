@@ -6,7 +6,9 @@
         "VRC.SDK3A.Editor",
         "VRC.SDKBase",
         "VRC.SDKBase.Editor",
-        "com.aoyon.modulecreator.runtime"
+        "com.aoyon.modulecreator.runtime",
+        "nadena.dev.ndmf",
+        "nadena.dev.ndmf.runtime"
     ],
     "includePlatforms": [
         "Editor"
