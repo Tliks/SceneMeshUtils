@@ -150,9 +150,9 @@ namespace com.aoyon.modulecreator
             GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.BlendShape")))
             {
-                PreviewController.StopAnimationMode();
+                CustomAnimationMode.StopAnimationMode();
                 ReplaceMesh();
-                PreviewController.StartAnimationMode(_originskinnedMeshRenderer);
+                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
             }
             GUI.enabled = true;
         }

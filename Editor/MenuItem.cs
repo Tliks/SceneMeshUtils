@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace com.aoyon.modulecreator
 {
+    /*
     public class MenuItems : EditorWindow
     {
         private const int MENU_PRIORITY = 49;
@@ -16,7 +17,7 @@ namespace com.aoyon.modulecreator
             window.Initialize(triangleSelectorContext);
             window.Show();
         }
-        */
+        
 
         [MenuItem("GameObject/Show Triangle Selector Context", false, MENU_PRIORITY)]
         public static void ShowTriangleSelectorContextWindow()
@@ -26,7 +27,9 @@ namespace com.aoyon.modulecreator
             window.Show();
         }
     }
+    /*
 
+    
     public class EditorWindowA : EditorWindow
     {
         public SkinnedMeshRenderer SkinnedMeshRenderer;
@@ -50,5 +53,6 @@ namespace com.aoyon.modulecreator
             }
         }
     }
+    */
 
 }

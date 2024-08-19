@@ -33,9 +33,9 @@ namespace com.aoyon.modulecreator
             GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh")))
             {
-                PreviewController.StopAnimationMode();
+                CustomAnimationMode.StopAnimationMode();
                 DeleteMesh();
-                PreviewController.StartAnimationMode(_originskinnedMeshRenderer);
+                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
             }
             GUI.enabled = true;
         }

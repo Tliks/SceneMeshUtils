@@ -80,7 +80,8 @@ namespace com.aoyon.modulecreator
             SceneRaycastUtility.AddCollider(_selectedObject, _unselectedObject);
             HighlightEdgesManager.AddComponent(_selectedObject, _unselectedObject);
 
-            StartAnimationMode(renderer);
+            //CustomAnimationMode.StopAnimationMode();
+            CustomAnimationMode.StartAnimationMode(renderer);
 
             UpdateMesh();
         }
@@ -90,7 +91,7 @@ namespace com.aoyon.modulecreator
             _customSceneViewWindow.Close();
             Object.DestroyImmediate(_selectedObject);
             Object.DestroyImmediate(_unselectedObject);
-            StopAnimationMode();
+            CustomAnimationMode.StopAnimationMode();
         }
 
         private void AddpreviewObject(ref GameObject obj, Vector3 position, Quaternion rotation)
@@ -129,8 +130,8 @@ namespace com.aoyon.modulecreator
             HashSet<int> selectedtriangleIndices = _triangleSelectionManager.GetSelectedTriangles();
             HashSet<int> unselectedtriangleIndices = _triangleSelectionManager.GetUnselectedTriangles();
 
-            Mesh selectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, selectedtriangleIndices);
-            Mesh unselectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, unselectedtriangleIndices);
+            Mesh selectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, unselectedtriangleIndices);
+            Mesh unselectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, selectedtriangleIndices);
 
             _selectedMeshRenderer.sharedMesh = selectedPreviewMesh;
             _unselectedMeshRenderer.sharedMesh = unselectedPreviewMesh;
@@ -326,32 +327,6 @@ namespace com.aoyon.modulecreator
             UpdateMesh();
         }
 
-        public static void StartAnimationMode(SkinnedMeshRenderer rendrer)
-        {
-            AnimationMode.StartAnimationMode();
-            AnimationMode.BeginSampling();
-            try
-            {
-                var binding = EditorCurveBinding.PPtrCurve("", typeof(SkinnedMeshRenderer), "m_Mesh");
-                var modification = new PropertyModification
-                {
-                    target = rendrer,
-                    propertyPath = "m_Mesh",
-                    objectReference = rendrer.sharedMesh
-                };
-
-                AnimationMode.AddPropertyModification(binding, modification, true);
-            }
-            finally
-            {
-                AnimationMode.EndSampling();
-            }
-        }
-
-        public static void StopAnimationMode()
-        {
-            AnimationMode.StopAnimationMode();
-        }
 
     }
 }

@@ -13,7 +13,7 @@ namespace com.aoyon.modulecreator
     public class TriangleSelectorContext : ScriptableObject
     {
         public SkinnedMeshRenderer SkinnedMeshRenderer;
-        public HashSet<int> selectedTriangleIndices = new();
+        public List<int> selectedTriangleIndices = new();
     }
 
     public class TriangleSelector : EditorWindow
@@ -41,7 +41,15 @@ namespace com.aoyon.modulecreator
 
         private bool _isPreviewEnabled = true;
 
-        public void Initialize(TriangleSelectorContext _triangleSelectorContext)
+        public static void ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
+        {
+            TriangleSelector window = GetWindow<TriangleSelector>();
+            context.SkinnedMeshRenderer = skinnedMeshRenderer;
+            window.Initialize(context);
+            window.Show();
+        }
+
+        private void Initialize(TriangleSelectorContext _triangleSelectorContext)
         {
             this._triangleSelectorContext = _triangleSelectorContext;
             _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
@@ -54,7 +62,6 @@ namespace com.aoyon.modulecreator
         {
             _previewController.Dispose();
             SceneView.duringSceneGui -= OnSceneGUI;
-            _triangleSelectorContext.selectedTriangleIndices = _previewController._triangleSelectionManager.GetSelectedTriangles();
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -88,75 +95,20 @@ namespace com.aoyon.modulecreator
 
             process_options();
 
+            EditorGUILayout.Space();
+            RenderApply();
+
         }
 
-        
-        private void RenderUtility()
+        private void RenderApply()
         {
-            string[] options = 
-            { 
-                LocalizationEditor.GetLocalizedText("Utility.None"),
-                LocalizationEditor.GetLocalizedText("Utility.ModuleCreator"), 
-                LocalizationEditor.GetLocalizedText("Utility.GenerateMask"),
-                LocalizationEditor.GetLocalizedText("Utility.DeleteMesh"),
-                LocalizationEditor.GetLocalizedText("Utility.BlendShape"),
-                LocalizationEditor.GetLocalizedText("Utility.TransformPolygon")
-            };
-
-            int new_index;
-            using (new GUILayout.HorizontalScope())
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Preview.Apply")))
             {
-                GUILayout.Label(LocalizationEditor.GetLocalizedText("Utility.description"));
-                new_index = EditorGUILayout.Popup(_UtilityIndex, options);
-            }
-
-            switch (new_index)
-            {
-                case 1:
-                    if (new_index != _UtilityIndex)
-                    {
-                        CreateModuleUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
-                        _UtilityIndex = new_index;
-                    }
-                    CreateModuleUtilty.RenderModuleCreator();
-                    break;
-
-                case 2:
-                    if (new_index != _UtilityIndex)
-                    {
-                        GenerateMaskUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
-                        _UtilityIndex = new_index;
-                    }
-                    GenerateMaskUtilty.RenderGenerateMask();
-                    break;
-
-                case 3:
-                    if (new_index != _UtilityIndex)
-                    {
-                        DeleteMeshUtilty.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
-                        _UtilityIndex = new_index;
-                    }
-                    DeleteMeshUtilty.RenderDeleteMesh();
-                    break;
-
-                case 4:
-                    if (new_index != _UtilityIndex)
-                    {
-                        ClampBlendShapeUtility.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager);
-                        _UtilityIndex = new_index;
-                    }
-                    ClampBlendShapeUtility.RendergenerateClamp();
-                    break;
-                case 5:
-                    if (new_index != _UtilityIndex)
-                    {
-                        TransformPolygonUtilityEditor.Initialize(_OriginskinnedMeshRenderer, _previewController._triangleSelectionManager.GetSelectedTriangles());
-                        _UtilityIndex = new_index;
-                    }
-                    break;
+                _triangleSelectorContext.selectedTriangleIndices = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
+                Close();
             }
         }
-        
+
         void HandleUndoRedoEvent(Event e)
         {
             if (e.type == EventType.KeyDown && (e.control || e.command))

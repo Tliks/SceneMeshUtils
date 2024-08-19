@@ -85,9 +85,9 @@ namespace com.aoyon.modulecreator
             // Create Selected Islands Module
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
             {
-                PreviewController.StopAnimationMode();
+                CustomAnimationMode.StopAnimationMode();
                 CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
-                PreviewController.StartAnimationMode(_originskinnedMeshRenderer);
+                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
                 //Close();
             }
 

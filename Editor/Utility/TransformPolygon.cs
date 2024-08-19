@@ -12,7 +12,7 @@ namespace com.aoyon.modulecreator
 
         public static void Initialize(SkinnedMeshRenderer orignalSkinnedMeshRenderer, HashSet<int> triangleIndices)
         {   
-            PreviewController.StopAnimationMode();
+            CustomAnimationMode.StopAnimationMode();
             TransformPolygonUtility transformPolygonUtility = orignalSkinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
             Mesh bakedMesh = new Mesh();
             orignalSkinnedMeshRenderer.BakeMesh(bakedMesh);

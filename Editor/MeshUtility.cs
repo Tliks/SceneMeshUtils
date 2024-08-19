@@ -188,7 +188,7 @@ namespace com.aoyon.modulecreator
             skinnedMeshRenderer.sharedMaterials = usedMaterials.ToArray();
         }
 
-        public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToKeep)
+        public static Mesh RemoveTriangles(Mesh originalMesh, HashSet<int> triangleIndexesToRemove)
         {
             Mesh newMesh = Object.Instantiate(originalMesh);
             
@@ -205,7 +205,7 @@ namespace com.aoyon.modulecreator
                 {
                     int globalTriangleIndex = (globalTriangleIndexOffset + i) / 3;
 
-                    if (triangleIndexesToKeep.Contains(globalTriangleIndex))
+                    if (!triangleIndexesToRemove.Contains(globalTriangleIndex))
                     {
                         newSubmeshTriangles[submesh].Add(originalTriangles[i]);
                         newSubmeshTriangles[submesh].Add(originalTriangles[i + 1]);
