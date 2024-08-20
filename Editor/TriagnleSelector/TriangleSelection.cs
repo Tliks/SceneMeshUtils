@@ -24,6 +24,7 @@ namespace com.aoyon.modulecreator
 
         public static TriangleSelectionContainer GetContainer(Mesh mesh)
         {
+            if (!Directory.Exists(SAVE_PATH)) Directory.CreateDirectory(SAVE_PATH);
             string[] guids = AssetDatabase.FindAssets("t:TriangleSelectionContainer", new[] { SAVE_PATH });
             foreach (string guid in guids)
             {
