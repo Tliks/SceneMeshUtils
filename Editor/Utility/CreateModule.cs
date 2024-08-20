@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 namespace com.aoyon.modulecreator
-{
-    public static class CreateModuleUtilty
+{   
+
+    public class ModuleCreator : EditorWindow
     {
         private static bool _showAdvancedOptions = false;
         private static ModuleCreatorSettings _Settings = new ModuleCreatorSettings
@@ -13,19 +15,37 @@ namespace com.aoyon.modulecreator
             IncludePhysBoneColider = true
         };
 
-        private static SkinnedMeshRenderer _originskinnedMeshRenderer;
+        public SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
-        private static TriangleSelectionManager _triangleSelectionManager;
+        private TriangleSelection _targetselection;
+        private RenderSelector _renderSelector;
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
+        public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
-            _originskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
-            _triangleSelectionManager = triangleSelectionManager;
+            ModuleCreator window = GetWindow<ModuleCreator>();
+            window.Initialize(skinnedMeshRenderer);
+            window.Show();
+        }
+
+        private void Initialize(SkinnedMeshRenderer skinnedMeshRenderer)
+        {
+            _originskinnedMeshRenderer = skinnedMeshRenderer;
+            _targetselection = new();
+            _renderSelector = CreateInstance<RenderSelector>();
+            _renderSelector.Initialize(_originskinnedMeshRenderer, _targetselection);
+            _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
+        }
+
+        void OnDisable()
+        {
+            _renderSelector.Dispose();
         }
         
-        public static void RenderModuleCreator()
+        void OnGUI()
         {
+            _renderSelector.RenderGUI();
+
+            EditorGUILayout.Space();
             RenderPhysBoneOptions();
 
             EditorGUILayout.Space();
@@ -37,7 +57,6 @@ namespace com.aoyon.modulecreator
             process_advanced_options();
         }
 
-
         private static void RenderPhysBoneOptions()
         {
             EditorGUILayout.Space();
@@ -48,47 +67,56 @@ namespace com.aoyon.modulecreator
             _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
             GUI.enabled = true;
         }
-        private static void CreateModule(HashSet<int> Triangles)
+
+        private void CreateModule(HashSet<int> Triangles, bool iskeep)
         {
             if (Triangles.Count > 0)
-            {
-                Mesh newMesh = MeshUtility.DeleteMesh(_originskinnedMeshRenderer.sharedMesh, Triangles);
-
+            {   
+                Mesh newMesh;
+                if (iskeep)
+                {
+                    newMesh = MeshUtility.KeepMesh(_originskinnedMeshRenderer.sharedMesh, Triangles);
+                }
+                else
+                {
+                    newMesh = MeshUtility.DeleteMesh(_originskinnedMeshRenderer.sharedMesh, Triangles);
+                }
+                 
                 string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
                 AssetDatabase.CreateAsset(newMesh, path);
                 AssetDatabase.SaveAssets();
 
                 _Settings.newmesh = newMesh;
-                ModuleCreator.CheckAndCopyBones(_originskinnedMeshRenderer.gameObject, _Settings);
+                ModuleCreatorProcessor.CheckAndCopyBones(_originskinnedMeshRenderer.gameObject, _Settings);
             }
         }
 
-        private static void RenderCreateBothModuleButtons()
+        private void RenderCreateBothModuleButtons()
         {
-            GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
+            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
 
             // Create Both Modules
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
             {
-                CreateModule(_triangleSelectionManager.GetSelectedTriangles());
-                CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
-                //Close();
+                CreateModule(_targetselection.selection.ToHashSet(), true);
+                CreateModule(_targetselection.selection.ToHashSet(), false);
+                Close();
             }
 
             GUI.enabled = true;
         }
         
-        private static void RenderCreateModuleButtons()
+        private void RenderCreateModuleButtons()
         {
-            GUI.enabled = _originskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
+            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
             
             // Create Selected Islands Module
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
             {
                 CustomAnimationMode.StopAnimationMode();
-                CreateModule(_triangleSelectionManager.GetUnselectedTriangles());
+                CreateModule(_targetselection.selection.ToHashSet(), true);
                 CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
-                //Close();
+                Close();
             }
 
             GUI.enabled = true;

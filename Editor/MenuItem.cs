@@ -3,33 +3,27 @@ using UnityEngine;
 
 namespace com.aoyon.modulecreator
 {
-    /*
     public class MenuItems : EditorWindow
     {
         private const int MENU_PRIORITY = 49;
 
-        /*
-        [MenuItem("GameObject/AAU/Create Module", false, MENU_PRIORITY)]
-        public static void ShowWindow()
+         [MenuItem("GameObject/SceneMeshUtils/Create Module", true, MENU_PRIORITY)]
+        static bool CreateModuleValidation()
         {
-            TriangleSelector window = GetWindow(typeof(TriangleSelector));
-            TriangleSelectorContext triangleSelectorContext = new();
-            window.Initialize(triangleSelectorContext);
-            window.Show();
+            return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
+        }
+
+        [MenuItem("GameObject/SceneMeshUtils/Create Module", false, MENU_PRIORITY)]
+        static void CreateModule()
+        {
+            SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+            ModuleCreator.ShowWindow(skinnedMeshRenderer);
         }
         
-
-        [MenuItem("GameObject/Show Triangle Selector Context", false, MENU_PRIORITY)]
-        public static void ShowTriangleSelectorContextWindow()
-        {
-            EditorWindowA window = GetWindow<EditorWindowA>();
-            window.SkinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-            window.Show();
-        }
     }
-    /*
-
     
+
+    /*
     public class EditorWindowA : EditorWindow
     {
         public SkinnedMeshRenderer SkinnedMeshRenderer;
@@ -54,5 +48,6 @@ namespace com.aoyon.modulecreator
         }
     }
     */
+
 
 }

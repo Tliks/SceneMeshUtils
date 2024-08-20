@@ -20,7 +20,7 @@ namespace com.aoyon.modulecreator
         public Mesh newmesh=null;
     }
 
-    public class ModuleCreator
+    public class ModuleCreatorProcessor
     {
         public static GameObject CheckAndCopyBones(GameObject sourceObject, ModuleCreatorSettings settings)
         {   
