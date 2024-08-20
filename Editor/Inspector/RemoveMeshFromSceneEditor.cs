@@ -13,7 +13,9 @@ namespace com.aoyon.modulecreator
             SkinnedMeshRenderer skinnedMeshRenderer = (target as RemoveMeshFromScene).GetComponent<SkinnedMeshRenderer>();
             TriangleSelection targetselection = (target as RemoveMeshFromScene).triangleSelection;
             _renderSelector = CreateInstance<RenderSelector>();
-            _renderSelector.Initialize(skinnedMeshRenderer, targetselection);
+            RenderSelectorContext ctx = new();
+            ctx.isKeep = false;
+            _renderSelector.Initialize(skinnedMeshRenderer, ctx, targetselection);
         }
 
         private void OnDisable()

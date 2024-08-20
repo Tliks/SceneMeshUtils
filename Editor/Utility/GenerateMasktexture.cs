@@ -34,7 +34,13 @@ namespace com.aoyon.modulecreator
             _originskinnedMeshRenderer = originskinnedMeshRenderer;
             _targetselection = new();
             _renderSelector = CreateInstance<RenderSelector>();
-            _renderSelector.Initialize(_originskinnedMeshRenderer, _targetselection);
+            RenderSelectorContext ctx = new()
+            {
+                isKeep = true,
+                isRenderToggle = true,
+                FixedPreview = true
+            };
+            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, _targetselection);
             _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
         }
 
@@ -72,8 +78,10 @@ namespace com.aoyon.modulecreator
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
             EditorGUILayout.Space();
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
-            {
-                GenerateMask();
+            {   
+                CustomAnimationMode.StopAnimationMode();
+                GenerateMask(_targetselection.selection.ToHashSet());
+                Close();
             }
             GUI.enabled = true;
 
@@ -125,7 +133,7 @@ namespace com.aoyon.modulecreator
         }
 
 
-        private void GenerateMask()
+        private void GenerateMask(HashSet<int> Triangles)
         {
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
             Texture2D originalTexture = GetReadableTexture(_originskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
@@ -133,9 +141,10 @@ namespace com.aoyon.modulecreator
             Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
             Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_originskinnedMeshRenderer, _targetselection.selection.ToHashSet(), baseColors, targetColors, _originskinnedMeshRenderer.sharedMesh);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_originskinnedMeshRenderer, Triangles, baseColors, targetColors, _originskinnedMeshRenderer.sharedMesh);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
+            if (maskTextures.Count == 0) Debug.Log("????");
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
                 string timeStamp = DateTime.Now.ToString("yyMMdd_HHmmss");
@@ -150,7 +159,6 @@ namespace com.aoyon.modulecreator
                     selectedObjects.Add(obj);
                     EditorGUIUtility.PingObject(obj);
                     Debug.Log("Saved MaskTexture to " + path);
-                    Close();
                 }
             }
             //Selection.activeGameObject = null;

@@ -32,7 +32,13 @@ namespace com.aoyon.modulecreator
             _originskinnedMeshRenderer = skinnedMeshRenderer;
             _targetselection = new();
             _renderSelector = CreateInstance<RenderSelector>();
-            _renderSelector.Initialize(_originskinnedMeshRenderer, _targetselection);
+            RenderSelectorContext ctx = new()
+            {
+                isKeep = true,
+                isRenderToggle = true,
+                FixedPreview = true
+            };
+            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, _targetselection);
             _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
         }
 
@@ -97,7 +103,8 @@ namespace com.aoyon.modulecreator
 
             // Create Both Modules
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
-            {
+            {   
+                CustomAnimationMode.StopAnimationMode();
                 CreateModule(_targetselection.selection.ToHashSet(), true);
                 CreateModule(_targetselection.selection.ToHashSet(), false);
                 Close();
@@ -115,7 +122,6 @@ namespace com.aoyon.modulecreator
             {
                 CustomAnimationMode.StopAnimationMode();
                 CreateModule(_targetselection.selection.ToHashSet(), true);
-                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
                 Close();
             }
 

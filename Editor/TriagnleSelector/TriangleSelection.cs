@@ -8,6 +8,13 @@ using System.IO;
 namespace com.aoyon.modulecreator
 {
 
+    public class RenderSelectorContext
+    {
+        public bool isKeep = true;
+        public bool isRenderToggle = true;
+        public bool FixedPreview = true;
+    }
+
     public class RenderSelector : Editor
     {
         private SkinnedMeshRenderer _skinnedMeshRenderer;
@@ -17,24 +24,27 @@ namespace com.aoyon.modulecreator
         private TriangleSelection _target;
         private string[] _displayedOptions;
         private int _selectedIndex = 0;
-        private TriangleSelectorContext _context;
+        private TriangleSelectorContext _selectorcontext;
+        private RenderSelectorContext _renderctx;
 
         private bool _isAutoPreview = true;
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx)
         {
-            Initialize(skinnedMeshRenderer, new TriangleSelection());
+            Initialize(skinnedMeshRenderer, ctx, new TriangleSelection());
         }
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, TriangleSelection target)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx, TriangleSelection target)
         {
             CustomAnimationMode.StopAnimationMode();
             _skinnedMeshRenderer = skinnedMeshRenderer;
+            _renderctx = ctx;
             _mesh = _skinnedMeshRenderer.sharedMesh;
             LoadAsset();
             _target = target;
             _selectedIndex = FindIndex(_triangleSelections, _target) + 1;
-            _context = CreateInstance<TriangleSelectorContext>();
+            _selectorcontext = CreateInstance<TriangleSelectorContext>();
+            if (!_renderctx.isRenderToggle) _isAutoPreview = _renderctx.FixedPreview;
             StartPreview();
         }
 
@@ -66,14 +76,14 @@ namespace com.aoyon.modulecreator
             if (GUILayout.Button("Open Triangle Selector"))
             {
                 StopPrview();
-                TriangleSelector.ShowWindow(_context, _skinnedMeshRenderer);
+                TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
             }
             
-            List<int> newSelection = _context.selectedTriangleIndices;
+            List<int> newSelection = _selectorcontext.selectedTriangleIndices;
             if (newSelection != null && newSelection.Count > 0)
             {
                 //Debug.Log("update");
-                _context.selectedTriangleIndices = new List<int>();
+                _selectorcontext.selectedTriangleIndices = new List<int>();
                 TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
 
                 SaveAsScriptableObject.UpdateData(_triangleSelectionContainer, newTriangleSelection);
@@ -84,7 +94,7 @@ namespace com.aoyon.modulecreator
                 StartPreview();
             }
 
-            if (GUILayout.Button(_isAutoPreview ? "Disable Auto Preview" : "Enable Auto Preview"))
+            if (_renderctx.isRenderToggle && GUILayout.Button(_isAutoPreview ? "Disable Auto Preview" : "Enable Auto Preview"))
             {
                 ToggleAutoPreview();
             }
@@ -109,7 +119,15 @@ namespace com.aoyon.modulecreator
             {
                 CustomAnimationMode.StopAnimationMode();
                 CustomAnimationMode.StartAnimationMode(_skinnedMeshRenderer);
-                _skinnedMeshRenderer.sharedMesh = MeshUtility.RemoveTriangles(_mesh, _target.selection.ToHashSet());
+                if (_renderctx.isKeep)
+                {
+                    _skinnedMeshRenderer.sharedMesh = MeshUtility.keepTriangles(_mesh, _target.selection.ToHashSet());
+                }
+                else
+                {
+                    _skinnedMeshRenderer.sharedMesh = MeshUtility.RemoveTriangles(_mesh, _target.selection.ToHashSet());
+                }
+                
             }
         }
 
