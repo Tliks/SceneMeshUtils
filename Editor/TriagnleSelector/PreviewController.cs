@@ -21,7 +21,7 @@ namespace com.aoyon.modulecreator
         private Mesh _originalMesh;
         private Mesh _bakedMesh;
 
-        private CustomSceneView _customSceneViewW;
+        private CustomSceneView _customSceneView;
 
         private Dictionary<int, int> _selectedoldToNewIndexMap;
         private Dictionary<int, int> _unselectedoldToNewIndexMap;
@@ -64,7 +64,7 @@ namespace com.aoyon.modulecreator
 
         public void Dispose()
         {
-            _customSceneViewW.Close();
+            _customSceneView.Close();
             Object.DestroyImmediate(_selectedObject);
             Object.DestroyImmediate(_unselectedObject);
             CustomAnimationMode.StopAnimationMode();
@@ -81,8 +81,9 @@ namespace com.aoyon.modulecreator
         private void OpenCustomSceneView()
         {
             SceneView defaultSceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
-            _customSceneViewW = CustomSceneView.ShowWindow(defaultSceneView);
-            FocusCustomViewObject(_customSceneViewW, _bakedMesh, _selectedMeshRenderer.transform);
+            _customSceneView = CustomSceneView.ShowWindow(defaultSceneView);
+
+            FocusCustomViewObject(_customSceneView, _bakedMesh, _selectedMeshRenderer.transform);
         }
 
         private void FocusCustomViewObject(SceneView sceneView, Mesh mesh, Transform origin)
