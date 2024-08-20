@@ -81,8 +81,9 @@ namespace com.aoyon.modulecreator
         private void OpenCustomSceneView()
         {
             SceneView defaultSceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
+            defaultSceneView.drawGizmos = true;
             _customSceneView = CustomSceneView.ShowWindow(defaultSceneView);
-
+            _customSceneView.drawGizmos = true;
             FocusCustomViewObject(_customSceneView, _bakedMesh, _selectedMeshRenderer.transform);
         }
 
