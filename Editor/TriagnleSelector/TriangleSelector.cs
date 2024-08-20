@@ -76,11 +76,13 @@ namespace com.aoyon.modulecreator
         private void OnGUI()
         {
             LocalizationEditor.RenderLocalize();
+            
+            EditorGUILayout.Space();
+            GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectedTotalPolygonsLabel"), EditorStyles.boldLabel);
+            GUILayout.Label($"{_previewController._triangleSelectionManager.GetSelectedTriangles().Count}/{_previewController._triangleSelectionManager.GetAllTriangles().Count}");
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.commondescription"), MessageType.Info);
 
             EditorGUILayout.Space();
-            RenderVertexCount();
-            EditorGUILayout.Space();
-
             RenderSelectionButtons();
             RenderUndoRedoButtons();
 
@@ -100,7 +102,7 @@ namespace com.aoyon.modulecreator
 
         private void RenderApply()
         {
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Preview.Apply")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.Apply")))
             {
                 _triangleSelectorContext.selectedTriangleIndices = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
                 Close();
@@ -211,36 +213,22 @@ namespace com.aoyon.modulecreator
             Handles.EndGUI();
         }
 
-
-        private void RenderislandDescription()
-        {
-            //EditorGUILayout.Space();
-            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("description"), MessageType.Info);
-            //EditorGUILayout.Space();
-        }
-
-        private void RenderVertexCount()
-        {
-            GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectedTotalPolygonsLabel"), EditorStyles.boldLabel);
-            GUILayout.Label($"{_previewController._triangleSelectionManager.GetSelectedTriangles().Count}/{_previewController._triangleSelectionManager.GetAllTriangles().Count}");
-        }
-
         private void RenderSelectionButtons()
         {
             GUILayout.BeginHorizontal();
         
             GUI.enabled = _isPreviewEnabled;
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("SelectAllButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectAllButton")))
             {
                 _previewController.SelectAll();
             }
 
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("UnselectAllButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.UnselectAllButton")))
             {
                 _previewController.UnselectAll();
             }
 
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("ReverseAllButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.ReverseAllButton")))
             {
                 _previewController.ReverseAll();
             }
@@ -249,61 +237,16 @@ namespace com.aoyon.modulecreator
             GUILayout.EndHorizontal();
         }
 
-        private void RenderSelectionMode()
-        {
-            string[] options = { LocalizationEditor.GetLocalizedText("SelectionMode.Island"), LocalizationEditor.GetLocalizedText("SelectionMode.Polygon") };
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectionMode.description"));
-            int SelectionModeIndex = _isIsland ? 0 : 1;
-            SelectionModeIndex = EditorGUILayout.Popup(SelectionModeIndex, options);
-            _isIsland = SelectionModeIndex == 0 ? true: false;
-            GUILayout.EndHorizontal();
-        }
-
-
-        private void process_options()
-        {
-            EditorGUILayout.Space();
-
-            if (_isIsland)
-            {
-                RenderislandDescription();
-                _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SplitMeshMoreToggle"), !_mergeSamePosition);
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SplitMeshMoreToggle"), MessageType.Info);
-                _checkAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("SelectAllInRangeToggle"), !_checkAll);
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("tooltip.SelectAllInRangeToggle"), MessageType.Info);
-            }
-            else
-            {
-                using (new GUILayout.HorizontalScope())
-                {
-                    GUILayout.Label(LocalizationEditor.GetLocalizedText("SelectionMode.Polygon.scale"));
-                    _scale = EditorGUILayout.Slider(_scale, 0.0f, 0.1f);
-                }
-            }
-
-            EditorGUILayout.Space();
-
-        }
-
-        private void RenderModeoff()
-        {
-            if (GUILayout.Button(!_isPreviewEnabled ? LocalizationEditor.GetLocalizedText("EnableSelectionButton") : LocalizationEditor.GetLocalizedText("DisableSelectionButton")))
-            {
-                _isPreviewEnabled = !_isPreviewEnabled;
-            }
-        }
-
         private void RenderUndoRedoButtons()
         {
             EditorGUILayout.BeginHorizontal();
 
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("UndoButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.UndoButton")))
             {
                 _previewController.PerformUndo();
             }
 
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("RedoButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.RedoButton")))
             {
                 _previewController.PerformRedo();
             }
@@ -311,6 +254,56 @@ namespace com.aoyon.modulecreator
             EditorGUILayout.EndHorizontal();
 
         }
+
+        private void RenderSelectionMode()
+        {
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionMode"));
+
+            string[] options = { LocalizationEditor.GetLocalizedText("TriangleSelector.island"), LocalizationEditor.GetLocalizedText("TriangleSelector.polygon") };
+            int SelectionModeIndex = _isIsland ? 0 : 1;
+            SelectionModeIndex = EditorGUILayout.Popup(SelectionModeIndex, options);
+            _isIsland = SelectionModeIndex == 0 ? true: false;
+
+            GUILayout.EndHorizontal();
+        }
+
+        private void RenderModeoff()
+        {
+            if (GUILayout.Button(!_isPreviewEnabled ? LocalizationEditor.GetLocalizedText("TriangleSelector.EnableSelectionButton") : LocalizationEditor.GetLocalizedText("TriangleSelector.DisableSelectionButton")))
+            {
+                _isPreviewEnabled = !_isPreviewEnabled;
+            }
+        }
+
+        private void process_options()
+        {
+            if (_isIsland)
+            {
+                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.description"), MessageType.Info);
+                EditorGUILayout.Space();
+                _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle"), !_mergeSamePosition);
+                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle.description"), MessageType.Info);
+                _checkAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle"), !_checkAll);
+                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle.description"), MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.description"), MessageType.Info);
+                EditorGUILayout.Space();
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.scale"));
+                    _scale = EditorGUILayout.Slider(_scale, 0.0f, 0.1f);
+                }
+                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.scale.description"), MessageType.Info);
+            }
+
+            EditorGUILayout.Space();
+
+        }
+
 
     }
 }
