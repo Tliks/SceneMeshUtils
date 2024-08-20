@@ -21,7 +21,7 @@ namespace com.aoyon.modulecreator
         private Mesh _originalMesh;
         private Mesh _bakedMesh;
 
-        private CustomSceneViewWindow _customSceneViewWindow;
+        private CustomSceneView _customSceneViewW;
 
         private Dictionary<int, int> _selectedoldToNewIndexMap;
         private Dictionary<int, int> _unselectedoldToNewIndexMap;
@@ -64,7 +64,7 @@ namespace com.aoyon.modulecreator
 
         public void Dispose()
         {
-            _customSceneViewWindow.Close();
+            _customSceneViewW.Close();
             Object.DestroyImmediate(_selectedObject);
             Object.DestroyImmediate(_unselectedObject);
             CustomAnimationMode.StopAnimationMode();
@@ -81,8 +81,8 @@ namespace com.aoyon.modulecreator
         private void OpenCustomSceneView()
         {
             SceneView defaultSceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
-            _customSceneViewWindow = CustomSceneViewWindow.ShowWindow(defaultSceneView);
-            FocusCustomViewObject(_customSceneViewWindow, _bakedMesh, _selectedMeshRenderer.transform);
+            _customSceneViewW = CustomSceneView.ShowWindow(defaultSceneView);
+            FocusCustomViewObject(_customSceneViewW, _bakedMesh, _selectedMeshRenderer.transform);
         }
 
         private void FocusCustomViewObject(SceneView sceneView, Mesh mesh, Transform origin)
@@ -170,7 +170,7 @@ namespace com.aoyon.modulecreator
         {
             if (startpos.x == endpos.x || startpos.y == endpos.y) return;
 
-            bool IsSelected = CustomSceneViewWindow.IsSelected();
+            bool IsSelected = CustomSceneView.IsSelected();
             Transform origin = IsSelected ? _selectedMeshRenderer.transform : _unselectedMeshRenderer.transform;
             
             MeshCollider meshCollider = GenerateColider(startpos, endpos);
