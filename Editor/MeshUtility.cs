@@ -6,7 +6,18 @@ namespace com.aoyon.modulecreator
 {
     public class MeshUtility
     {
-        public static Mesh DeleteMesh(Mesh originalMesh, HashSet<int> triangleIndexes)
+
+        public static Mesh KeepMesh(Mesh originalMesh, HashSet<int> triangleIndexestoKeep)
+        {
+            return ProcessMesh(originalMesh, triangleIndexestoKeep, true);
+        }
+
+        public static Mesh DeleteMesh(Mesh originalMesh, HashSet<int> triangleIndexestoRemove)
+        {
+            return ProcessMesh(originalMesh, triangleIndexestoRemove, false);
+        }
+
+        private static Mesh ProcessMesh(Mesh originalMesh, HashSet<int> triangleIndexes, bool keep)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -24,7 +35,8 @@ namespace com.aoyon.modulecreator
                 for (int i = 0; i < originalTriangles.Length; i += 3)
                 {
                     int globalTriangleIndex = (globalTriangleIndexOffset + i) / 3;
-                    if (!triangleIndexes.Contains(globalTriangleIndex))
+                    if ((keep && triangleIndexes.Contains(globalTriangleIndex)) || 
+                        (!keep && !triangleIndexes.Contains(globalTriangleIndex)))
                     {
                         newSubmeshTriangles[subMeshIndex].Add(originalTriangles[i]);
                         newSubmeshTriangles[subMeshIndex].Add(originalTriangles[i + 1]);
