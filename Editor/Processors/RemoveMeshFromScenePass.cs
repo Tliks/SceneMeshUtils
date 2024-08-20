@@ -1,6 +1,7 @@
 using UnityEngine;
 using nadena.dev.ndmf;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace com.aoyon.modulecreator
 {
@@ -11,6 +12,12 @@ namespace com.aoyon.modulecreator
             var comonent = context.AvatarRootObject.GetComponentInChildren<RemoveMeshFromScene>();
 
             TriangleSelection triangleSelection = comonent.triangleSelection;
+
+            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count > 0)
+            {
+                Object.DestroyImmediate(comonent);
+                return;
+            }
 
             SkinnedMeshRenderer skinnedMeshRenderer = comonent.GetComponent<SkinnedMeshRenderer>();
 
