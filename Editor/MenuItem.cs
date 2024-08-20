@@ -19,6 +19,20 @@ namespace com.aoyon.modulecreator
             SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
             ModuleCreator.ShowWindow(skinnedMeshRenderer);
         }
+
+
+        [MenuItem("GameObject/SceneMeshUtils/Create Mask texture", true, MENU_PRIORITY)]
+        static bool CreateMaskTextureValidation()
+        {
+            return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
+        }
+
+        [MenuItem("GameObject/SceneMeshUtils/Create Mask texture", false, MENU_PRIORITY)]
+        static void CreateMaskTexture()
+        {
+            SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+            MaskTextureGenerator.ShowWindow(skinnedMeshRenderer);
+        }
         
     }
     
