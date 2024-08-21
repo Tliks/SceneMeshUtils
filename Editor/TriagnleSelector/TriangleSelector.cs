@@ -113,12 +113,14 @@ namespace com.aoyon.modulecreator
 
         private void RenderApply()
         {
+            GUI.enabled = _previewController._triangleSelectionManager.GetSelectedTriangles().Count() > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.Apply")))
             {
                 _triangleSelectorContext.target = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
                 _triangleSelectorContext.displayname = _selectionName;
                 Close();
             }
+            GUI.enabled = true;
         }
 
         void HandleUndoRedoEvent(Event e)
