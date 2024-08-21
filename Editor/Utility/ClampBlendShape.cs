@@ -106,7 +106,7 @@ namespace com.aoyon.modulecreator
             string uniqueBlendShapeName = GetUniqueBlendShapeName(blendShapeNames, blendShapeName);
 
             newMesh.AddBlendShapeFrame(uniqueBlendShapeName, 100.0f, blendShapeVertices, null, null);
-            Debug.Log($"Blend shape '{uniqueBlendShapeName}' has been added.");
+            //Debug.Log($"Blend shape '{uniqueBlendShapeName}' has been added.");
             return newMesh;
         }
 
