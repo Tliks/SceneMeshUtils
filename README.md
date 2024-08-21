@@ -12,6 +12,10 @@ SceneMeshUtils(仮称)
 - 縮小BlendShapeの生成(Add Shrink BlendShape)
 - ポリゴンの移動(Transform Polygon)
 
+## 依存関係
+- VRC.SDK3
+- Non-Destructive Modular Framework
+
 ## Create Module
 
 ### 機能
@@ -153,6 +157,10 @@ SceneMeshUtils(仮称)
 - Triangle Selectorは起動中SceneViewに対し、Unity Editor標準の選択を無効化します。
 - 選択を中止はこの動作を一時的に停止し標準の選択が行えるようにします。
 - 選択を再開はTriangle Selector固有の選択を再開します。
+
+#### 選択箇所の名前(オプション)
+- 選択箇所を保存する際にその保存名を指定できます。
+- 入力がない場合は自動で設定されます。
 
 #### 適用
 - 選択箇所を呼び出し元の機能に適用します。
