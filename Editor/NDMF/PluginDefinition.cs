@@ -8,7 +8,7 @@ namespace com.aoyon.scenemeshutils
 {
     public class PluginDefinition : Plugin<PluginDefinition>
     {
-        public override string QualifiedName => "com.aoyon.scenemeshutils";
+        public override string QualifiedName => "com.aoyon.scene-mesh-utils";
 
         public override string DisplayName => "SceneMeshUtils";
 
