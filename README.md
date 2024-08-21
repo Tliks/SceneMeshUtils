@@ -1,9 +1,9 @@
-SceneMeshUtils(仮称)
+SceneMeshUtils(仮)
 ====
 
-## SceneMeshUtilsとは
+## 概要
 
-メッシュの一部をシーン上から直接選択するTriangle Selectorを用いたユーティリティ。
+メッシュの一部をシーン上から直接選択するTriangle Selectorとそれを用いたユーティリティ。
 
 ## 機能一覧
 - メッシュPrefabの生成(Create Module)
@@ -23,7 +23,7 @@ SceneMeshUtils(仮称)
 - 欲しいメッシュの箇所を指定した上でウェイトやPhysBone等を走査し必要最低限の構成のPrefab Variantを生成
 
 ### 実行場所
-- Skinned Mesh Renderがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Module`
+- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Module`
 
 ### 使い方
 - `Open Triangle Selector`からTriangle Selectorを起動
@@ -40,7 +40,7 @@ SceneMeshUtils(仮称)
 - メッシュの箇所を指定した上で、選択領域と非選択領域に対してそれぞれ塗りつぶしや色の転送等を行ったテクスチャを生成
 
 ### 実行場所
-- Skinned Mesh Renderがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Mask Texture`
+- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Mask Texture`
 
 ### 使い方
 - `Open Triangle Selector`からTriangle Selectorを起動
@@ -62,7 +62,7 @@ SceneMeshUtils(仮称)
 - 基本的にAAO Remove Meshと同じですがTriangle Selectorを用いることでシーン上から直接選択できるインターフェースの違いがあります。
 
 ### 実行場所
-- Skinned Mesh RenderがついたオブジェクトにAdd Componentから`SceneMeshUtils/Remove Mesh From Scene`
+- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Remove Mesh From Scene`
 
 ### 使い方
 - `Open Triangle Selector`からTriangle Selectorを起動
@@ -74,11 +74,11 @@ SceneMeshUtils(仮称)
 
 ### 機能
 - 貫通対策用のBlendShapeを非破壊で追加する機能。
-- Triangle Selectorでアイランド単位の選択を行った箇所に対してははメッシュの表示/非表示を行うアニメーションに転用できます。
+- Triangle Selectorでアイランド単位の選択を行った箇所に対してはメッシュの表示/非表示を行うアニメーションに転用できます。
 - Blenderで追加するほど綺麗なShrinkにはなりません。
 
 ### 実行場所
-- Skinned Mesh RenderがついたオブジェクトにAdd Componentから`SceneMeshUtils/Add Shrink BlendShape`
+- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Add Shrink BlendShape`
 
 ### 使い方
 - `Open Triangle Selector`からTriangle Selectorを起動
@@ -94,7 +94,7 @@ SceneMeshUtils(仮称)
 - この機能は非破壊でMeshを直接編集することで選択された箇所の頂点に対してのみ追加のTransformの値を加算します。
 
 ### 実行場所
-- Skinned Mesh RenderがついたオブジェクトにAdd Componentから`SceneMeshUtils/Transform Polygon`
+- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Transform Polygon`
 
 ### 使い方
 - `Open Triangle Selector`からTriangle Selectorを起動
@@ -113,7 +113,7 @@ SceneMeshUtils(仮称)
 
 ### 使い方
 - クリックもしくはドラッグを用いた範囲選択が出来ます。
-- 選択された箇所のメッシュは起動時に開かれるSceneViewに移動することでプレビューされます。
+- 選択された箇所のメッシュは起動時に開かれるSceneViewに移動されてプレビューされます。
 - 構造的に分離されたメッシュの一部(アイランド)を選択するアイランドモードとポリゴンモードがあります。
 - メッシュが選択できたらApplyボタンを押して適用します。
 
@@ -123,12 +123,12 @@ SceneMeshUtils(仮称)
 - 英語と日本語を切り替えます  
 
 #### 選択中 / 全ポリゴン
-- 指定されたSkinned Mesh Renderにつくメッシュの全ポリゴンと現在選択されているポリゴンのそれぞれの数。
+- 指定されたSkinned Mesh Rendererにつくメッシュの全ポリゴンと現在選択されているポリゴンのそれぞれの数。
 
-#### すべて選択 / すべての選択を解除 / 選択を変転
+#### すべて選択 / すべての選択を解除 / 選択を反転
 - すべて選択は全ポリゴンを選択状態にします。
 - すべての選択を解除は全ポリゴンを非選択状態にします。
-- 選択を変転は現在選択されているポリゴンと非選択のポリゴンを反転します。
+- 選択を反転は現在選択されているポリゴンと非選択のポリゴンを反転します。
 
 #### 元に戻す(Ctrl+Z) / やり直す(Ctrl+Y)
 - 元に戻す(Undo)は選択領域を一つ前に戻します。Ctrl+Zからも操作できます。
@@ -164,3 +164,19 @@ SceneMeshUtils(仮称)
 
 #### 適用
 - 選択箇所を呼び出し元の機能に適用します。
+
+### Tips
+
+#### 範囲選択について
+- Iso(Isometric/平行投影)とPersp(Perspective/透視投影)で効果が異なります。
+- Isoが選択方向に大して直方体を構成する選択領域を持つのに対し、Perspは選択方向に対して広がる四角錐の選択領域を持ちます。
+- これはPerspは選択方向に対して奥におくほど広い範囲のポリゴンが選択されることを意味します。
+- そのため正確な範囲選択を行う場合などは基本的にIsoを用いることが推奨されます。
+- 上記の問題に関連して、選択領域の奥行きはIsoで10mである一方、Perspでは3mに制限されています。
+
+#### 選択領域の保持について
+- Triangle Selectorで選択された範囲は全て保持されます。
+- Open Triangle Selectorの上部にあるTriangle Selectionのドロップダウンからそのメッシュに対する過去の選択領域が選択できます。
+- Assetsに保持されるため、コンポーネントやアバターを越えて同一のメッシュに対しては過去の選択を参照できます。
+- Triangle Selectionのドロップダウンの横にあるEditからその選択領域に関する編集を行う新たな選択領域を追加できます。
+

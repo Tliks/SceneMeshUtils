@@ -1,7 +1,7 @@
-<h1 id="scenemeshutils仮称">SceneMeshUtils(仮称)</h1>
-<h2 id="scenemeshutilsとは">SceneMeshUtilsとは</h2>
+<h1 id="scenemeshutils仮">SceneMeshUtils(仮)</h1>
+<h2 id="概要">概要</h2>
 <p>メッシュの一部をシーン上から直接選択するTriangle
-Selectorを用いたユーティリティ。</p>
+Selectorとそれを用いたユーティリティ。</p>
 <h2 id="機能一覧">機能一覧</h2>
 <ul>
 <li>メッシュPrefabの生成(Create Module)</li>
@@ -25,7 +25,7 @@ Variantを生成</li>
 <h3 id="実行場所">実行場所</h3>
 <ul>
 <li>Skinned Mesh
-Renderがついたオブジェクトの右クリックメニューから<code>SceneMeshUtils/Create Module</code></li>
+Rendererがついたオブジェクトの右クリックメニューから<code>SceneMeshUtils/Create Module</code></li>
 </ul>
 <h3 id="使い方">使い方</h3>
 <ul>
@@ -45,7 +45,7 @@ Renderがついたオブジェクトの右クリックメニューから<code>Sc
 <h3 id="実行場所-1">実行場所</h3>
 <ul>
 <li>Skinned Mesh
-Renderがついたオブジェクトの右クリックメニューから<code>SceneMeshUtils/Create Mask Texture</code></li>
+Rendererがついたオブジェクトの右クリックメニューから<code>SceneMeshUtils/Create Mask Texture</code></li>
 </ul>
 <h3 id="使い方-1">使い方</h3>
 <ul>
@@ -72,7 +72,7 @@ Selectorを用いることでシーン上から直接選択できるインター
 </ul>
 <h3 id="実行場所-2">実行場所</h3>
 <ul>
-<li>Skinned Mesh RenderがついたオブジェクトにAdd
+<li>Skinned Mesh RendererがついたオブジェクトにAdd
 Componentから<code>SceneMeshUtils/Remove Mesh From Scene</code></li>
 </ul>
 <h3 id="使い方-2">使い方</h3>
@@ -88,12 +88,12 @@ Previewが有効であれば削除されたメッシュがプレビューされ�
 <ul>
 <li>貫通対策用のBlendShapeを非破壊で追加する機能。</li>
 <li>Triangle
-Selectorでアイランド単位の選択を行った箇所に対してははメッシュの表示/非表示を行うアニメーションに転用できます。</li>
+Selectorでアイランド単位の選択を行った箇所に対してはメッシュの表示/非表示を行うアニメーションに転用できます。</li>
 <li>Blenderで追加するほど綺麗なShrinkにはなりません。</li>
 </ul>
 <h3 id="実行場所-3">実行場所</h3>
 <ul>
-<li>Skinned Mesh RenderがついたオブジェクトにAdd
+<li>Skinned Mesh RendererがついたオブジェクトにAdd
 Componentから<code>SceneMeshUtils/Add Shrink BlendShape</code></li>
 </ul>
 <h3 id="使い方-3">使い方</h3>
@@ -113,7 +113,7 @@ Previewが有効であればBlendShapeが追加されたメッシュがプレビ
 </ul>
 <h3 id="実行場所-4">実行場所</h3>
 <ul>
-<li>Skinned Mesh RenderがついたオブジェクトにAdd
+<li>Skinned Mesh RendererがついたオブジェクトにAdd
 Componentから<code>SceneMeshUtils/Transform Polygon</code></li>
 </ul>
 <h3 id="使い方-4">使い方</h3>
@@ -137,7 +137,7 @@ Previewが有効であれば選択されたメッシュのみPosition等が変�
 <h3 id="使い方-5">使い方</h3>
 <ul>
 <li>クリックもしくはドラッグを用いた範囲選択が出来ます。</li>
-<li>選択された箇所のメッシュは起動時に開かれるSceneViewに移動することでプレビューされます。</li>
+<li>選択された箇所のメッシュは起動時に開かれるSceneViewに移動されてプレビューされます。</li>
 <li>構造的に分離されたメッシュの一部(アイランド)を選択するアイランドモードとポリゴンモードがあります。</li>
 <li>メッシュが選択できたらApplyボタンを押して適用します。</li>
 </ul>
@@ -149,14 +149,14 @@ Previewが有効であれば選択されたメッシュのみPosition等が変�
 <h4 id="選択中-全ポリゴン">選択中 / 全ポリゴン</h4>
 <ul>
 <li>指定されたSkinned Mesh
-Renderにつくメッシュの全ポリゴンと現在選択されているポリゴンのそれぞれの数。</li>
+Rendererにつくメッシュの全ポリゴンと現在選択されているポリゴンのそれぞれの数。</li>
 </ul>
-<h4 id="すべて選択-すべての選択を解除-選択を変転">すべて選択 /
-すべての選択を解除 / 選択を変転</h4>
+<h4 id="すべて選択-すべての選択を解除-選択を反転">すべて選択 /
+すべての選択を解除 / 選択を反転</h4>
 <ul>
 <li>すべて選択は全ポリゴンを選択状態にします。</li>
 <li>すべての選択を解除は全ポリゴンを非選択状態にします。</li>
-<li>選択を変転は現在選択されているポリゴンと非選択のポリゴンを反転します。</li>
+<li>選択を反転は現在選択されているポリゴンと非選択のポリゴンを反転します。</li>
 </ul>
 <h4 id="元に戻すctrlz-やり直すctrly">元に戻す(Ctrl+Z) /
 やり直す(Ctrl+Y)</h4>
@@ -206,4 +206,22 @@ Editor標準の選択を無効化します。</li>
 <h4 id="適用">適用</h4>
 <ul>
 <li>選択箇所を呼び出し元の機能に適用します。</li>
+</ul>
+<h3 id="tips">Tips</h3>
+<h4 id="範囲選択について">範囲選択について</h4>
+<ul>
+<li>Iso(Isometric/平行投影)とPersp(Perspective/透視投影)で効果が異なります。</li>
+<li>Isoが選択方向に大して直方体を構成する選択領域を持つのに対し、Perspは選択方向に対して広がる四角錐の選択領域を持ちます。</li>
+<li>これはPerspは選択方向に対して奥におくほど広い範囲のポリゴンが選択されることを意味します。</li>
+<li>そのため正確な範囲選択を行う場合などは基本的にIsoを用いることが推奨されます。</li>
+<li>上記の問題に関連して、選択領域の奥行きはIsoで10mである一方、Perspでは3mに制限されています。</li>
+</ul>
+<h4 id="選択領域の保持について">選択領域の保持について</h4>
+<ul>
+<li>Triangle Selectorで選択された範囲は全て保持されます。</li>
+<li>Open Triangle Selectorの上部にあるTriangle
+Selectionのドロップダウンからそのメッシュに対する過去の選択領域が選択できます。</li>
+<li>Assetsに保持されるため、コンポーネントやアバターを越えて同一のメッシュに対しては過去の選択を参照できます。</li>
+<li>Triangle
+Selectionのドロップダウンの横にあるEditからその選択領域に関する編集を行う新たな選択領域を追加できます。</li>
 </ul>
