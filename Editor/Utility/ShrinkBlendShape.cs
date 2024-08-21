@@ -135,7 +135,7 @@ namespace com.aoyon.scenemeshutils
 
         private static void ReplaceMesh()
         {
-            Mesh newMesh = GenerateshrinkBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
+            Mesh newMesh = GenerateShrinkBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname, "shrinkMesh");
             AssetDatabase.CreateAsset(newMesh, path);
