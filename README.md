@@ -12,6 +12,10 @@ SceneMeshUtils(仮称)
 - 縮小BlendShapeの生成(Add Shrink BlendShape)
 - ポリゴンの移動(Transform Polygon)
 
+## 依存関係
+- VRC.SDK3
+- Non-Destructive Modular Framework
+
 ## Create Module
 
 ### 機能
