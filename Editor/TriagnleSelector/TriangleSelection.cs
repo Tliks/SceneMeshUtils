@@ -92,18 +92,24 @@ namespace com.aoyon.modulecreator
                 TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
             }
             
-            List<int> newSelection = _selectorcontext.target;
-            if (newSelection != null && newSelection.Count > 0)
+            if (_selectorcontext.end)
             {
-                //Debug.Log("update");
-                _selectorcontext.target = new List<int>();
-                TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
+                _selectorcontext.end = false;
 
-                SaveAsScriptableObject.UpdateData(_triangleSelectionContainer, newTriangleSelection);
+                List<int> newSelection = _selectorcontext.target;
+                if (newSelection != null && newSelection.Count > 0)
+                {
+                    //Debug.Log("update");
+                    _selectorcontext.target = new List<int>();
+                    TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
 
-                LoadAsset();
-                _target.selection = new List<int>(newSelection);
-                _selectedIndex = FindIndex(_triangleSelections, _target) + 1;
+                    SaveAsScriptableObject.UpdateData(_triangleSelectionContainer, newTriangleSelection);
+
+                    LoadAsset();
+                    _target.selection = new List<int>(newSelection);
+                    _selectedIndex = FindIndex(_triangleSelections, _target) + 1;
+                }
+                
                 StartPreview();
             }
 

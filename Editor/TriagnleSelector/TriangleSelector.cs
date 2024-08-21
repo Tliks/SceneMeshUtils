@@ -15,6 +15,7 @@ namespace com.aoyon.modulecreator
         public SkinnedMeshRenderer SkinnedMeshRenderer;
         public List<int> target = new();
         public HashSet<int> target_default = new();
+        public bool end = false;
     }
 
     public class TriangleSelector : EditorWindow
@@ -60,6 +61,7 @@ namespace com.aoyon.modulecreator
         private void OnDisable()
         {
             _previewController.Dispose();
+            _triangleSelectorContext.end = true;
             SceneView.duringSceneGui -= OnSceneGUI;
         }
 
