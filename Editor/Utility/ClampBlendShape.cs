@@ -18,7 +18,7 @@ namespace com.aoyon.modulecreator
             _rootname = CheckUtility.CheckRoot(origSkinnedMeshRenderer.gameObject).name;
         }
 
-        private static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
+        public static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
         {
             Mesh newMesh = Object.Instantiate(originalMesh);
             Vector3[] vertices = newMesh.vertices;

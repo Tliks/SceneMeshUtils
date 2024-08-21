@@ -19,7 +19,8 @@ namespace com.aoyon.modulecreator
                 .BeforePlugin("net.rs64.tex-trans-tool")
                 .BeforePlugin("com.anatawa12.avatar-optimizer");
 
-            sequence.Run(RemoveMeshFromScenePass.Instance);
+            sequence.Run(AddShrinkBlendShapePass.Instance).Then
+            .Run(RemoveMeshFromScenePass.Instance);
         }
     }
 }

@@ -13,6 +13,7 @@ namespace com.aoyon.modulecreator
         public bool isKeep = true;
         public bool isRenderToggle = true;
         public bool FixedPreview = true;
+        public bool isblendhsape = false;
     }
 
     public class RenderSelector : Editor
@@ -29,9 +30,9 @@ namespace com.aoyon.modulecreator
 
         private bool _isAutoPreview = true;
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, TriangleSelection target)
         {
-            Initialize(skinnedMeshRenderer, ctx, new TriangleSelection());
+            Initialize(skinnedMeshRenderer, new RenderSelectorContext(), target);
         }
 
         public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx, TriangleSelection target)
@@ -119,7 +120,11 @@ namespace com.aoyon.modulecreator
             {
                 CustomAnimationMode.StopAnimationMode();
                 CustomAnimationMode.StartAnimationMode(_skinnedMeshRenderer);
-                if (_renderctx.isKeep)
+                if (_renderctx.isblendhsape)
+                {
+                    _skinnedMeshRenderer.sharedMesh = ClampBlendShapeUtility.GenerateClampBlendShape(_mesh, _target.selection.ToHashSet());
+                }
+                else if (_renderctx.isKeep)
                 {
                     _skinnedMeshRenderer.sharedMesh = MeshUtility.keepTriangles(_mesh, _target.selection.ToHashSet());
                 }
