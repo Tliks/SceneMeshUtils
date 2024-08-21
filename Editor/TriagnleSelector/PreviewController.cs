@@ -26,8 +26,7 @@ namespace com.aoyon.modulecreator
         private Dictionary<int, int> _selectedoldToNewIndexMap;
         private Dictionary<int, int> _unselectedoldToNewIndexMap;
 
-
-        public void Initialize(SkinnedMeshRenderer renderer)
+        public void Initialize(SkinnedMeshRenderer renderer, HashSet<int> defaultselection)
         {
             AddpreviewObject(ref _unselectedObject, renderer.transform.position, renderer.transform.rotation);
             AddpreviewObject(ref _selectedObject, renderer.transform.position + new Vector3(100, 0, -100), renderer.transform.rotation);
@@ -45,7 +44,7 @@ namespace com.aoyon.modulecreator
             OpenCustomSceneView();
 
             HashSet<int> allTriangleIndices = Enumerable.Range(0, _bakedMesh.triangles.Count() / 3).ToHashSet();    
-            _triangleSelectionManager = new TriangleSelectionManager(allTriangleIndices);
+            _triangleSelectionManager = new TriangleSelectionManager(allTriangleIndices, defaultselection);
 
             Stopwatch stopwatch = new();
             stopwatch.Start();

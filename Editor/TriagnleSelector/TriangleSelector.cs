@@ -13,7 +13,8 @@ namespace com.aoyon.modulecreator
     public class TriangleSelectorContext : ScriptableObject
     {
         public SkinnedMeshRenderer SkinnedMeshRenderer;
-        public List<int> selectedTriangleIndices = new();
+        public List<int> target = new();
+        public HashSet<int> target_default = new();
     }
 
     public class TriangleSelector : EditorWindow
@@ -52,7 +53,7 @@ namespace com.aoyon.modulecreator
             this._triangleSelectorContext = _triangleSelectorContext;
             _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
             _previewController = new();
-            _previewController.Initialize(_OriginskinnedMeshRenderer);
+            _previewController.Initialize(_OriginskinnedMeshRenderer, _triangleSelectorContext.target_default);
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
@@ -104,7 +105,7 @@ namespace com.aoyon.modulecreator
         {
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.Apply")))
             {
-                _triangleSelectorContext.selectedTriangleIndices = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
+                _triangleSelectorContext.target = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
                 Close();
             }
         }

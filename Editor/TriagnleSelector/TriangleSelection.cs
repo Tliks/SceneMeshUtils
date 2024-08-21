@@ -57,34 +57,46 @@ namespace com.aoyon.modulecreator
         public void RenderGUI()
         {
             //serializedObject.Update();
-
-            int selectedIndex = EditorGUILayout.Popup("Triangle Selection", _selectedIndex, _displayedOptions);
-            if (selectedIndex != _selectedIndex)
+            using (new GUILayout.HorizontalScope())
             {   
-                _selectedIndex = selectedIndex;
-                if (_selectedIndex == 0)
+                GUILayout.Label("Triangle Selection");
+                int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions);
+                if (selectedIndex != _selectedIndex)
+                {   
+                    _selectedIndex = selectedIndex;
+                    if (_selectedIndex == 0)
+                    {
+                        _target = new();
+                        StopPrview();
+                    }
+                    else
+                    {
+                        _target.selection = new List<int>(_triangleSelections[_selectedIndex - 1].selection);
+                        StartPreview();
+                    }
+                }
+
+                if (GUILayout.Button("Edit"))
                 {
-                    _target = new();
                     StopPrview();
+                    _selectorcontext.target_default = new HashSet<int>(_target.selection);
+                    TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
                 }
-                else
-                {
-                    _target.selection = new List<int>(_triangleSelections[_selectedIndex - 1].selection);
-                    StartPreview();
-                }
+
             }
             
             if (GUILayout.Button("Open Triangle Selector"))
             {
                 StopPrview();
+                _selectorcontext.target_default = new HashSet<int>();
                 TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
             }
             
-            List<int> newSelection = _selectorcontext.selectedTriangleIndices;
+            List<int> newSelection = _selectorcontext.target;
             if (newSelection != null && newSelection.Count > 0)
             {
                 //Debug.Log("update");
-                _selectorcontext.selectedTriangleIndices = new List<int>();
+                _selectorcontext.target = new List<int>();
                 TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
 
                 SaveAsScriptableObject.UpdateData(_triangleSelectionContainer, newTriangleSelection);
