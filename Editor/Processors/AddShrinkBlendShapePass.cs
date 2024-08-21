@@ -21,7 +21,7 @@ namespace com.aoyon.scenemeshutils
 
             SkinnedMeshRenderer skinnedMeshRenderer = comonent.GetComponent<SkinnedMeshRenderer>();
 
-            Mesh newMesh = ClampBlendShapeUtility.GenerateClampBlendShape(skinnedMeshRenderer.sharedMesh, triangleSelection.selection.ToHashSet());
+            Mesh newMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(skinnedMeshRenderer.sharedMesh, triangleSelection.selection.ToHashSet());
 
             skinnedMeshRenderer.sharedMesh = newMesh;
 

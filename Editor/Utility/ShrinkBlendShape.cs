@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace com.aoyon.scenemeshutils
 {
-    public class ClampBlendShapeUtility
+    public class ShrinkBlendShapeUtility
     {
         private static SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
@@ -18,7 +18,7 @@ namespace com.aoyon.scenemeshutils
             _rootname = CheckUtility.CheckRoot(origSkinnedMeshRenderer.gameObject).name;
         }
 
-        public static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
+        public static Mesh GenerateShrinkBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
         {
             Mesh newMesh = Object.Instantiate(originalMesh);
             Vector3[] vertices = newMesh.vertices;
@@ -101,7 +101,7 @@ namespace com.aoyon.scenemeshutils
 
             // 選択されていない頂点の移動量は0になるため、初期化時のVector3.zeroのままでOK
 
-            string blendShapeName = "ClampBlendShape";
+            string blendShapeName = "shrinkBlendShape";
             List<string> blendShapeNames = GetBlendShapeNames(newMesh);
             string uniqueBlendShapeName = GetUniqueBlendShapeName(blendShapeNames, blendShapeName);
 
@@ -135,16 +135,16 @@ namespace com.aoyon.scenemeshutils
 
         private static void ReplaceMesh()
         {
-            Mesh newMesh = GenerateClampBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
+            Mesh newMesh = GenerateshrinkBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
 
-            string path = AssetPathUtility.GenerateMeshPath(_rootname, "ClampMesh");
+            string path = AssetPathUtility.GenerateMeshPath(_rootname, "shrinkMesh");
             AssetDatabase.CreateAsset(newMesh, path);
             AssetDatabase.SaveAssets();
 
             _originskinnedMeshRenderer.sharedMesh = newMesh;
         }
 
-        public static void RendergenerateClamp()
+        public static void Rendergenerateshrink()
         {
             EditorGUILayout.Space();
             GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;

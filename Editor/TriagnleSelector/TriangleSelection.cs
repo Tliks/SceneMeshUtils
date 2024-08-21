@@ -162,7 +162,7 @@ namespace com.aoyon.scenemeshutils
                 CustomAnimationMode.StartAnimationMode(_skinnedMeshRenderer);
                 if (_renderctx.isblendhsape)
                 {
-                    _skinnedMeshRenderer.sharedMesh = ClampBlendShapeUtility.GenerateClampBlendShape(_mesh, _target.selection.ToHashSet());
+                    _skinnedMeshRenderer.sharedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(_mesh, _target.selection.ToHashSet());
                 }
                 else if (_renderctx.isKeep)
                 {
