@@ -131,11 +131,13 @@ namespace com.aoyon.modulecreator
                 {
                     _previewController.PerformUndo();
                     e.Use();
+                    Repaint();
                 }
                 else if (e.keyCode == KeyCode.Y) // Ctrl/Cmd + Y
                 {
                     _previewController.PerformRedo();
                     e.Use();
+                    Repaint();
                 }
             }
         }
@@ -187,6 +189,7 @@ namespace com.aoyon.modulecreator
                     _isdragging = false;
                     _selectionRect = new Rect();
                     DrawSelectionRectangle();
+                    Repaint();
 
                 }
                 //ドラッグ中
