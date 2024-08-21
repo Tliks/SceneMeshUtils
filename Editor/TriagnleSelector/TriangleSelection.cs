@@ -21,6 +21,7 @@ namespace com.aoyon.modulecreator
     {
         private SkinnedMeshRenderer _skinnedMeshRenderer;
         private Mesh _mesh;
+        private TriangleSelector _triangleSelector;
         private TriangleSelectionContainer _triangleSelectionContainer;
         private List<TriangleSelection> _triangleSelections;
         private TriangleSelection _target;
@@ -52,6 +53,10 @@ namespace com.aoyon.modulecreator
 
         public void Dispose()
         {
+            if (_triangleSelector != null)
+            {
+                _triangleSelector.Dispose();
+            }
             CustomAnimationMode.StopAnimationMode();
         }
 
@@ -81,7 +86,7 @@ namespace com.aoyon.modulecreator
                 {
                     StopPrview();
                     _selectorcontext.target_default = new HashSet<int>(_target.selection);
-                    TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+                    _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
                 }
 
             }
@@ -90,7 +95,7 @@ namespace com.aoyon.modulecreator
             {
                 StopPrview();
                 _selectorcontext.target_default = new HashSet<int>();
-                TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+                _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
             }
             
             if (_selectorcontext.end)

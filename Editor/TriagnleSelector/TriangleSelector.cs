@@ -43,12 +43,13 @@ namespace com.aoyon.modulecreator
 
         private bool _isPreviewEnabled = true;
 
-        public static void ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
+        public static TriangleSelector ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
         {
             TriangleSelector window = GetWindow<TriangleSelector>();
             context.SkinnedMeshRenderer = skinnedMeshRenderer;
             window.Initialize(context);
             window.Show();
+            return window;
         }
 
         private void Initialize(TriangleSelectorContext _triangleSelectorContext)
@@ -65,6 +66,11 @@ namespace com.aoyon.modulecreator
             _previewController.Dispose();
             _triangleSelectorContext.end = true;
             SceneView.duringSceneGui -= OnSceneGUI;
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
 
         private void OnSceneGUI(SceneView sceneView)
