@@ -33,6 +33,7 @@ namespace com.aoyon.modulecreator
             { "TriangleSelector.polygon.scale", new string[] { "Scale", "スケール" }},
             { "TriangleSelector.polygon.scale.description", new string[] { "The value that determines how far polygons from the clicked point are included in the selection.", "クリックした箇所からどれだけ離れた位置にあるポリゴンまで選択対象に含めるかの値です。" }},
 
+            { "TriangleSelector.SelectionName", new string[] { "SelectionName(Optional)", "選択箇所の名前(オプション)"}},
             { "TriangleSelector.Apply", new string[] { "Apply", "適用"}},
 
             { "advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},

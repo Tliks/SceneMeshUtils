@@ -15,6 +15,7 @@ namespace com.aoyon.modulecreator
         public SkinnedMeshRenderer SkinnedMeshRenderer;
         public List<int> target = new();
         public HashSet<int> target_default = new();
+        public string displayname;
         public bool end = false;
     }
 
@@ -38,6 +39,7 @@ namespace com.aoyon.modulecreator
         private bool _checkAll = true;
         private bool _isIsland = true;
         public float _scale = 0.03f;
+        private string _selectionName = "";
 
         private bool _isPreviewEnabled = true;
 
@@ -99,8 +101,14 @@ namespace com.aoyon.modulecreator
             process_options();
 
             EditorGUILayout.Space();
+            RenderNameInput();
             RenderApply();
 
+        }
+
+        private void RenderNameInput()
+        {
+            _selectionName = EditorGUILayout.TextField(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionName"), _selectionName);
         }
 
         private void RenderApply()
@@ -108,6 +116,7 @@ namespace com.aoyon.modulecreator
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.Apply")))
             {
                 _triangleSelectorContext.target = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
+                _triangleSelectorContext.displayname = _selectionName;
                 Close();
             }
         }

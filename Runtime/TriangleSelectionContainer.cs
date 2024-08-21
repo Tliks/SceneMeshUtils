@@ -15,6 +15,9 @@ namespace com.aoyon.modulecreator
     public class TriangleSelection
     {
         public List<int> selection = new List<int>();
+
+        public string displayname;
+        public long createtime;
     }
 }
 

@@ -4,6 +4,7 @@ using UnityEditor;
 using System;
 using System.Linq;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace com.aoyon.modulecreator
 {
@@ -101,7 +102,23 @@ namespace com.aoyon.modulecreator
                 {
                     //Debug.Log("update");
                     _selectorcontext.target = new List<int>();
+
                     TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
+                    string displayname;
+                    float percent = (float)newSelection.Count() / ((float)_mesh.triangles.Count() / 3) * 100;
+                    percent = (int)Math.Round((double)percent);
+                    if (_selectorcontext.displayname == null || _selectorcontext.displayname == "")
+                    {
+                        string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
+                        displayname = $"{uniquename} ({percent}%)";
+                    }
+                    else
+                    {
+                        displayname = $"{_selectorcontext.displayname} ({percent}%)";
+                    }
+                    _selectorcontext.displayname = null;
+                    newTriangleSelection.displayname = displayname;
+                    newTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
 
                     SaveAsScriptableObject.UpdateData(_triangleSelectionContainer, newTriangleSelection);
 
@@ -128,7 +145,7 @@ namespace com.aoyon.modulecreator
         {
             _triangleSelectionContainer = SaveAsScriptableObject.GetContainer(_mesh);
             _triangleSelections = _triangleSelectionContainer.selections;
-            _displayedOptions = _triangleSelections.Select(ts => ts.selection.Count().ToString()).ToArray();
+            _displayedOptions = _triangleSelections.Select(ts => ts.displayname).ToArray();
             _displayedOptions = new[] { "None" }.Concat(_displayedOptions).ToArray();
         }
 
@@ -229,6 +246,43 @@ namespace com.aoyon.modulecreator
 
             var loadedInstance = (TriangleSelectionContainer)AssetDatabase.LoadAssetAtPath(uniquePath, typeof(TriangleSelectionContainer));
             return loadedInstance;
+        }
+
+        public static string GetUniqueDisplayname(List<TriangleSelection> selections)
+        {
+            int maxIndex = -1;
+            var regex = new Regex(@"Selection(\d+)");
+
+            foreach (var selection in selections)
+            {
+                var match = regex.Match(selection.displayname);
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int index))
+                {
+                    if (index > maxIndex)
+                    {
+                        maxIndex = index;
+                    }
+                }
+            }
+
+            return $"Selection{maxIndex + 1}";
+        }
+
+        public static long GetTimestamp()
+        {
+            DateTime now = DateTime.Now;
+
+            int year = now.Year;
+            int month = now.Month;
+            int day = now.Day;
+            int hour = now.Hour;
+            int minute = now.Minute;
+            int second = now.Second;
+
+            string timestampStr = $"{year:D4}{month:D2}{day:D2}{hour:D2}{minute:D2}{second:D2}";
+            long timestamp = long.Parse(timestampStr);
+
+            return timestamp;
         }
     }
 }
