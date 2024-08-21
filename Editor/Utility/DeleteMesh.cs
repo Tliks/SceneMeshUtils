@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public static class DeleteMeshUtilty
     {

@@ -27,7 +27,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class CustomSceneView : SceneView
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     [CustomEditor(typeof(TransformPolygonUtility))]

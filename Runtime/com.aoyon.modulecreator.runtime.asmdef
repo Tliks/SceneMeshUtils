@@ -1,5 +1,5 @@
 {
-    "name": "com.aoyon.modulecreator.runtime",
+    "name": "com.aoyon.scenemeshutils.runtime",
     "rootNamespace": "",
     "references": [
         "VRC.SDK3A",

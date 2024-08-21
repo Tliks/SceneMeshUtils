@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class TransformPolygonUtility : MonoBehaviour
     {

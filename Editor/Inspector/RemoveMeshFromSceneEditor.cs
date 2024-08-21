@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     [CustomEditor(typeof(RemoveMeshFromScene))]
     public class RemoveMeshFromSceneEditor: Editor

@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public static class AssetPathUtility
     {

@@ -1,16 +1,16 @@
 using nadena.dev.ndmf;
-using com.aoyon.modulecreator;
+using com.aoyon.scenemeshutils;
 using UnityEngine;
 
 [assembly: ExportsPlugin(typeof(PluginDefinition))]
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class PluginDefinition : Plugin<PluginDefinition>
     {
-        public override string QualifiedName => "com.aoyon.modulecreator";
+        public override string QualifiedName => "com.aoyon.scenemeshutils";
 
-        public override string DisplayName => "ModuleCreator";
+        public override string DisplayName => "SceneMeshUtils";
 
         protected override void Configure()
         {

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class ModuleCreatorSettings
     {

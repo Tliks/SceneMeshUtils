@@ -7,7 +7,7 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     public class TriangleSelectorContext : ScriptableObject

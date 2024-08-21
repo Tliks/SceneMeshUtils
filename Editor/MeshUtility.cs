@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class MeshUtility
     {

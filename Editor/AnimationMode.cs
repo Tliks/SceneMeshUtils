@@ -25,7 +25,7 @@ SOFTWARE.
 using UnityEngine;
 using UnityEditor;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class CustomAnimationMode
     {

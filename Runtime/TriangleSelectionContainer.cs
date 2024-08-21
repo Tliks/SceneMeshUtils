@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     [Serializable]
     public class TriangleSelectionContainer : ScriptableObject

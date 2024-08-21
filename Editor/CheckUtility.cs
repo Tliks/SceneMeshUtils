@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class CheckUtility
     {

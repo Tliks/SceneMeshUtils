@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class LocalizationEditor
     {

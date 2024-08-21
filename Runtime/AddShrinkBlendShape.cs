@@ -3,7 +3,7 @@ using VRC.SDKBase;
 using System.Collections.Generic;
 using System;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     [AddComponentMenu("SceneMeshUtils/Add Shrink BlendShape")]

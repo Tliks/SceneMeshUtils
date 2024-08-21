@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     
     public class PreviewController

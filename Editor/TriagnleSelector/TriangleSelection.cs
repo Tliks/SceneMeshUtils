@@ -6,7 +6,7 @@ using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     public class RenderSelectorContext
