@@ -6,7 +6,7 @@ using System;
 namespace com.aoyon.scenemeshutils
 {
 
-    [AddComponentMenu("SceneMeshUtils/Add Shrink BlendShape")]
+    [AddComponentMenu("SceneMeshUtils/SMU Add Shrink BlendShape")]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(SkinnedMeshRenderer))]
     public class AddShrinkBlendShape: MonoBehaviour, IEditorOnly

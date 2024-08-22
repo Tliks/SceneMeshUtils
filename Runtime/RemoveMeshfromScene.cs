@@ -6,7 +6,7 @@ using System;
 namespace com.aoyon.scenemeshutils
 {
 
-    [AddComponentMenu("SceneMeshUtils/Remove Mesh From Scene")]
+    [AddComponentMenu("SceneMeshUtils/SMU Remove Mesh From Scene")]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(SkinnedMeshRenderer))]
     public class RemoveMeshFromScene: MonoBehaviour, IEditorOnly
