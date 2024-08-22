@@ -204,7 +204,7 @@ namespace com.aoyon.scenemeshutils
 
     public class SaveAsScriptableObject
     {
-        private const string SAVE_PATH = "Assets/TriangleSelection";
+        private const string SAVE_PATH = "Assets/SceneMeshUtils/TriangleSelection";
 
         public static void UpdateData(TriangleSelectionContainer triangleSelection, TriangleSelection newSelection)
         {
