@@ -63,6 +63,7 @@ namespace com.aoyon.scenemeshutils
         public void RenderGUI()
         {
             //serializedObject.Update();
+            GUI.enabled = _triangleSelector == null;
             using (new GUILayout.HorizontalScope())
             {   
                 GUILayout.Label("Triangle Selection");
@@ -90,6 +91,7 @@ namespace com.aoyon.scenemeshutils
                 }
 
             }
+            GUI.enabled = true;
             
             if (GUILayout.Button(_triangleSelector == null ? "Open Triangle Selector" : "Close Triangle Selector"))
             {
@@ -105,6 +107,7 @@ namespace com.aoyon.scenemeshutils
                 }
             }
             
+            GUI.enabled = _triangleSelector == null;
             if (_selectorcontext.end)
             {
                 _selectorcontext.end = false;
@@ -146,6 +149,7 @@ namespace com.aoyon.scenemeshutils
             {
                 ToggleAutoPreview();
             }
+            GUI.enabled = true;
 
             /*
             string label = (target as RemoveMeshFromScene).triangleSelection != null ? (target as RemoveMeshFromScene).triangleSelection.selection.Count.ToString() : "なくない?";
