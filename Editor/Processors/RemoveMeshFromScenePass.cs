@@ -11,9 +11,11 @@ namespace com.aoyon.scenemeshutils
         {
             var comonent = context.AvatarRootObject.GetComponentInChildren<RemoveMeshFromScene>();
 
+            if (comonent == null) return;
+
             TriangleSelection triangleSelection = comonent.triangleSelection;
 
-            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count > 0)
+            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count == 0)
             {
                 Object.DestroyImmediate(comonent);
                 return;

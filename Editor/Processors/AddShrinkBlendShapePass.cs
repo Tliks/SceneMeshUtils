@@ -9,11 +9,13 @@ namespace com.aoyon.scenemeshutils
     {
         protected override void Execute(BuildContext context)
         {
-            var comonent = context.AvatarRootObject.GetComponentInChildren<RemoveMeshFromScene>();
+            var comonent = context.AvatarRootObject.GetComponentInChildren<AddShrinkBlendShape>();
+
+            if (comonent == null) return;
 
             TriangleSelection triangleSelection = comonent.triangleSelection;
 
-            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count > 0)
+            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count == 0)
             {
                 Object.DestroyImmediate(comonent);
                 return;
