@@ -44,7 +44,12 @@ namespace com.aoyon.scenemeshutils
             return window;
         }
 
-        
+        void OnDestroy()
+        {
+            SetLastActiveSceneView(_defaultSceneView);
+            isMouseOver = false;
+        }
+    
         public void OnGUI()
         {
             if (EditorWindow.mouseOverWindow == this)
