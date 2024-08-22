@@ -16,6 +16,7 @@ namespace com.aoyon.scenemeshutils
         {
             var sequence =
                 InPhase(BuildPhase.Transforming)
+                .BeforePlugin("MantisLODEditor.ndmf")
                 .BeforePlugin("net.rs64.tex-trans-tool")
                 .BeforePlugin("com.anatawa12.avatar-optimizer");
 
