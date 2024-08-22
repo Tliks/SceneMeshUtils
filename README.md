@@ -23,15 +23,15 @@ SceneMeshUtils(仮)
 - 欲しいメッシュの箇所を指定した上でウェイトやPhysBone等を走査し必要最低限の構成のPrefab Variantを生成
 
 ### 実行場所
-- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Module`
+- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューからSceneMeshUtils/Create Module
 
 ### 使い方
-- `Open Triangle Selector`からTriangle Selectorを起動
-- 欲しい箇所のメッシュを指定した上でApply。詳細は以下の`Triangle Selector`から
+- Open Triangle SelectorからTriangle Selectorを起動
+- 欲しい箇所のメッシュを指定した上でApply。詳細は以下のTriangle Selectorから
 - 選択された出力対象の箇所のメッシュがプレビューされます。
-- `Create Module`もしくは`Create Both Module`
+- Create ModuleもしくはCreate Both Module
 - 基本的にそのままMAセットアップ可能なメッシュやArmature等を内包したPrefabとそのインスタンスがAssetsとHierarchyにそれぞれ生成されます
-- `Create Both Module`は選択したメッシュと選択されていないメッシュでそれぞれPrefabを生成します。独立した合計2つのメッシュに分離するような機能です。
+- Create Both Moduleは選択したメッシュと選択されていないメッシュでそれぞれPrefabを生成します。独立した合計2つのメッシュに分離するような機能です。
 
 ## Create Mask Texture
 
@@ -40,11 +40,11 @@ SceneMeshUtils(仮)
 - メッシュの箇所を指定した上で、選択領域と非選択領域に対してそれぞれ塗りつぶしや色の転送等を行ったテクスチャを生成
 
 ### 実行場所
-- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューから`SceneMeshUtils/Create Mask Texture`
+- Skinned Mesh Rendererがついたオブジェクトの右クリックメニューからSceneMeshUtils/Create Mask Texture
 
 ### 使い方
-- `Open Triangle Selector`からTriangle Selectorを起動
-- メッシュの箇所を指定した上でApply。詳細は以下の`Triangle Selector`から
+- Open Triangle SelectorからTriangle Selectorを起動
+- メッシュの箇所を指定した上でApply。詳細は以下のTriangle Selectorから
 - 選択された箇所のメッシュがプレビューされます。
 - 選択した箇所と選択されていない箇所をそれぞれどのような色にするか選択します。
     - white: 白に塗りつぶし
@@ -62,15 +62,16 @@ SceneMeshUtils(仮)
 - 基本的にAAO Remove Meshと同じですがTriangle Selectorを用いることでシーン上から直接選択できるインターフェースの違いがあります。
 
 ### 実行場所
-- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Remove Mesh From Scene`
+- Skinned Mesh RendererがついたオブジェクトにAdd ComponentからSceneMeshUtils/Remove Mesh From Scene
 
 ### 使い方
-- `Open Triangle Selector`からTriangle Selectorを起動
-- 消したい箇所のメッシュを指定した上でApply。詳細は以下の`Triangle Selector`から
+- Open Triangle SelectorからTriangle Selectorを起動
+- 消したい箇所のメッシュを指定した上でApply。詳細は以下のTriangle Selectorから
 - Auto Previewが有効であれば削除されたメッシュがプレビューされます。
 - NDMF準拠でビルド時にメッシュ削除
 
-## Add Shrink BlendShape
+## Add Shrink BlendShape(開発途中)
+基本的に機能しますが追加したBlendShapeを参照する術がないかも
 
 ### 機能
 - 貫通対策用のBlendShapeを非破壊で追加する機能。
@@ -78,15 +79,16 @@ SceneMeshUtils(仮)
 - Blenderで追加するほど綺麗なShrinkにはなりません。
 
 ### 実行場所
-- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Add Shrink BlendShape`
+- Skinned Mesh RendererがついたオブジェクトにAdd ComponentからSceneMeshUtils/Add Shrink BlendShape
 
 ### 使い方
-- `Open Triangle Selector`からTriangle Selectorを起動
-- 消したい箇所のメッシュを指定した上でApply。詳細は以下の`Triangle Selector`から
+- Open Triangle SelectorからTriangle Selectorを起動
+- 消したい箇所のメッシュを指定した上でApply。詳細は以下のTriangle Selectorから
 - Auto Previewが有効であればBlendShapeが追加されたメッシュがプレビューされます。
 - NDMF準拠でビルド時にBlendShapeを追加
 
 ## Transform Polygon(開発途中)
+コンポーネントがありません
 
 ### 機能
 - メッシュの一部にのみTransformを適用する機能。
@@ -94,11 +96,11 @@ SceneMeshUtils(仮)
 - この機能は非破壊でMeshを直接編集することで選択された箇所の頂点に対してのみ追加のTransformの値を加算します。
 
 ### 実行場所
-- Skinned Mesh RendererがついたオブジェクトにAdd Componentから`SceneMeshUtils/Transform Polygon`
+- Skinned Mesh RendererがついたオブジェクトにAdd ComponentからSceneMeshUtils/Transform Polygon
 
 ### 使い方
-- `Open Triangle Selector`からTriangle Selectorを起動
-- 適用したい箇所のメッシュを指定した上でApply。詳細は以下の`Triangle Selector`から
+- Open Triangle SelectorからTriangle Selectorを起動
+- 適用したい箇所のメッシュを指定した上でApply。詳細は以下のTriangle Selectorから
 - コンポーネント上にあるTransformに準拠した項目の数値を変更します
 - Auto Previewが有効であれば選択されたメッシュのみPosition等が変化します。
 - NDMF準拠でビルド時にMeshを編集
@@ -109,7 +111,7 @@ SceneMeshUtils(仮)
 - メッシュの一部をシーン上から直接選択する共通のインターフェース
 
 ### 実行場所
-- 各機能の`Open Triangle Selector`から起動できます。
+- 各機能のOpen Triangle Selectorから起動できます。
 
 ### 使い方
 - クリックもしくはドラッグを用いた範囲選択が出来ます。
