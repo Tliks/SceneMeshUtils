@@ -70,7 +70,8 @@ SceneMeshUtils(仮)
 - Auto Previewが有効であれば削除されたメッシュがプレビューされます。
 - NDMF準拠でビルド時にメッシュ削除
 
-## Add Shrink BlendShape
+## Add Shrink BlendShape(開発途中)
+基本的に機能しますが追加したBlendShapeを参照する術がないかも
 
 ### 機能
 - 貫通対策用のBlendShapeを非破壊で追加する機能。
@@ -87,6 +88,7 @@ SceneMeshUtils(仮)
 - NDMF準拠でビルド時にBlendShapeを追加
 
 ## Transform Polygon(開発途中)
+コンポーネントがありません
 
 ### 機能
 - メッシュの一部にのみTransformを適用する機能。
