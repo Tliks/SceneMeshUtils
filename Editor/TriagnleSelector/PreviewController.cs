@@ -55,7 +55,7 @@ namespace com.aoyon.scenemeshutils
             SceneRaycastUtility.AddCollider(_selectedObject, _unselectedObject);
             HighlightEdgesManager.AddComponent(_selectedObject, _unselectedObject);
 
-            //CustomAnimationMode.StopAnimationMode();
+            CustomAnimationMode.StopAnimationMode();
             CustomAnimationMode.StartAnimationMode(renderer);
 
             UpdateMesh();
