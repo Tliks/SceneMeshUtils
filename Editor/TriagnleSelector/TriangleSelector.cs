@@ -14,8 +14,10 @@ namespace com.aoyon.scenemeshutils
     {
         public SkinnedMeshRenderer SkinnedMeshRenderer;
         public List<int> target = new();
+        public bool isedit;
         public HashSet<int> target_default = new();
         public string displayname;
+        public bool iseditmodeasnew;
         public bool end = false;
     }
 
@@ -42,6 +44,7 @@ namespace com.aoyon.scenemeshutils
         private string _selectionName = "";
 
         private bool _isPreviewEnabled = true;
+        private int _iseditmodeasnew = 0;
 
         public static TriangleSelector ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -58,6 +61,7 @@ namespace com.aoyon.scenemeshutils
             _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
             _previewController = new();
             _previewController.Initialize(_OriginskinnedMeshRenderer, _triangleSelectorContext.target_default);
+            if (_triangleSelectorContext.isedit) _selectionName = _triangleSelectorContext.displayname;
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
@@ -107,23 +111,27 @@ namespace com.aoyon.scenemeshutils
             process_options();
 
             EditorGUILayout.Space();
-            RenderNameInput();
             RenderApply();
 
         }
 
-        private void RenderNameInput()
-        {
-            _selectionName = EditorGUILayout.TextField(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionName"), _selectionName);
-        }
-
         private void RenderApply()
         {
+            _selectionName = EditorGUILayout.TextField(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionName"), _selectionName);
+            if (_triangleSelectorContext.isedit)
+            {   
+                string label = LocalizationEditor.GetLocalizedText("TriangleSelector.SaveMode");
+                string editmode = LocalizationEditor.GetLocalizedText("TriangleSelector.SaveMode.edit");
+                string newmode = LocalizationEditor.GetLocalizedText("TriangleSelector.SaveMode.new");
+                _iseditmodeasnew = EditorGUILayout.Popup(label, _iseditmodeasnew, new string[] {editmode, newmode});
+            }
             GUI.enabled = _previewController._triangleSelectionManager.GetSelectedTriangles().Count() > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelector.Apply")))
             {
                 _triangleSelectorContext.target = _previewController._triangleSelectionManager.GetSelectedTriangles().ToList();
                 _triangleSelectorContext.displayname = _selectionName;
+                if (_triangleSelectorContext.isedit) _triangleSelectorContext.iseditmodeasnew = _iseditmodeasnew == 0 ? false : true; 
+                else _triangleSelectorContext.iseditmodeasnew = true;
                 Close();
             }
             GUI.enabled = true;

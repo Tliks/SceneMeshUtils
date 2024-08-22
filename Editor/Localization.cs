@@ -34,6 +34,9 @@ namespace com.aoyon.scenemeshutils
             { "TriangleSelector.polygon.scale.description", new string[] { "The value that determines how far polygons from the clicked point are included in the selection.", "クリックした箇所からどれだけ離れた位置にあるポリゴンまで選択対象に含めるかの値です。" }},
 
             { "TriangleSelector.SelectionName", new string[] { "SelectionName(Optional)", "選択箇所の名前(オプション)"}},
+            { "TriangleSelector.SaveMode", new string[] { "Save Method", "保存方法"}},
+            { "TriangleSelector.SaveMode.edit", new string[] { "Save As Overwrite", "上書き保存"}},
+            { "TriangleSelector.SaveMode.new", new string[] { "Save As New", "新規保存"}},
             { "TriangleSelector.Apply", new string[] { "Apply", "適用"}},
 
             { "advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},
