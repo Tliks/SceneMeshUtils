@@ -67,10 +67,10 @@ namespace com.aoyon.scenemeshutils
         {
             EditorGUILayout.Space();
 
-            _Settings.IncludePhysBone = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneToggle"), _Settings.IncludePhysBone);
+            _Settings.IncludePhysBone = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.PhysBoneToggle"), _Settings.IncludePhysBone);
 
             GUI.enabled = _Settings.IncludePhysBone;
-            _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
+            _Settings.IncludePhysBoneColider = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.PhysBoneColiderToggle"), _Settings.IncludePhysBoneColider);
             GUI.enabled = true;
         }
 
@@ -101,10 +101,10 @@ namespace com.aoyon.scenemeshutils
         {
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
 
-            _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("OutputUnselcted"), _outputunselected);
+            _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.OutputUnselcted"), _outputunselected);
             
             // Create Selected Islands Module
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.CreateModuleButton")))
             {
                 CustomAnimationMode.StopAnimationMode();
                 CreateModule(_targetselection.selection.ToHashSet(), true);
@@ -118,25 +118,25 @@ namespace com.aoyon.scenemeshutils
         private static void process_advanced_options()
         {   
 
-            _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("advancedoptions"));
+            _showAdvancedOptions = EditorGUILayout.Foldout(_showAdvancedOptions, LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.advancedoptions"));
             if (_showAdvancedOptions)
             {
                 
                 GUI.enabled = _Settings.IncludePhysBone;
-                GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.AdditionalTransformsToggle"));
+                GUIContent content_at = new GUIContent(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.AdditionalTransformsToggle"), LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.tooltip.AdditionalTransformsToggle"));
                 _Settings.RemainAllPBTransforms = EditorGUILayout.Toggle(content_at, _Settings.RemainAllPBTransforms);
 
-                GUIContent content_ii = new GUIContent(LocalizationEditor.GetLocalizedText("IncludeIgnoreTransformsToggle"), LocalizationEditor.GetLocalizedText("tooltip.IncludeIgnoreTransformsToggle"));
+                GUIContent content_ii = new GUIContent(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.IncludeIgnoreTransformsToggle"), LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.tooltip.IncludeIgnoreTransformsToggle"));
                 _Settings.IncludeIgnoreTransforms = EditorGUILayout.Toggle(content_ii, _Settings.IncludeIgnoreTransforms);
 
                 GUIContent content_rr = new GUIContent(
-                    LocalizationEditor.GetLocalizedText("RenameRootTransformToggle"),
-                    LocalizationEditor.GetLocalizedText("tooltip.RenameRootTransformToggle"));
+                    LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.RenameRootTransformToggle"),
+                    LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.tooltip.RenameRootTransformToggle"));
                 _Settings.RenameRootTransform = EditorGUILayout.Toggle(content_rr, _Settings.RenameRootTransform);
 
                 GUI.enabled = true;
 
-                GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("tooltip.SpecifyRootObjectLabel"));
+                GUIContent content_sr = new GUIContent(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.SpecifyRootObjectLabel"), LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.tooltip.SpecifyRootObjectLabel"));
                 _Settings.RootObject = (GameObject)EditorGUILayout.ObjectField(content_sr, _Settings.RootObject, typeof(GameObject), true);
                         
             }

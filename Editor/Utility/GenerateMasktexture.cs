@@ -61,23 +61,23 @@ namespace com.aoyon.scenemeshutils
         {
             //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
             string[] options = { 
-                LocalizationEditor.GetLocalizedText("mask.color.white"), 
-                LocalizationEditor.GetLocalizedText("mask.color.black"), 
-                LocalizationEditor.GetLocalizedText("mask.color.alpha"),
-                LocalizationEditor.GetLocalizedText("mask.color.original"),
-                LocalizationEditor.GetLocalizedText("mask.color.grayscale")
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.white"), 
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.black"), 
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.alpha"),
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.original"),
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.grayscale")
                 };
 
-            _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
-            _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.backcolor"), _backcolorindex, options);
+            _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("Utility.mask.areacolor"), _areacolorindex, options);
+            _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("Utility.mask.backcolor"), _backcolorindex, options);
 
-            selectedValue = EditorGUILayoutIntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, optionValues);
-            _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
+            selectedValue = EditorGUILayoutIntPopup(LocalizationEditor.GetLocalizedText("Utility.mask.resolution"), selectedValue, optionValues);
+            _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("Utility.mask.expansion"), _expansion);
             
             // Create Selected Islands Module
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
             EditorGUILayout.Space();
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.mask.createtexture")))
             {   
                 CustomAnimationMode.StopAnimationMode();
                 GenerateMask(_targetselection.selection.ToHashSet());
