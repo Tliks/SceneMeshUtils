@@ -181,14 +181,14 @@ namespace com.aoyon.scenemeshutils
             return foundVertices;
 
             bool IsInsideIsland(Island island, bool checkAll) =>
-                checkAll ? island.VertexIndices.TrueForAll(IsVertexCloseToCollider) 
-                        : island.VertexIndices.Exists(IsVertexCloseToCollider);
+                checkAll ? island.VertexIndices.TrueForAll(IsVertexInCollider) 
+                        : island.VertexIndices.Exists(IsVertexInCollider);
 
-            bool IsVertexCloseToCollider(int vertexIndex)
+            bool IsVertexInCollider(int vertexIndex)
             {
                 Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                 Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
-                return Vector3.Distance(closestPoint, vertexWorldPos) < 0.001f;
+                return closestPoint == vertexWorldPos;
             }
         }
 
