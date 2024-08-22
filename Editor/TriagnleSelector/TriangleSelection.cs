@@ -91,11 +91,18 @@ namespace com.aoyon.scenemeshutils
 
             }
             
-            if (GUILayout.Button("Open Triangle Selector"))
+            if (GUILayout.Button(_triangleSelector == null ? "Open Triangle Selector" : "Close Triangle Selector"))
             {
-                StopPrview();
-                _selectorcontext.target_default = new HashSet<int>();
-                _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+                if (_triangleSelector == null)
+                {
+                    StopPrview();
+                    _selectorcontext.target_default = new HashSet<int>();
+                    _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+                }
+                else
+                {
+                    _triangleSelector.Dispose();
+                }
             }
             
             if (_selectorcontext.end)
