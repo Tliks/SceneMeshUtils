@@ -19,6 +19,7 @@ namespace com.aoyon.scenemeshutils
         private static string _rootname;
         private TriangleSelection _targetselection;
         private RenderSelector _renderSelector;
+        private bool _outputunselected = false;
 
         public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -57,7 +58,6 @@ namespace com.aoyon.scenemeshutils
             EditorGUILayout.Space();
 
             RenderCreateModuleButtons();
-            RenderCreateBothModuleButtons();
             EditorGUILayout.Space();
             
             process_advanced_options();
@@ -96,32 +96,19 @@ namespace com.aoyon.scenemeshutils
                 ModuleCreatorProcessor.CheckAndCopyBones(_originskinnedMeshRenderer.gameObject, _Settings);
             }
         }
-
-        private void RenderCreateBothModuleButtons()
-        {
-            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
-
-            // Create Both Modules
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateBothModulesButton")))
-            {   
-                CustomAnimationMode.StopAnimationMode();
-                CreateModule(_targetselection.selection.ToHashSet(), true);
-                CreateModule(_targetselection.selection.ToHashSet(), false);
-                Close();
-            }
-
-            GUI.enabled = true;
-        }
         
         private void RenderCreateModuleButtons()
         {
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
+
+            _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("OutputUnselcted"), _outputunselected);
             
             // Create Selected Islands Module
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("CreateModuleButton")))
             {
                 CustomAnimationMode.StopAnimationMode();
                 CreateModule(_targetselection.selection.ToHashSet(), true);
+                if (_outputunselected) CreateModule(_targetselection.selection.ToHashSet(), false);
                 Close();
             }
 

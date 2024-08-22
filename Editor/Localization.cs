@@ -44,7 +44,7 @@ namespace com.aoyon.scenemeshutils
             { "PreviewMeshButton", new string[] { "Preview Mesh", "メッシュプレビュー" } },
             { "CalculateIslandsButton", new string[] { "Calculate Islands", "アイランド計算" } },
             { "CreateModuleButton", new string[] { "Create Module", "モジュールを作成" } },
-            { "CreateBothModulesButton", new string[] { "Create both selected and unselected modules", "選択・未選択両方のモジュールを作成" } },
+            { "OutputUnselcted", new string[] { "Include Unselected Module", "未選択のモジュールも含める" } },
             { "PhysBoneToggle", new string[] { "PhysBone", "PhysBone" } },
             { "PhysBoneColiderToggle", new string[] { "PhysBoneColider", "PhysBoneColider" } },
             { "AdditionalTransformsToggle", new string[] { "Additional Transforms", "追加のTransform" } },
