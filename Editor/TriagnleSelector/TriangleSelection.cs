@@ -83,6 +83,7 @@ namespace com.aoyon.scenemeshutils
                     }
                 }
 
+                GUI.enabled = _selectedIndex != 0;
                 if (GUILayout.Button("Remove"))
                 {
                     StopPrview();
@@ -91,6 +92,7 @@ namespace com.aoyon.scenemeshutils
                     _target.selection = new List<int>();
                     _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
                 }
+                GUI.enabled = true;
             }
             GUI.enabled = true;
             
