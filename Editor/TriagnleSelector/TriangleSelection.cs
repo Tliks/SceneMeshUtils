@@ -73,7 +73,7 @@ namespace com.aoyon.scenemeshutils
                     _selectedIndex = selectedIndex;
                     if (_selectedIndex == 0)
                     {
-                        _target = new();
+                        _target.selection = new();
                         StopPrview();
                     }
                     else
@@ -89,8 +89,16 @@ namespace com.aoyon.scenemeshutils
                     StopPrview();
                     SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
                     LoadAsset();
-                    _target.selection = new List<int>();
                     _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
+                    if (_selectedIndex != 0)
+                    {
+                        _target.selection = new List<int>(_triangleSelections[_selectedIndex - 1].selection);
+                    }
+                    else
+                    {
+                        _target.selection = new List<int>();
+                    }
+                    
                 }
                 GUI.enabled = true;
             }
