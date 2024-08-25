@@ -8,6 +8,7 @@ namespace com.aoyon.scenemeshutils
     public class TriangleSelectionContainer : ScriptableObject
     {
         public Mesh mesh;
+        public int TriangleCount;
         public List<TriangleSelection> selections = new List<TriangleSelection>();
     }
 
