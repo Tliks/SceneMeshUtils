@@ -1,26 +1,24 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public static class DeleteMeshUtilty
     {
         private static SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
-        private static Mesh _originalMesh;
         private static TriangleSelectionManager _triangleSelectionManager;
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _originskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
+            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
             _triangleSelectionManager = triangleSelectionManager;
         }
 
         private static void DeleteMesh()
         {   
-            Mesh newMesh = MeshUtility.DeleteMesh(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
+            Mesh newMesh = MeshUtility.DeleteMesh(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
 
             string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
             AssetDatabase.CreateAsset(newMesh, path);
@@ -35,9 +33,9 @@ namespace com.aoyon.modulecreator
             GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh")))
             {
-                MeshPreview.StopPreview();
+                CustomAnimationMode.StopAnimationMode();
                 DeleteMesh();
-                MeshPreview.StartPreview(_originskinnedMeshRenderer);
+                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
             }
             GUI.enabled = true;
         }

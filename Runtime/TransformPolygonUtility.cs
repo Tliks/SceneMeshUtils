@@ -1,31 +1,32 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class TransformPolygonUtility : MonoBehaviour
     {
-        [HideInInspector]
+        //[HideInInspector]
         public SkinnedMeshRenderer origSkinnedMeshRenderer;
-        [HideInInspector]
+        //[HideInInspector]
         public string rootname;
-        [HideInInspector]
+        //[HideInInspector]
         public Mesh originalMesh;
-        [HideInInspector]
+        //[HideInInspector]
         public HashSet<int> triangleIndices;
 
         public Vector3 position = Vector3.zero;
         public Vector3 rotation = Vector3.zero;
         public Vector3 scale = Vector3.one;
-        [HideInInspector]
+        //[HideInInspector]
         public Vector3 centroid = Vector3.zero;
         
-        public void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, HashSet<int> triangleIndices)
+        public void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, HashSet<int> triangleIndices, Vector3 centroid)
         {
             this.origSkinnedMeshRenderer = origSkinnedMeshRenderer;
             this.rootname = rootname;
             this.originalMesh = originalMesh;
             this.triangleIndices = triangleIndices;
+            this.centroid = centroid;
         }
     }
     

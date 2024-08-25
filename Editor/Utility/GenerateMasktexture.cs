@@ -2,62 +2,91 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
-    public static class GenerateMaskUtilty
+    public class MaskTextureGenerator : EditorWindow
     {
-        private static SkinnedMeshRenderer _OriginskinnedMeshRenderer;
-        private static string _rootname;
+        private SkinnedMeshRenderer _originskinnedMeshRenderer;
+        private string _rootname;
 
-        private static int[] optionValues = { 512, 1024, 2048 };
-        private static string[] displayOptions = { "512", "1024", "2048" };
-        private static int selectedValue = 512;
-        private static int _areacolorindex = 0;
-        private static int _backcolorindex = 1;
-        private static int _expansion = 2;
-        private static Mesh _originalMesh;
-        private static TriangleSelectionManager _triangleSelectionManager;
+        private TriangleSelection _targetselection;
+        private RenderSelector _renderSelector;
 
+        private int[] optionValues = { 128, 256, 512, 1024, 2048 };
+        private int selectedValue = 512;
+        private int _areacolorindex = 0;
+        private int _backcolorindex = 1;
+        private int _expansion = 2;
 
-        public static void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
-            _OriginskinnedMeshRenderer = originskinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
-            _triangleSelectionManager = triangleSelectionManager;
+            MaskTextureGenerator window = GetWindow<MaskTextureGenerator>();
+            window.Initialize(skinnedMeshRenderer);
+            window.Show();
         }
 
-        public static void RenderGenerateMask()
+        private void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer)
         {
+            _originskinnedMeshRenderer = originskinnedMeshRenderer;
+            _targetselection = new();
+            _renderSelector = CreateInstance<RenderSelector>();
+            RenderSelectorContext ctx = new()
+            {
+                isKeep = true,
+                isRenderToggle = true,
+                FixedPreview = true
+            };
+            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, _targetselection);
+            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
+        }
+
+        void OnDisable()
+        {
+            _renderSelector.Dispose();
+        }
+
+        void OnGUI()
+        {
+            _renderSelector.RenderGUI();
+
             EditorGUILayout.Space();
+            RenderGenerateMask();
+        }
+
+        public void RenderGenerateMask()
+        {
             //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("mask.description"), MessageType.Info);
             string[] options = { 
-                LocalizationEditor.GetLocalizedText("mask.color.white"), 
-                LocalizationEditor.GetLocalizedText("mask.color.black"), 
-                LocalizationEditor.GetLocalizedText("mask.color.alpha"),
-                LocalizationEditor.GetLocalizedText("mask.color.original"),
-                LocalizationEditor.GetLocalizedText("mask.color.grayscale")
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.white"), 
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.black"), 
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.alpha"),
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.original"),
+                LocalizationEditor.GetLocalizedText("Utility.mask.color.grayscale")
                 };
 
-            _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.areacolor"), _areacolorindex, options);
-            _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("mask.backcolor"), _backcolorindex, options);
+            _areacolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("Utility.mask.areacolor"), _areacolorindex, options);
+            _backcolorindex = EditorGUILayout.Popup(LocalizationEditor.GetLocalizedText("Utility.mask.backcolor"), _backcolorindex, options);
 
-            selectedValue = EditorGUILayout.IntPopup(LocalizationEditor.GetLocalizedText("mask.resolution"), selectedValue, displayOptions, optionValues);
-            _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("mask.expansion"), _expansion);
+            selectedValue = EditorGUILayoutIntPopup(LocalizationEditor.GetLocalizedText("Utility.mask.resolution"), selectedValue, optionValues);
+            _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("Utility.mask.expansion"), _expansion);
             
             // Create Selected Islands Module
-            GUI.enabled = _OriginskinnedMeshRenderer != null && _triangleSelectionManager.GetSelectedTriangles().Count > 0;
+            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
             EditorGUILayout.Space();
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("GenerateMaskTexture")))
-            {
-                GenerateMask();
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.mask.createtexture")))
+            {   
+                CustomAnimationMode.StopAnimationMode();
+                GenerateMask(_targetselection.selection.ToHashSet());
+                Close();
             }
             GUI.enabled = true;
 
         }
+
         private static Color[] CreateColorArray(int indexValue, Texture2D originalTexture, int textureSize)
         {
             Color[] colors = new Color[textureSize * textureSize];
@@ -104,21 +133,22 @@ namespace com.aoyon.modulecreator
         }
 
 
-        private static void GenerateMask()
+        private void GenerateMask(HashSet<int> Triangles)
         {
             MeshMaskGenerator generator = new MeshMaskGenerator(selectedValue, _expansion);
-            Texture2D originalTexture = GetReadableTexture(_OriginskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
+            Texture2D originalTexture = GetReadableTexture(_originskinnedMeshRenderer.sharedMaterial.mainTexture as Texture2D);
 
             Color[] targetColors = CreateColorArray(_areacolorindex, originalTexture, selectedValue);
             Color[] baseColors = CreateColorArray(_backcolorindex, originalTexture, selectedValue);
 
-            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_OriginskinnedMeshRenderer, _triangleSelectionManager.GetSelectedTriangles(), baseColors, targetColors, _originalMesh);
+            Dictionary<string, Texture2D> maskTextures = generator.GenerateMaskTextures(_originskinnedMeshRenderer, Triangles, baseColors, targetColors, _originskinnedMeshRenderer.sharedMesh);
             
             List<UnityEngine.Object> selectedObjects = new List<UnityEngine.Object>();
+            if (maskTextures.Count == 0) Debug.Log("????");
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
                 string timeStamp = DateTime.Now.ToString("yyMMdd_HHmmss");
-                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{timeStamp}_{_OriginskinnedMeshRenderer.name}_{kvp.Key}");
+                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{timeStamp}_{_originskinnedMeshRenderer.name}_{kvp.Key}");
                 byte[] bytes = kvp.Value.EncodeToPNG();
                 File.WriteAllBytes(path, bytes);
                 AssetDatabase.Refresh();
@@ -135,7 +165,7 @@ namespace com.aoyon.modulecreator
             Selection.objects = selectedObjects.ToArray();
         }
 
-        private static Texture2D GetReadableTexture(Texture2D originalTexture)
+        private Texture2D GetReadableTexture(Texture2D originalTexture)
         {
             RenderTexture renderTexture = RenderTexture.GetTemporary(
                 originalTexture.width,
@@ -159,6 +189,10 @@ namespace com.aoyon.modulecreator
             return readableTexture;
         }
 
-    }
+        private static int EditorGUILayoutIntPopup(string label, int selectedValue, int[] optionValues)
+        {
+            return EditorGUILayout.IntPopup(label, selectedValue, optionValues.Select(i => i.ToString()).ToArray(), optionValues);
+        }
 
+    }
 }

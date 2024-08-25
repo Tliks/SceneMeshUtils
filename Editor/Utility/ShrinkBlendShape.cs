@@ -3,24 +3,22 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
-    public class ClampBlendShapeUtility
+    public class ShrinkBlendShapeUtility
     {
         private static SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
-        private static Mesh _originalMesh;
         private static TriangleSelectionManager _triangleSelectionManager;
 
-        public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, string rootname, Mesh originalMesh, TriangleSelectionManager triangleSelectionManager)
+        public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
         {
             _originskinnedMeshRenderer = origSkinnedMeshRenderer;
-            _rootname = rootname;
-            _originalMesh = originalMesh;
             _triangleSelectionManager = triangleSelectionManager;
+            _rootname = CheckUtility.CheckRoot(origSkinnedMeshRenderer.gameObject).name;
         }
 
-        private static Mesh GenerateClampBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
+        public static Mesh GenerateShrinkBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
         {
             Mesh newMesh = Object.Instantiate(originalMesh);
             Vector3[] vertices = newMesh.vertices;
@@ -103,12 +101,12 @@ namespace com.aoyon.modulecreator
 
             // 選択されていない頂点の移動量は0になるため、初期化時のVector3.zeroのままでOK
 
-            string blendShapeName = "ClampBlendShape";
+            string blendShapeName = "shrinkBlendShape";
             List<string> blendShapeNames = GetBlendShapeNames(newMesh);
             string uniqueBlendShapeName = GetUniqueBlendShapeName(blendShapeNames, blendShapeName);
 
             newMesh.AddBlendShapeFrame(uniqueBlendShapeName, 100.0f, blendShapeVertices, null, null);
-            Debug.Log($"Blend shape '{uniqueBlendShapeName}' has been added.");
+            //Debug.Log($"Blend shape '{uniqueBlendShapeName}' has been added.");
             return newMesh;
         }
 
@@ -137,24 +135,24 @@ namespace com.aoyon.modulecreator
 
         private static void ReplaceMesh()
         {
-            Mesh newMesh = GenerateClampBlendShape(_originalMesh, _triangleSelectionManager.GetSelectedTriangles());
+            Mesh newMesh = GenerateShrinkBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
 
-            string path = AssetPathUtility.GenerateMeshPath(_rootname, "ClampMesh");
+            string path = AssetPathUtility.GenerateMeshPath(_rootname, "shrinkMesh");
             AssetDatabase.CreateAsset(newMesh, path);
             AssetDatabase.SaveAssets();
 
             _originskinnedMeshRenderer.sharedMesh = newMesh;
         }
 
-        public static void RendergenerateClamp()
+        public static void Rendergenerateshrink()
         {
             EditorGUILayout.Space();
             GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.BlendShape")))
             {
-                MeshPreview.StopPreview();
+                CustomAnimationMode.StopAnimationMode();
                 ReplaceMesh();
-                MeshPreview.StartPreview(_originskinnedMeshRenderer);
+                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
             }
             GUI.enabled = true;
         }

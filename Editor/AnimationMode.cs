@@ -1,4 +1,4 @@
-/*
+        /*
 MIT License
 
 Copyright (c) 2022 anatawa12
@@ -25,11 +25,11 @@ SOFTWARE.
 using UnityEngine;
 using UnityEditor;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
-    public static class MeshPreview
+    public class CustomAnimationMode
     {
-        public static void StartPreview(SkinnedMeshRenderer rendrer)
+        public static void StartAnimationMode(SkinnedMeshRenderer rendrer)
         {
             AnimationMode.StartAnimationMode();
             AnimationMode.BeginSampling();
@@ -51,10 +51,9 @@ namespace com.aoyon.modulecreator
             }
         }
 
-        public static void StopPreview()
+        public static void StopAnimationMode()
         {
             AnimationMode.StopAnimationMode();
         }
-
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using VRC.SDK3.Dynamics.PhysBone.Components;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class ModuleCreatorSettings
     {
@@ -20,7 +20,7 @@ namespace com.aoyon.modulecreator
         public Mesh newmesh=null;
     }
 
-    public class ModuleCreator
+    public class ModuleCreatorProcessor
     {
         public static GameObject CheckAndCopyBones(GameObject sourceObject, ModuleCreatorSettings settings)
         {   
@@ -68,9 +68,9 @@ namespace com.aoyon.modulecreator
             return instance;
         }
 
-        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(GameObject sourceObject)
+        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(SkinnedMeshRenderer sourceRenderer)
         {
-            (GameObject root, int skin_index) = CheckObjects(sourceObject);
+            (GameObject root, int skin_index) = CheckObjects(sourceRenderer.gameObject);
             GameObject new_root = CopyObjects(root, "AAU Preview");
             SkinnedMeshRenderer skinnedMeshRenderer = CheckUtility.CleanUpHierarchy(new_root, skin_index);
             return (new_root, skinnedMeshRenderer);

@@ -2,14 +2,36 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using com.aoyon.modulecreator;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     [CustomEditor(typeof(TransformPolygonUtility))]
     public class TransformPolygonUtilityEditor : Editor
     {
+
+        public static void Initialize(SkinnedMeshRenderer orignalSkinnedMeshRenderer, HashSet<int> triangleIndices)
+        {   
+            CustomAnimationMode.StopAnimationMode();
+            TransformPolygonUtility transformPolygonUtility = orignalSkinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
+            Mesh bakedMesh = new Mesh();
+            orignalSkinnedMeshRenderer.BakeMesh(bakedMesh);
+
+            Vector3 middleVertex = Vector3.zero;
+            Vector3[] vertices = bakedMesh.vertices;
+
+            Transform origin = orignalSkinnedMeshRenderer.transform;
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                middleVertex += origin.position + origin.rotation * vertices[i];
+            }
+            middleVertex /= vertices.Length;
+
+            string rootname = CheckUtility.CheckRoot(orignalSkinnedMeshRenderer.gameObject).name;
+
+            Mesh newMesh = Object.Instantiate(orignalSkinnedMeshRenderer.sharedMesh);
+            transformPolygonUtility.Initialize(orignalSkinnedMeshRenderer, rootname, newMesh, triangleIndices, middleVertex);
+        }
         
         private void OnEnable()
         {
@@ -50,8 +72,8 @@ namespace com.aoyon.modulecreator
                 Vector3 vertex = vertices[index];
 
                 vertex += position;
-                vertex = rotationQuat * vertex;
-                vertex = Vector3.Scale(vertex, scale);
+                //vertex = rotationQuat * vertex;
+                //vertex = Vector3.Scale(vertex, scale);
 
                 vertices[index] = vertex;
             }

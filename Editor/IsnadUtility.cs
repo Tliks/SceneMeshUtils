@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     public class UnionFind
@@ -94,16 +94,15 @@ namespace com.aoyon.modulecreator
             }
 
             // 結合前のアイランドを作成
-            Dictionary<int, Island> islandDict = new Dictionary<int, Island>();
+            Dictionary<int, Island> islandDict = new Dictionary<int, Island>(vertCount);
             for (int i = 0; i < vertCount; i++)
             {
                 int root = unionFind.Find(i);
-                if (!islandDict.TryGetValue(root, out Island island))
+                if (!islandDict.ContainsKey(root))
                 {
-                    island = new Island(new List<int>(), new List<int>());
-                    islandDict[root] = island;
+                    islandDict[root] = new Island(new List<int>(), new List<int>());
                 }
-                island.VertexIndices.Add(i);
+                islandDict[root].VertexIndices.Add(i);
             }
 
             // 三角形インデックスを追加
@@ -120,16 +119,11 @@ namespace com.aoyon.modulecreator
             Dictionary<Vector3, int> vertexMap = new Dictionary<Vector3, int>(vertCount);
             for (int i = 0; i < vertCount; i++)
             {
-                if (vertexMap.TryGetValue(Vertices[i], out int existingIndex))
+                if (!vertexMap.TryAdd(Vertices[i], i))
                 {
-                    unionFind.Unite(existingIndex, i);
-                }
-                else
-                {
-                    vertexMap[Vertices[i]] = i;
+                    unionFind.Unite(vertexMap[Vertices[i]], i);
                 }
             }
-
             // 結合後のアイランドを作成
             Dictionary<int, Island> mergedIslandDict = new Dictionary<int, Island>();
             foreach (var kvp in islandDict)
@@ -187,14 +181,14 @@ namespace com.aoyon.modulecreator
             return foundVertices;
 
             bool IsInsideIsland(Island island, bool checkAll) =>
-                checkAll ? island.VertexIndices.TrueForAll(IsVertexCloseToCollider) 
-                        : island.VertexIndices.Exists(IsVertexCloseToCollider);
+                checkAll ? island.VertexIndices.TrueForAll(IsVertexInCollider) 
+                        : island.VertexIndices.Exists(IsVertexInCollider);
 
-            bool IsVertexCloseToCollider(int vertexIndex)
+            bool IsVertexInCollider(int vertexIndex)
             {
-                Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                 Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
-                return Vector3.Distance(closestPoint, vertexWorldPos) < 0.001f;
+                return closestPoint == vertexWorldPos;
             }
         }
 
@@ -213,7 +207,7 @@ namespace com.aoyon.modulecreator
                     Enumerable.Range(0, 3).All(i =>
                     {
                         int vertexIndex = Triangles[triIndex * 3 + i];
-                        Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                        Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                         return Vector3.Distance(position, vertexWorldPos) < threshold;
                     })
                 )
@@ -234,7 +228,7 @@ namespace com.aoyon.modulecreator
                 for (int j = 0; j < 3; j++)
                 {
                     int vertexIndex = Triangles[i + j];
-                    Vector3 vertexWorldPos = transform.TransformPoint(Vertices[vertexIndex]);
+                    Vector3 vertexWorldPos = transform.position + transform.rotation * Vertices[vertexIndex];
                     Vector3 closestPoint = collider.ClosestPoint(vertexWorldPos);
                     if (Vector3.Distance(closestPoint, vertexWorldPos) >= 0.001f)
                     {

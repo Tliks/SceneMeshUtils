@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
     public class HistoryManager
     {
@@ -56,11 +56,11 @@ namespace com.aoyon.modulecreator
         private HashSet<int> _allTriangleIndices;
         private HashSet<int> _selectedTriangleIndices;
 
-        public TriangleSelectionManager(HashSet<int> allTriangleIndices)
+        public TriangleSelectionManager(HashSet<int> allTriangleIndices, HashSet<int> defaultselection)
         {
             _history = new HistoryManager();
             _allTriangleIndices = new HashSet<int>(allTriangleIndices);
-            _selectedTriangleIndices = new HashSet<int>();
+            _selectedTriangleIndices = defaultselection;
         }
 
         public void SelectAllTriangles()

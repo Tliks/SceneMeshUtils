@@ -2,15 +2,15 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
 
     public static class SceneRaycastUtility
     {
-        private static GameObject selectedColiderObject; 
-        private static GameObject unselectedColiderObject; 
         private static MeshCollider selectedMeshCollider;
         private static MeshCollider ubselectedMeshCollider;
+
+        private static RaycastHit[] hits = new RaycastHit[20];
 
         public static bool TryRaycast(out RaycastHit hitInfo)
         {
@@ -33,10 +33,16 @@ namespace com.aoyon.modulecreator
             }
 
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
+            
+            int hitCount = Physics.RaycastNonAlloc(ray, hits, Mathf.Infinity);
+            for (int i = 0; i < hitCount; i++)
             {
-                hitInfo = hit;
-                return true;
+                RaycastHit hit = hits[i];
+                if (hit.collider == selectedMeshCollider || hit.collider == ubselectedMeshCollider)
+                {
+                    hitInfo = hit;
+                    return true;
+                }
             }
 
             return false;
@@ -44,42 +50,23 @@ namespace com.aoyon.modulecreator
 
         public static bool IsSelected(RaycastHit hitInfo)
         {
-            GameObject hitGameobject = hitInfo.transform.gameObject;
-            if (hitGameobject == selectedColiderObject)
+            MeshCollider hitcolider = hitInfo.collider as MeshCollider;
+            if (hitcolider == selectedMeshCollider)
             {
                 return true;
             }
-            else if (hitGameobject == unselectedColiderObject)
+            else
             {
                 return false;
             }
-            else
-            {
-                throw new InvalidOperationException("hit invalid object");
-            }
         }
         
-        public static void AddCollider(Transform selectedtransform, Transform unselectedtransform)
+        public static void AddCollider(GameObject selectedObject, GameObject unselectedObject)
         {   
-            AddcoliderObject(ref selectedColiderObject, selectedtransform);
-            AddcoliderObject(ref unselectedColiderObject, unselectedtransform);
-
-            selectedMeshCollider = AddMeshCollider(selectedColiderObject);
-            ubselectedMeshCollider = AddMeshCollider(unselectedColiderObject);
+            selectedMeshCollider = AddMeshCollider(selectedObject);
+            ubselectedMeshCollider = AddMeshCollider(unselectedObject);
 
             return;
-
-            void AddcoliderObject(ref GameObject obj, Transform transform)
-            {
-                if (obj == null)
-                {
-                    obj = new GameObject();
-                    obj.name = "AAU preview";
-                    obj.transform.position = transform.position;
-                    obj.transform.rotation = transform.rotation;
-                    obj.transform.localScale = transform.lossyScale;
-                }
-            }
             
             MeshCollider AddMeshCollider(GameObject obj)
             {
@@ -92,12 +79,6 @@ namespace com.aoyon.modulecreator
                 return meshCollider;
             }
             
-        }
-
-        public static void DeleteCollider()
-        {
-            UnityEngine.Object.DestroyImmediate(selectedColiderObject);
-            UnityEngine.Object.DestroyImmediate(unselectedColiderObject);
         }
 
         public static void UpdateColider(Mesh mesh, bool IsSelected)

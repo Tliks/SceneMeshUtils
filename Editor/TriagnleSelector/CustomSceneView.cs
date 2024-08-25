@@ -27,16 +27,16 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace com.aoyon.modulecreator
+namespace com.aoyon.scenemeshutils
 {
-    public class CustomSceneViewWindow : SceneView
+    public class CustomSceneView : SceneView
     {
         private static bool isMouseOver = false;
         private static SceneView _defaultSceneView;
 
-        public static CustomSceneViewWindow ShowWindow(SceneView defaultSceneView)
+        public static CustomSceneView ShowWindow(SceneView defaultSceneView)
         {
-            var window = CreateWindow<CustomSceneViewWindow>();
+            var window = CreateWindow<CustomSceneView>();
             window.titleContent = new GUIContent("Selected Mesh Preview");
             window.Show();
             _defaultSceneView = defaultSceneView;
@@ -44,7 +44,12 @@ namespace com.aoyon.modulecreator
             return window;
         }
 
-        
+        void OnDestroy()
+        {
+            SetLastActiveSceneView(_defaultSceneView);
+            isMouseOver = false;
+        }
+    
         public void OnGUI()
         {
             if (EditorWindow.mouseOverWindow == this)
