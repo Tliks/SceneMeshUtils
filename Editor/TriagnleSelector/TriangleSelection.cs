@@ -98,6 +98,7 @@ namespace com.aoyon.scenemeshutils
                     {
                         _target.selection = new List<int>();
                     }
+                    StartPreview();
                     
                 }
                 GUI.enabled = true;
