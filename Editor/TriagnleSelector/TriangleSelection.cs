@@ -122,8 +122,7 @@ namespace com.aoyon.scenemeshutils
                     {
                         _selectorcontext.isedit = true;
                         _selectorcontext.target_default = new HashSet<int>(_target.selection);
-                        var parts = _triangleSelections[_selectedIndex - 1].displayname.Split(' ');
-                        _selectorcontext.displayname = string.Join(" ", parts, 0, parts.Length - 1);;
+                        _selectorcontext.displayname = _triangleSelections[_selectedIndex - 1].displayname;
                     }
 
                     _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
@@ -134,6 +133,7 @@ namespace com.aoyon.scenemeshutils
                 }
             }
             
+            // 新規選択
             GUI.enabled = _triangleSelector == null;
             if (_selectorcontext.end)
             {
@@ -144,18 +144,13 @@ namespace com.aoyon.scenemeshutils
                 {
                     //Debug.Log("update");
                     _selectorcontext.target = new List<int>();
-
-                    string displayname;
-                    float percent = (float)newSelection.Count() / ((float)_mesh.triangles.Count() / 3) * 100;
-                    percent = (int)Math.Round((double)percent);
-                    if (_selectorcontext.displayname == null || _selectorcontext.displayname == "")
+                    
+                    string displayname = _selectorcontext.displayname;
+                    // displaynameが未入力時は自動決定
+                    if (displayname == null || displayname == "")
                     {
                         string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
-                        displayname = $"{uniquename} ({percent}%)";
-                    }
-                    else
-                    {
-                        displayname = $"{_selectorcontext.displayname} ({percent}%)";
+                        displayname = uniquename;
                     }
                     _selectorcontext.displayname = null;
 
@@ -199,8 +194,12 @@ namespace com.aoyon.scenemeshutils
         {
             _triangleSelectionContainer = SaveAsScriptableObject.GetContainer(_mesh);
             _triangleSelections = _triangleSelectionContainer.selections;
-            _displayedOptions = _triangleSelections.Select(ts => ts.displayname).ToArray();
-            _displayedOptions = new[] { "None" }.Concat(_displayedOptions).ToArray();
+            _displayedOptions = _triangleSelections
+                .Select(ts => $"{ts.displayname} ({SaveAsScriptableObject.CalculatePercent(ts.selection.Count(), _triangleSelectionContainer.TriangleCount)}%)")
+                .ToArray();
+            _displayedOptions = new[] { "None" }
+                .Concat(_displayedOptions)
+                .ToArray();
         }
 
         private void StartPreview()
@@ -292,10 +291,16 @@ namespace com.aoyon.scenemeshutils
                 TriangleSelectionContainer selection = AssetDatabase.LoadAssetAtPath<TriangleSelectionContainer>(assetPath);
                 if (selection != null && selection.mesh == mesh)
                 {
-                    //Debug.Log("既存のTriangleSelectionを取得");
-                    //Debug.Log(selection.mesh.name);
-                    //Debug.Log(selection.selections.Count);
-                    return selection;
+                    int targetcount = mesh.triangles.Count() / 3;
+                    int cachecount = selection.TriangleCount != 0 ? selection.TriangleCount : targetcount; // TriangleCountが0の場合はtargetcountを使用
+                    if (targetcount != cachecount)
+                    {
+                        Debug.LogWarning($"Mesh changes detected. A new TriangleSelectionContainer will be created. Current polygon count: {targetcount}. Saved polygon count: {cachecount}.");
+                    }
+                    else
+                    {
+                        return selection;
+                    }
                 }
             }
 
@@ -307,6 +312,7 @@ namespace com.aoyon.scenemeshutils
         {
             var instance = ScriptableObject.CreateInstance<TriangleSelectionContainer>();
             instance.mesh = mesh;
+            instance.TriangleCount = mesh.triangles.Count() / 3;
 
             if (!Directory.Exists(SAVE_PATH)) Directory.CreateDirectory(SAVE_PATH);
             string uniquePath = AssetDatabase.GenerateUniqueAssetPath($"{SAVE_PATH}/{mesh.name}.asset");
@@ -354,5 +360,13 @@ namespace com.aoyon.scenemeshutils
 
             return timestamp;
         }
+
+        public static int CalculatePercent(int selection, int total)
+        {
+            float percent = (float)selection / (float)total * 100;
+            percent = (int)Math.Round((double)percent);
+            return (int)percent;
+        }
+
     }
 }
