@@ -9,13 +9,13 @@ namespace com.aoyon.scenemeshutils
     {
         public Mesh mesh;
         public int TriangleCount;
-        public List<TriangleSelection> selections = new List<TriangleSelection>();
+        public List<TriangleSelection> selections = new();
     }
 
     [Serializable]
     public class TriangleSelection
     {
-        public List<int> selection = new List<int>();
+        public List<int> selection = new();
 
         public string displayname;
         public long createtime;

@@ -298,10 +298,16 @@ namespace com.aoyon.scenemeshutils
                 TriangleSelectionContainer selection = AssetDatabase.LoadAssetAtPath<TriangleSelectionContainer>(assetPath);
                 if (selection != null && selection.mesh == mesh)
                 {
-                    //Debug.Log("既存のTriangleSelectionを取得");
-                    //Debug.Log(selection.mesh.name);
-                    //Debug.Log(selection.selections.Count);
-                    return selection;
+                    int targetcount = mesh.triangles.Count() / 3;
+                    int cachecount = selection.TriangleCount != 0 ? selection.TriangleCount : targetcount; // TriangleCountが0の場合はtargetcountを使用
+                    if (targetcount != cachecount)
+                    {
+                        Debug.LogWarning($"Mesh changes detected. A new TriangleSelectionContainer will be created. Current polygon count: {targetcount}. Saved polygon count: {cachecount}.");
+                    }
+                    else
+                    {
+                        return selection;
+                    }
                 }
             }
 
