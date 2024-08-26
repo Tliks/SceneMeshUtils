@@ -13,7 +13,7 @@ namespace com.aoyon.scenemeshutils
         public bool IncludePhysBone = true;
         public bool IncludePhysBoneColider = true;
 
-        public bool RenameRootTransform = false;
+        public bool RenameRootTransform = true;
         public bool RemainAllPBTransforms = false;
         public bool IncludeIgnoreTransforms = false;
         public GameObject RootObject = null;
