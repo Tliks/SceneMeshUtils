@@ -41,7 +41,28 @@ namespace com.aoyon.scenemeshutils
             window.Show();
             _defaultSceneView = defaultSceneView;
             SetLastActiveSceneView(_defaultSceneView);
+            Initialize(window);
             return window;
+        }
+
+        private static void Initialize(CustomSceneView customSceneView)
+        {
+            var copied = new CameraSettings();
+
+            copied.speed = _defaultSceneView.cameraSettings.speed;
+            copied.speedNormalized = _defaultSceneView.cameraSettings.speedNormalized;
+            copied.speedMin = _defaultSceneView.cameraSettings.speedMin;
+            copied.speedMax = _defaultSceneView.cameraSettings.speedMax;
+            copied.easingEnabled = _defaultSceneView.cameraSettings.easingEnabled;
+            copied.easingDuration = _defaultSceneView.cameraSettings.easingDuration;
+            copied.accelerationEnabled = _defaultSceneView.cameraSettings.accelerationEnabled;
+            copied.fieldOfView = _defaultSceneView.cameraSettings.fieldOfView;
+            copied.nearClip = _defaultSceneView.cameraSettings.nearClip;
+            copied.farClip = _defaultSceneView.cameraSettings.farClip;
+            copied.dynamicClip = _defaultSceneView.cameraSettings.dynamicClip;
+            copied.occlusionCulling = _defaultSceneView.cameraSettings.occlusionCulling;
+
+            customSceneView.cameraSettings = copied;
         }
 
         void OnDestroy()
