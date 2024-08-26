@@ -29,8 +29,7 @@ namespace com.aoyon.scenemeshutils
         public override void OnInspectorGUI()
         {
             _renderSelector.RenderGUI();
-            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh.description"), MessageType.Info);
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.BlendShape.description"), MessageType.Info);
         }
-
     }
 }
