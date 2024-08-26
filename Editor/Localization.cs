@@ -10,6 +10,14 @@ namespace com.aoyon.scenemeshutils
         
         private static Dictionary<string, string[]> _LocalizedText = new Dictionary<string, string[]>
         {
+            {"TriangleSelection.TriangleSelection", new string[] {"Selection", "選択箇所"} },
+            {"TriangleSelection.Remove", new string[] {"Remove", "削除"} },
+            {"TriangleSelection.Add", new string[] {"Add New Selection", "新しい選択箇所を追加"} },
+            {"TriangleSelection.Edit", new string[] {"Edit Current Selection", "現在の選択箇所を編集"} },
+            {"TriangleSelection.CloseSelector", new string[] {"Close Triangle Selector", "Triangle Selectorを閉じる"} },
+            {"TriangleSelection.EnablePreview", new string[] {"Enable Preview", "プレビューを有効化"} },
+            {"TriangleSelection.DisablePreview", new string[] {"Disable Preview", "プレビューを無効化"} },
+
             { "TriangleSelector.SelectedTotalPolygonsLabel", new string[] { "Selected/Total Polygons", "選択中/全ポリゴン" } },
             { "TriangleSelector.commondescription", new string[] {"You can select parts of the mesh by clicking on the scene. You can also select a range by dragging.", "シーン上でクリックすることでメッシュの一部を選択できます。ドラッグすることで範囲選択も可能です。"}},
             { "TriangleSelector.SelectAllButton", new string[] { "Select All", "すべて選択" } },

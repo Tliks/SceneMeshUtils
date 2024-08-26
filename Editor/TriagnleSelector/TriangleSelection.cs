@@ -63,10 +63,11 @@ namespace com.aoyon.scenemeshutils
         public void RenderGUI()
         {
             //serializedObject.Update();
+            LocalizationEditor.RenderLocalize();
             GUI.enabled = _triangleSelector == null;
             using (new GUILayout.HorizontalScope())
             {   
-                GUILayout.Label("Triangle Selection");
+                GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelection.TriangleSelection"));
                 int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions);
                 if (selectedIndex != _selectedIndex)
                 {   
@@ -84,7 +85,7 @@ namespace com.aoyon.scenemeshutils
                 }
 
                 GUI.enabled = _selectedIndex != 0;
-                if (GUILayout.Button("Remove"))
+                if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.Remove")))
                 {
                     StopPrview();
                     SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
@@ -105,8 +106,8 @@ namespace com.aoyon.scenemeshutils
             }
             GUI.enabled = true;
             
-            string label = _selectedIndex == 0 ? "Add New Selection" : "Edit Current Selection";
-            if (GUILayout.Button(_triangleSelector == null ? label : "Close Triangle Selector"))
+            string label = _selectedIndex == 0 ? LocalizationEditor.GetLocalizedText("TriangleSelection.Add") : LocalizationEditor.GetLocalizedText("TriangleSelection.Edit");
+            if (GUILayout.Button(_triangleSelector == null ? label : LocalizationEditor.GetLocalizedText("TriangleSelection.CloseSelector")))
             {
                 if (_triangleSelector == null)
                 {
@@ -179,7 +180,7 @@ namespace com.aoyon.scenemeshutils
                 StartPreview();
             }
 
-            if (_renderctx.isRenderToggle && GUILayout.Button(_isAutoPreview ? "Disable Auto Preview" : "Enable Auto Preview"))
+            if (_renderctx.isRenderToggle && GUILayout.Button(_isAutoPreview ? LocalizationEditor.GetLocalizedText("TriangleSelection.DisablePreview") : LocalizationEditor.GetLocalizedText("TriangleSelection.EnablePreview")))
             {
                 ToggleAutoPreview();
             }
