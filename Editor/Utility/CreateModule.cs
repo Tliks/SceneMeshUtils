@@ -52,6 +52,8 @@ namespace com.aoyon.scenemeshutils
         {
             _renderSelector.RenderGUI();
 
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.description"), MessageType.Info);
+
             EditorGUILayout.Space();
             RenderPhysBoneOptions();
 

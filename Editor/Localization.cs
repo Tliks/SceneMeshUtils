@@ -48,7 +48,7 @@ namespace com.aoyon.scenemeshutils
             { "TriangleSelector.Apply", new string[] { "Apply", "適用"}},
         
 
-            { "Utility.ModuleCreator.description", new string[] { "Create Module", "モジュールを生成" }},
+            { "Utility.ModuleCreator.description", new string[] { "Generate a Prefab containing the mesh of the selection.", "選択した箇所のメッシュを含むPrefabを生成します。" }},
             { "Utility.ModuleCreator.advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},
             { "Utility.ModuleCreator.CreateModuleButton", new string[] { "Create Module", "モジュールを作成" } },
             { "Utility.ModuleCreator.OutputUnselcted", new string[] { "Include Unselected Module", "未選択のモジュールも含める" } },
@@ -63,7 +63,7 @@ namespace com.aoyon.scenemeshutils
             { "Utility.ModuleCreator.tooltip.RenameRootTransformToggle", new string[] { "Not Recommended: Due to the specifications of modular avatar, costume-side physbones may be deleted in some cases, so renaming physbone RootTransform will ensure that the costume-side physbones are integrated. This may cause duplication.", "推奨されません。モジュラーアバターの仕様により、場合によっては衣装側の物理ボーンが削除されることがあります。そのため、PhysBoneのRootTransformの名前を変更することで、衣装側のPhysBoneが確実に統合されるようにします。これにより重複が発生する可能性があります。" } },
             { "Utility.ModuleCreator.tooltip.SpecifyRootObjectLabel", new string[] { "The default root object is the parent object of the specified skinned mesh renderer object", "デフォルトのルートオブジェクトは、指定されたSkinned Mesh Rendererがついたオブジェクトの親オブジェクトです" } },
 
-            { "Utility.mask.description", new string[] {"Generate a mask image of the selected area", "選択した箇所のマスク画像を生成します"}},
+            { "Utility.mask.description", new string[] {"Generate a mask image of the selection", "選択した箇所のマスク画像を生成します"}},
             { "Utility.mask.createtexture", new string[] {"Create Texture", "テクスチャを生成"}},
             { "Utility.mask.resolution", new string[] {"Resolution", "解像度"}},
             { "Utility.mask.areacolor", new string[] {"SelectedAreaColor", "選択箇所の色"}},
@@ -76,8 +76,10 @@ namespace com.aoyon.scenemeshutils
             { "Utility.mask.expansion", new string[] {"Padding", "パディング"}},
             
             { "Utility.DeleteMesh", new string[] { "Delete Mesh", "メッシュを削除" }},
+            { "Utility.DeleteMesh.description", new string[] { "Delete the mesh of the selection non-destructively.", "選択した箇所のメッシュを非破壊で削除します" }},
 
             { "Utility.BlendShape", new string[] { "Generate Shrink BlendShape", "縮小ブレンドシェイプを生成" }},
+            { "Utility.BlendShape.description", new string[] { "Add a blendShape to shrink the selection non-destructively.", "選択した箇所を縮小させるBlendShapeを非破壊で追加します" }},
 
             { "Utility.TransformPolygon", new string[] { "Transform Polygon", "ポリゴンを移動" }}
         };

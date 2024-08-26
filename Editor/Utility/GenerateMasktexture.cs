@@ -52,6 +52,7 @@ namespace com.aoyon.scenemeshutils
         void OnGUI()
         {
             _renderSelector.RenderGUI();
+            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.mask.description"), MessageType.Info);
 
             EditorGUILayout.Space();
             RenderGenerateMask();
