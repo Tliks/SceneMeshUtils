@@ -349,14 +349,14 @@ namespace com.aoyon.scenemeshutils
         {
             DateTime now = DateTime.Now;
 
-            int year = now.Year;
+            int year = now.Year % 100;
             int month = now.Month;
             int day = now.Day;
             int hour = now.Hour;
             int minute = now.Minute;
             int second = now.Second;
 
-            string timestampStr = $"{year:D4}{month:D2}{day:D2}{hour:D2}{minute:D2}{second:D2}";
+            string timestampStr = $"{year:D2}{month:D2}{day:D2}{hour:D2}{minute:D2}{second:D2}";
             long timestamp = long.Parse(timestampStr);
 
             return timestamp;
