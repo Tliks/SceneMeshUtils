@@ -13,16 +13,26 @@ namespace com.aoyon.scenemeshutils
             {
                 if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.DisablePreview")))
                 {
-                    toggleNode.IsEnabled.Value = !toggleNode.IsEnabled.Value;
+                    StopNDMFPreview(toggleNode);
                 }
             }
             else
             {
                 if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.EnablePreview")))
                 {
-                    toggleNode.IsEnabled.Value = !toggleNode.IsEnabled.Value;
+                    StartNDMFPreview(toggleNode);
                 }
             }
+        }
+
+        public static void StartNDMFPreview(TogglablePreviewNode toggleNode)
+        {
+            toggleNode.IsEnabled.Value = true;
+        }
+
+        public static void StopNDMFPreview(TogglablePreviewNode toggleNode)
+        {
+            toggleNode.IsEnabled.Value = false;
         }
     }
 }
