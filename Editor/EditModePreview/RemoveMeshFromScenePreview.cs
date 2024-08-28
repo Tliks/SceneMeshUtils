@@ -10,7 +10,7 @@ namespace com.aoyon.scenemeshutils
 {
     internal class RemoveMeshFromScenePreview : IRenderFilter
     {
-        private static TogglablePreviewNode ToggleNode = TogglablePreviewNode.Create(
+        public static TogglablePreviewNode ToggleNode = TogglablePreviewNode.Create(
             () => "Remove Mesh From Scene",
             qualifiedName: "com.aoyon.scenemeshutils/RemoveMeshFromScenePreview",
             true
@@ -46,7 +46,7 @@ namespace com.aoyon.scenemeshutils
                 default: { break; }
             }
 
-            if (mesh == null) {Debug.Log("null??"); return null;}
+            if (mesh == null) {return null;}
             context.Observe(removeMeshFromScene);
 
             Mesh modifiedMesh = MeshUtility.DeleteMesh(mesh, removeMeshFromScene.triangleSelection.ToHashSet());

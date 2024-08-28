@@ -179,11 +179,6 @@ namespace com.aoyon.scenemeshutils
                 
                 //StartPreview();
             }
-
-            if (_renderctx.isRenderToggle && GUILayout.Button(_isAutoPreview ? LocalizationEditor.GetLocalizedText("TriangleSelection.DisablePreview") : LocalizationEditor.GetLocalizedText("TriangleSelection.EnablePreview")))
-            {
-                //ToggleAutoPreview();
-            }
             GUI.enabled = true;
 
             /*

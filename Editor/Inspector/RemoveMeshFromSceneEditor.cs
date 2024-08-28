@@ -27,8 +27,11 @@ namespace com.aoyon.scenemeshutils
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+
             _renderSelector.RenderGUI();
+            NDMFToggleButton.RenderNDMFToggle(RemoveMeshFromScenePreview.ToggleNode);
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh.description"), MessageType.Info);
+            
             serializedObject.ApplyModifiedProperties();
         }
 
