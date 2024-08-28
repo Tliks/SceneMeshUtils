@@ -28,8 +28,11 @@ namespace com.aoyon.scenemeshutils
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+            
             _renderSelector.RenderGUI();
+            NDMFToggleButton.RenderNDMFToggle(AddShrinkBlendShapePreview.ToggleNode);
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.BlendShape.description"), MessageType.Info);
+
             serializedObject.ApplyModifiedProperties();
         }
     }

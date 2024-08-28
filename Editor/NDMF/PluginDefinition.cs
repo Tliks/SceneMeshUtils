@@ -22,7 +22,8 @@ namespace com.aoyon.scenemeshutils
                 .BeforePlugin("com.anatawa12.avatar-optimizer");
 
             sequence
-            .Run(AddShrinkBlendShapePass.Instance).Then
+            .Run(AddShrinkBlendShapePass.Instance)
+            .PreviewingWith(new AddShrinkBlendShapePreview()).Then
             .Run(RemoveMeshFromScenePass.Instance)
             .PreviewingWith(new RemoveMeshFromScenePreview());
         }
