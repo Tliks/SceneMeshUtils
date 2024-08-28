@@ -72,7 +72,7 @@ namespace com.aoyon.scenemeshutils
         private void AddpreviewObject(ref GameObject obj, Vector3 position, Quaternion rotation)
         {
             obj = new GameObject();
-            obj.name = "AAU preview";
+            obj.name = "SMU preview";
             obj.transform.position = position;
             obj.transform.rotation = rotation;
         }
