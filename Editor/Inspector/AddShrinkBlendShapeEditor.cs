@@ -7,18 +7,17 @@ namespace com.aoyon.scenemeshutils
     public class AddShrinkBlendShapeEditor: Editor
     {
         private RenderSelector _renderSelector;
-        private TriangleSelection _targetselection;
 
         private void OnEnable()
         {
             SkinnedMeshRenderer skinnedMeshRenderer = (target as AddShrinkBlendShape).GetComponent<SkinnedMeshRenderer>();
-            _targetselection = (target as AddShrinkBlendShape).triangleSelection;
+            SerializedProperty targetselection = serializedObject.FindProperty(nameof(AddShrinkBlendShape.triangleSelection));
             _renderSelector = CreateInstance<RenderSelector>();
             RenderSelectorContext ctx = new()
             {
                 isblendhsape = true,
             };
-            _renderSelector.Initialize(skinnedMeshRenderer, ctx, _targetselection);
+            _renderSelector.Initialize(skinnedMeshRenderer, ctx, targetselection);
         }
 
         private void OnDisable()
@@ -28,8 +27,10 @@ namespace com.aoyon.scenemeshutils
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
             _renderSelector.RenderGUI();
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.BlendShape.description"), MessageType.Info);
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

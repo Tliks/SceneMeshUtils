@@ -11,6 +11,6 @@ namespace com.aoyon.scenemeshutils
     [RequireComponent(typeof(SkinnedMeshRenderer))]
     public class RemoveMeshFromScene: MonoBehaviour, IEditorOnly
     {
-        public TriangleSelection triangleSelection;
+        public List<int> triangleSelection = new();
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -11,7 +12,7 @@ namespace com.aoyon.scenemeshutils
         private void OnEnable()
         {
             SkinnedMeshRenderer skinnedMeshRenderer = (target as RemoveMeshFromScene).GetComponent<SkinnedMeshRenderer>();
-            TriangleSelection targetselection = (target as RemoveMeshFromScene).triangleSelection;
+            SerializedProperty targetselection = serializedObject.FindProperty(nameof(RemoveMeshFromScene.triangleSelection));
             _renderSelector = CreateInstance<RenderSelector>();
             RenderSelectorContext ctx = new();
             ctx.isKeep = false;
@@ -25,8 +26,10 @@ namespace com.aoyon.scenemeshutils
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
             _renderSelector.RenderGUI();
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh.description"), MessageType.Info);
+            serializedObject.ApplyModifiedProperties();
         }
 
     }
