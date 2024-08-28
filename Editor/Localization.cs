@@ -15,8 +15,8 @@ namespace com.aoyon.scenemeshutils
             {"TriangleSelection.Add", new string[] {"Add New Selection", "新しい選択箇所を追加"} },
             {"TriangleSelection.Edit", new string[] {"Edit Current Selection", "現在の選択箇所を編集"} },
             {"TriangleSelection.CloseSelector", new string[] {"Close Triangle Selector", "Triangle Selectorを閉じる"} },
-            {"TriangleSelection.EnablePreview", new string[] {"Enable Preview", "プレビューを有効化"} },
-            {"TriangleSelection.DisablePreview", new string[] {"Disable Preview", "プレビューを無効化"} },
+            {"TriangleSelection.EnablePreview", new string[] {"Enable NDMF Preview", "NDMFプレビューを有効化"} },
+            {"TriangleSelection.DisablePreview", new string[] {"Disable NDMF Preview", "NDMFプレビューを無効化"} },
 
             { "TriangleSelector.SelectedTotalPolygonsLabel", new string[] { "Selected/Total Polygons", "選択中/全ポリゴン" } },
             { "TriangleSelector.commondescription", new string[] {"You can select parts of the mesh by clicking on the scene. You can also select a range by dragging.", "シーン上でクリックすることでメッシュの一部を選択できます。ドラッグすることで範囲選択も可能です。"}},
