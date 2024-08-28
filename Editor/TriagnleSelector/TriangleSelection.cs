@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -201,10 +202,10 @@ namespace com.aoyon.scenemeshutils
 
         private void ReplaceListValues(SerializedProperty listProperty, List<int> newValues)
         {
-            listProperty.ClearArray();
+            // 普通に遅い
+            listProperty.arraySize = newValues.Count;
             for (int i = 0; i < newValues.Count; i++)
             {
-                listProperty.InsertArrayElementAtIndex(i);
                 listProperty.GetArrayElementAtIndex(i).intValue = newValues[i];
             }
         }
