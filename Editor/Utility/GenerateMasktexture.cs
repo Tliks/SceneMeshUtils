@@ -14,7 +14,7 @@ namespace com.aoyon.scenemeshutils
         private string _rootname;
 
         [SerializeField]
-        private List<int> _targetselection;
+        private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
 
         private int[] optionValues = { 128, 256, 512, 1024, 2048 };

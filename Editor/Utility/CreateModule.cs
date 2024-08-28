@@ -19,7 +19,7 @@ namespace com.aoyon.scenemeshutils
         public SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
         [SerializeField]
-        private List<int> _targetselection;
+        private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
         private bool _outputunselected = false;
 
