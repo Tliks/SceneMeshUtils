@@ -109,7 +109,6 @@ namespace com.aoyon.scenemeshutils
         
         private void RenderCreateModuleButtons()
         {
-            EditorGUILayout.LabelField(_targetselection.Count.ToString());
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.Count > 0;
 
             _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.OutputUnselcted"), _outputunselected);
