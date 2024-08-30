@@ -46,7 +46,7 @@ namespace com.aoyon.scenemeshutils
             _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
         }
 
-        void OnDisable()
+        void OnDestroy()
         {
             _renderSelector.Dispose();
         }
@@ -69,7 +69,10 @@ namespace com.aoyon.scenemeshutils
             
             process_advanced_options();
 
-            serializedObject.ApplyModifiedProperties();
+            if (serializedObject != null && serializedObject.targetObject != null)
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
             
         }
 

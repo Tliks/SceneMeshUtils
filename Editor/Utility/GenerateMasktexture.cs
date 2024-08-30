@@ -61,7 +61,11 @@ namespace com.aoyon.scenemeshutils
             EditorGUILayout.Space();
             RenderGenerateMask();
 
-            serializedObject.ApplyModifiedProperties();
+            if (serializedObject != null && serializedObject.targetObject != null)
+            {
+                serializedObject.ApplyModifiedProperties();
+            }
+            
         }
 
         public void RenderGenerateMask()
