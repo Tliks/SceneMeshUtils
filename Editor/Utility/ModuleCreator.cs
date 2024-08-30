@@ -30,6 +30,7 @@ namespace com.aoyon.scenemeshutils
                 (GameObject root, int skin_index) = CheckObjects(sourceObject);
 
                 (GameObject new_root, string variantPath) = SaveRootObject(root, sourceObject.name);
+                new_root.transform.position = Vector3.zero;
 
                 CheckUtility.CleanUpHierarchy(new_root, skin_index, settings);
 
