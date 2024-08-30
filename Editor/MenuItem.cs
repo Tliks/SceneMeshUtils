@@ -7,14 +7,27 @@ namespace com.aoyon.scenemeshutils
     {
         private const int MENU_PRIORITY = 49;
 
-         [MenuItem("GameObject/SceneMeshUtils/Create Module", true, MENU_PRIORITY)]
+         [MenuItem("GameObject/Module Creator/Create Module", true, MENU_PRIORITY)]
         static bool CreateModuleValidation()
         {
             return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
         }
 
-        [MenuItem("GameObject/SceneMeshUtils/Create Module", false, MENU_PRIORITY)]
+        [MenuItem("GameObject/Module Creator/Create Module", false, MENU_PRIORITY)]
         static void CreateModule()
+        {
+            SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
+            ModuleCreatorProcessor.CheckAndCopyBones(skinnedMeshRenderer.gameObject, new ModuleCreatorSettings());
+        }
+
+         [MenuItem("GameObject/Module Creator/Create Module with Triangle Selector", true, MENU_PRIORITY)]
+        static bool CreateModuleTRValidation()
+        {
+            return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
+        }
+
+        [MenuItem("GameObject/Module Creator/Create Module with Triangle Selector", false, MENU_PRIORITY)]
+        static void CreateModuleTR()
         {
             SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
             ModuleCreator.ShowWindow(skinnedMeshRenderer);
