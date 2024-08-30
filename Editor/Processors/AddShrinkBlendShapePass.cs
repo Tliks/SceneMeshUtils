@@ -9,25 +9,29 @@ namespace com.aoyon.scenemeshutils
     {
         protected override void Execute(BuildContext context)
         {
-            var comonent = context.AvatarRootObject.GetComponentInChildren<AddShrinkBlendShape>();
+            var comonents = context.AvatarRootObject.GetComponentsInChildren<AddShrinkBlendShape>();
 
-            if (comonent == null) return;
-
-            List<int> triangleSelection = comonent.triangleSelection;
-
-            if (triangleSelection == null || triangleSelection == null || triangleSelection.Count == 0)
+            foreach (var comonent in comonents)
             {
+                if (comonent == null) return;
+
+                List<int> triangleSelection = comonent.triangleSelection;
+
+                if (triangleSelection == null || triangleSelection == null || triangleSelection.Count == 0)
+                {
+                    Object.DestroyImmediate(comonent);
+                    return;
+                }
+
+                SkinnedMeshRenderer skinnedMeshRenderer = comonent.GetComponent<SkinnedMeshRenderer>();
+
+                Mesh newMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(skinnedMeshRenderer.sharedMesh, triangleSelection.ToHashSet());
+
+                skinnedMeshRenderer.sharedMesh = newMesh;
+
                 Object.DestroyImmediate(comonent);
-                return;
             }
 
-            SkinnedMeshRenderer skinnedMeshRenderer = comonent.GetComponent<SkinnedMeshRenderer>();
-
-            Mesh newMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(skinnedMeshRenderer.sharedMesh, triangleSelection.ToHashSet());
-
-            skinnedMeshRenderer.sharedMesh = newMesh;
-
-            Object.DestroyImmediate(comonent);
         }
     }
 }
