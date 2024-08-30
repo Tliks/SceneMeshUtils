@@ -22,6 +22,7 @@ namespace com.aoyon.scenemeshutils
         private int _areacolorindex = 0;
         private int _backcolorindex = 1;
         private int _expansion = 2;
+        private SerializedObject serializedObject;
 
         public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -40,7 +41,7 @@ namespace com.aoyon.scenemeshutils
                 isRenderToggle = true,
                 FixedPreview = true
             };
-            SerializedObject serializedObject = new SerializedObject(this);
+            serializedObject = new SerializedObject(this);
             _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, serializedObject.FindProperty("_targetselection"));
             _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
         }
@@ -52,11 +53,15 @@ namespace com.aoyon.scenemeshutils
 
         void OnGUI()
         {
+            serializedObject.Update();
+
             _renderSelector.RenderGUI();
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.mask.description"), MessageType.Info);
 
             EditorGUILayout.Space();
             RenderGenerateMask();
+
+            serializedObject.ApplyModifiedProperties();
         }
 
         public void RenderGenerateMask()

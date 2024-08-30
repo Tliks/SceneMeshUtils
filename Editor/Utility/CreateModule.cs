@@ -22,6 +22,7 @@ namespace com.aoyon.scenemeshutils
         private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
         private bool _outputunselected = false;
+        private SerializedObject serializedObject;
 
         public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -40,7 +41,7 @@ namespace com.aoyon.scenemeshutils
                 isRenderToggle = true,
                 FixedPreview = true
             };
-            SerializedObject serializedObject = new SerializedObject(this);
+            serializedObject = new SerializedObject(this);
             _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, serializedObject.FindProperty("_targetselection"));
             _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
         }
@@ -52,6 +53,8 @@ namespace com.aoyon.scenemeshutils
         
         void OnGUI()
         {
+            serializedObject.Update();
+
             _renderSelector.RenderGUI();
 
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.description"), MessageType.Info);
@@ -65,6 +68,9 @@ namespace com.aoyon.scenemeshutils
             EditorGUILayout.Space();
             
             process_advanced_options();
+
+            serializedObject.ApplyModifiedProperties();
+            
         }
 
         private static void RenderPhysBoneOptions()
@@ -103,6 +109,7 @@ namespace com.aoyon.scenemeshutils
         
         private void RenderCreateModuleButtons()
         {
+            EditorGUILayout.LabelField(_targetselection.Count.ToString());
             GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.Count > 0;
 
             _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.OutputUnselcted"), _outputunselected);
