@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+
 namespace com.aoyon.scenemeshutils
 {   
 
@@ -17,7 +18,8 @@ namespace com.aoyon.scenemeshutils
 
         public SkinnedMeshRenderer _originskinnedMeshRenderer;
         private static string _rootname;
-        private TriangleSelection _targetselection;
+        [SerializeField]
+        private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
         private bool _outputunselected = false;
 
@@ -31,7 +33,6 @@ namespace com.aoyon.scenemeshutils
         private void Initialize(SkinnedMeshRenderer skinnedMeshRenderer)
         {
             _originskinnedMeshRenderer = skinnedMeshRenderer;
-            _targetselection = new();
             _renderSelector = CreateInstance<RenderSelector>();
             RenderSelectorContext ctx = new()
             {
@@ -39,7 +40,8 @@ namespace com.aoyon.scenemeshutils
                 isRenderToggle = true,
                 FixedPreview = true
             };
-            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, _targetselection);
+            SerializedObject serializedObject = new SerializedObject(this);
+            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, serializedObject.FindProperty("_targetselection"));
             _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
         }
 
@@ -101,7 +103,7 @@ namespace com.aoyon.scenemeshutils
         
         private void RenderCreateModuleButtons()
         {
-            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
+            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.Count > 0;
 
             _outputunselected = EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.OutputUnselcted"), _outputunselected);
             
@@ -109,8 +111,8 @@ namespace com.aoyon.scenemeshutils
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.ModuleCreator.CreateModuleButton")))
             {
                 CustomAnimationMode.StopAnimationMode();
-                CreateModule(_targetselection.selection.ToHashSet(), true);
-                if (_outputunselected) CreateModule(_targetselection.selection.ToHashSet(), false);
+                CreateModule(_targetselection.ToHashSet(), true);
+                if (_outputunselected) CreateModule(_targetselection.ToHashSet(), false);
                 Close();
             }
 

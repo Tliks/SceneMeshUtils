@@ -13,9 +13,9 @@ namespace com.aoyon.scenemeshutils
 
             if (comonent == null) return;
 
-            TriangleSelection triangleSelection = comonent.triangleSelection;
+            List<int> triangleSelection = comonent.triangleSelection;
 
-            if (triangleSelection == null || triangleSelection.selection == null || triangleSelection.selection.Count == 0)
+            if (triangleSelection == null || triangleSelection == null || triangleSelection.Count == 0)
             {
                 Object.DestroyImmediate(comonent);
                 return;
@@ -23,7 +23,7 @@ namespace com.aoyon.scenemeshutils
 
             SkinnedMeshRenderer skinnedMeshRenderer = comonent.GetComponent<SkinnedMeshRenderer>();
 
-            Mesh newMesh = MeshUtility.DeleteMesh(skinnedMeshRenderer.sharedMesh, triangleSelection.selection.ToHashSet());
+            Mesh newMesh = MeshUtility.DeleteMesh(skinnedMeshRenderer.sharedMesh, triangleSelection.ToHashSet());
 
             skinnedMeshRenderer.sharedMesh = newMesh;
 

@@ -8,8 +8,9 @@
     "name": "Ao_425",
     "url": "https://github.com/Tliks"
   },
-  "url": "https://github.com/Tliks/ModuleCreator",
+  "url": "https://github.com/Tliks/SceneMeshUtils",
   "vpmDependencies": {
-    "com.vrchat.avatars": ">=3.0.0"
+    "com.vrchat.avatars": ">=3.0.0",
+    "nadena.dev.ndmf": "^1.5.0"
   }
 }

@@ -11,6 +11,6 @@ namespace com.aoyon.scenemeshutils
     [RequireComponent(typeof(SkinnedMeshRenderer))]
     public class AddShrinkBlendShape: MonoBehaviour, IEditorOnly
     {
-        public TriangleSelection triangleSelection = new();
+        public List<int> triangleSelection = new();
     }
 }

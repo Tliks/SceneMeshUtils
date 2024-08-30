@@ -13,7 +13,8 @@ namespace com.aoyon.scenemeshutils
         private SkinnedMeshRenderer _originskinnedMeshRenderer;
         private string _rootname;
 
-        private TriangleSelection _targetselection;
+        [SerializeField]
+        private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
 
         private int[] optionValues = { 128, 256, 512, 1024, 2048 };
@@ -32,7 +33,6 @@ namespace com.aoyon.scenemeshutils
         private void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer)
         {
             _originskinnedMeshRenderer = originskinnedMeshRenderer;
-            _targetselection = new();
             _renderSelector = CreateInstance<RenderSelector>();
             RenderSelectorContext ctx = new()
             {
@@ -40,7 +40,8 @@ namespace com.aoyon.scenemeshutils
                 isRenderToggle = true,
                 FixedPreview = true
             };
-            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, _targetselection);
+            SerializedObject serializedObject = new SerializedObject(this);
+            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, serializedObject.FindProperty("_targetselection"));
             _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
         }
 
@@ -76,12 +77,12 @@ namespace com.aoyon.scenemeshutils
             _expansion = EditorGUILayout.IntField(LocalizationEditor.GetLocalizedText("Utility.mask.expansion"), _expansion);
             
             // Create Selected Islands Module
-            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.selection.Count > 0;
+            GUI.enabled = _originskinnedMeshRenderer != null && _targetselection.Count > 0;
             EditorGUILayout.Space();
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.mask.createtexture")))
             {   
                 CustomAnimationMode.StopAnimationMode();
-                GenerateMask(_targetselection.selection.ToHashSet());
+                GenerateMask(_targetselection.ToHashSet());
                 Close();
             }
             GUI.enabled = true;

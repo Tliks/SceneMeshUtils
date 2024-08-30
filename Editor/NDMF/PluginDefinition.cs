@@ -1,4 +1,5 @@
 using nadena.dev.ndmf;
+using nadena.dev.ndmf.preview;
 using com.aoyon.scenemeshutils;
 using UnityEngine;
 
@@ -20,8 +21,11 @@ namespace com.aoyon.scenemeshutils
                 .BeforePlugin("net.rs64.tex-trans-tool")
                 .BeforePlugin("com.anatawa12.avatar-optimizer");
 
-            sequence.Run(AddShrinkBlendShapePass.Instance).Then
-            .Run(RemoveMeshFromScenePass.Instance);
+            sequence
+            .Run(AddShrinkBlendShapePass.Instance)
+            .PreviewingWith(new AddShrinkBlendShapePreview()).Then
+            .Run(RemoveMeshFromScenePass.Instance)
+            .PreviewingWith(new RemoveMeshFromScenePreview());
         }
     }
 }

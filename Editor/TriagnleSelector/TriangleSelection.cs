@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -24,7 +25,7 @@ namespace com.aoyon.scenemeshutils
         private TriangleSelector _triangleSelector;
         private TriangleSelectionContainer _triangleSelectionContainer;
         private List<TriangleSelection> _triangleSelections;
-        private TriangleSelection _target;
+        private SerializedProperty _target;
         private string[] _displayedOptions;
         private int _selectedIndex = 0;
         private TriangleSelectorContext _selectorcontext;
@@ -32,12 +33,12 @@ namespace com.aoyon.scenemeshutils
 
         private bool _isAutoPreview = true;
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, TriangleSelection target)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, SerializedProperty target)
         {
             Initialize(skinnedMeshRenderer, new RenderSelectorContext(), target);
         }
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx, TriangleSelection target)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx, SerializedProperty target)
         {
             CustomAnimationMode.StopAnimationMode();
             _skinnedMeshRenderer = skinnedMeshRenderer;
@@ -48,7 +49,7 @@ namespace com.aoyon.scenemeshutils
             _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
             _selectorcontext = CreateInstance<TriangleSelectorContext>();
             if (!_renderctx.isRenderToggle) _isAutoPreview = _renderctx.FixedPreview;
-            StartPreview();
+            //StartPreview();
         }
 
         public void Dispose()
@@ -62,7 +63,6 @@ namespace com.aoyon.scenemeshutils
 
         public void RenderGUI()
         {
-            //serializedObject.Update();
             LocalizationEditor.RenderLocalize();
             GUI.enabled = _triangleSelector == null;
             using (new GUILayout.HorizontalScope())
@@ -74,32 +74,33 @@ namespace com.aoyon.scenemeshutils
                     _selectedIndex = selectedIndex;
                     if (_selectedIndex == 0)
                     {
-                        _target.selection = new();
-                        StopPrview();
+                        ReplaceListValues(_target, new List<int>());
+                        //StopPrview();
                     }
                     else
                     {
-                        _target.selection = new List<int>(_triangleSelections[_selectedIndex - 1].selection);
-                        StartPreview();
+                        ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
+                        SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
+                        //StartPreview();
                     }
                 }
 
                 GUI.enabled = _selectedIndex != 0;
                 if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.Remove")))
                 {
-                    StopPrview();
+                    //StopPrview();
                     SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
                     LoadAsset();
                     _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
                     if (_selectedIndex != 0)
                     {
-                        _target.selection = new List<int>(_triangleSelections[_selectedIndex - 1].selection);
+                        ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
                     }
                     else
                     {
-                        _target.selection = new List<int>();
+                        ReplaceListValues(_target, new List<int>());
                     }
-                    StartPreview();
+                    //StartPreview();
                     
                 }
                 GUI.enabled = true;
@@ -111,7 +112,7 @@ namespace com.aoyon.scenemeshutils
             {
                 if (_triangleSelector == null)
                 {
-                    StopPrview();
+                    //StopPrview();
 
                     // Add New Selection
                     if (_selectedIndex == 0)
@@ -123,7 +124,7 @@ namespace com.aoyon.scenemeshutils
                     else
                     {
                         _selectorcontext.isedit = true;
-                        _selectorcontext.target_default = new HashSet<int>(_target.selection);
+                        _selectorcontext.target_default = new HashSet<int>(_triangleSelections[_selectedIndex - 1].selection);
                         _selectorcontext.displayname = _triangleSelections[_selectedIndex - 1].displayname;
                     }
 
@@ -172,17 +173,12 @@ namespace com.aoyon.scenemeshutils
                         SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
                     }
 
-                    _target.selection = new List<int>(newSelection);
+                    ReplaceListValues(_target, new List<int>(newSelection));
                     LoadAsset();
                     _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
                 }
                 
-                StartPreview();
-            }
-
-            if (_renderctx.isRenderToggle && GUILayout.Button(_isAutoPreview ? LocalizationEditor.GetLocalizedText("TriangleSelection.DisablePreview") : LocalizationEditor.GetLocalizedText("TriangleSelection.EnablePreview")))
-            {
-                ToggleAutoPreview();
+                //StartPreview();
             }
             GUI.enabled = true;
 
@@ -204,31 +200,14 @@ namespace com.aoyon.scenemeshutils
                 .ToArray();
         }
 
-        private void StartPreview()
+        private void ReplaceListValues(SerializedProperty listProperty, List<int> newValues)
         {
-            if (_isAutoPreview && _target != null && _target.selection.Count > 0)
+            // 普通に遅い
+            listProperty.arraySize = newValues.Count;
+            for (int i = 0; i < newValues.Count; i++)
             {
-                CustomAnimationMode.StopAnimationMode();
-                CustomAnimationMode.StartAnimationMode(_skinnedMeshRenderer);
-                if (_renderctx.isblendhsape)
-                {
-                    _skinnedMeshRenderer.sharedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(_mesh, _target.selection.ToHashSet());
-                }
-                else if (_renderctx.isKeep)
-                {
-                    _skinnedMeshRenderer.sharedMesh = MeshUtility.keepTriangles(_mesh, _target.selection.ToHashSet());
-                }
-                else
-                {
-                    _skinnedMeshRenderer.sharedMesh = MeshUtility.RemoveTriangles(_mesh, _target.selection.ToHashSet());
-                }
-                
+                listProperty.GetArrayElementAtIndex(i).intValue = newValues[i];
             }
-        }
-
-        private void StopPrview()
-        {
-            CustomAnimationMode.StopAnimationMode();
         }
 
         private void ToggleAutoPreview()
@@ -236,15 +215,19 @@ namespace com.aoyon.scenemeshutils
             if ( !_isAutoPreview)
             {
                 _isAutoPreview = true;
-                StartPreview();
+                //StartPreview();
             }
             else
             {
                 _isAutoPreview = false;
-                StopPrview();
+                //StopPrview();
             }
         }
 
+        internal void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, RenderSelectorContext ctx, object value)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class SaveAsScriptableObject
@@ -279,8 +262,30 @@ namespace com.aoyon.scenemeshutils
 
         public static int FindIndex(List<TriangleSelection> triangleSelections, TriangleSelection triangleSelection)
         {
-            int index = triangleSelections.FindIndex(ts => ts.selection.SequenceEqual(triangleSelection.selection));
+            int index = FindIndex(triangleSelections, triangleSelection.selection);
             return index;
+        }
+
+        public static int FindIndex(List<TriangleSelection> triangleSelections, List<int> selection)
+        {
+            int index = triangleSelections.FindIndex(ts => ts.selection.SequenceEqual(selection));
+            return index;
+        }
+
+        public static int FindIndex(List<TriangleSelection> triangleSelections, SerializedProperty listProperty)
+        {
+            int index = FindIndex(triangleSelections, ConvertToList(listProperty));
+            return index;
+        }
+
+        private static List<int> ConvertToList(SerializedProperty listProperty)
+        {
+            List<int> intList = new List<int>();
+            for (int i = 0; i < listProperty.arraySize; i++)
+            {
+                intList.Add(listProperty.GetArrayElementAtIndex(i).intValue);
+            }
+            return intList;
         }
 
         public static TriangleSelectionContainer GetContainer(Mesh mesh)
