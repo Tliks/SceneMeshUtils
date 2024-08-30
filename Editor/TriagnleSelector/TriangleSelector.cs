@@ -48,7 +48,8 @@ namespace com.aoyon.scenemeshutils
 
         public static TriangleSelector ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
         {
-            TriangleSelector window = GetWindow<TriangleSelector>();
+            Type[] types = new Type[] { typeof(ModuleCreator), typeof(MaskTextureGenerator) };
+            TriangleSelector window = GetWindow<TriangleSelector>(types); 
             context.SkinnedMeshRenderer = skinnedMeshRenderer;
             window.Initialize(context);
             window.Show();
