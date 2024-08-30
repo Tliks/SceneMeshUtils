@@ -106,7 +106,7 @@ namespace com.aoyon.scenemeshutils
                 AssetDatabase.SaveAssets();
 
                 _Settings.newmesh = newMesh;
-                ModuleCreatorProcessor.CheckAndCopyBones(_originskinnedMeshRenderer.gameObject, _Settings);
+                ModuleCreatorProcessor.CheckAndCopyBones(new List<GameObject> {_originskinnedMeshRenderer.gameObject}, _Settings);
             }
         }
         

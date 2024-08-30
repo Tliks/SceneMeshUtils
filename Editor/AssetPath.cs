@@ -23,7 +23,7 @@ namespace com.aoyon.scenemeshutils
             string folderpath =  $"{BASEPATH}/{root_name}/Prefab";;
             if (!Directory.Exists(folderpath)) Directory.CreateDirectory(folderpath);
 
-            string fileName = $"{mesh_name}_MA";
+            string fileName = mesh_name;
             string fileExtension = "prefab";
             
             return AssetDatabase.GenerateUniqueAssetPath(folderpath + "/" + fileName + "." + fileExtension);

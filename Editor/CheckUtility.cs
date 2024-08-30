@@ -9,6 +9,41 @@ namespace com.aoyon.scenemeshutils
 {
     public class CheckUtility
     {
+
+        public static GameObject CheckObjects(IEnumerable<GameObject> objs)
+        {   
+            GameObject commonroot = null;
+            foreach (var obj in objs)
+            {
+                Checktarget(obj);
+                GameObject root = CheckRoot(obj);
+                if (commonroot != null && root != commonroot) throw new InvalidOperationException("Please run it for objects that have a common parent.");
+                else commonroot = root;
+                CheckSkin(obj);
+                CheckPrefabAsset(obj);
+            }
+            CheckHips(commonroot);
+
+            return commonroot;
+        }
+
+        public static IEnumerable<int> GetIndices(GameObject root, IEnumerable<GameObject> objs)
+        {
+            List<int> indices = new List<int>();
+            Transform[] AllChildren = GetAllChildren(root);
+
+            foreach (var obj in objs)
+            {
+                int index = Array.IndexOf(AllChildren, obj.transform);
+                if (index != -1)
+                {
+                    indices.Add(index);
+                }
+            }
+
+            return indices;
+        }
+
         public static void Checktarget(GameObject targetObject)
         {
             if (targetObject == null)
@@ -76,57 +111,77 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
-        public static SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index)
+        public static SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, IEnumerable<int> skinIndices)
         {
-            return CleanUpHierarchy(new_root, skin_index, null);
+            return CleanUpHierarchy(new_root, skinIndices, null);
         }
 
-        public static SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, int skin_index, ModuleCreatorSettings settings)
+
+        public static SkinnedMeshRenderer CleanUpHierarchy(GameObject new_root, IEnumerable<int> skinIndices, ModuleCreatorSettings settings)
         {
             HashSet<GameObject> objectsToSave = new HashSet<GameObject>();
             HashSet<object> componentsToSave = new HashSet<object>();
 
-            // 複製先のSkinnedMeshRendererがついたオブジェクトを追加
-            GameObject skin = GetSkin(new_root, skin_index);
-            objectsToSave.Add(skin);
+            HashSet<GameObject> allweightedBones = new();
+            SkinnedMeshRenderer skinnedMeshRenderer = null;
 
-            SkinnedMeshRenderer skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
-            componentsToSave.Add(skinnedMeshRenderer);
-            if (settings != null && settings.newmesh != null) 
+            // 複製先のSkinnedMeshRendererがついたオブジェクトを追加
+            IEnumerable<GameObject> skins = GetSkin(new_root, skinIndices);
+            foreach (GameObject skin in skins)
             {
-                skinnedMeshRenderer.sharedMesh = settings.newmesh;
-                MeshUtility.RemoveUnusedMaterials(skinnedMeshRenderer);
+                objectsToSave.Add(skin);
+
+                skinnedMeshRenderer = skin.GetComponent<SkinnedMeshRenderer>();
+                componentsToSave.Add(skinnedMeshRenderer);
+
+                // SkinnedMeshRendererのrootBoneとanchor overrideに設定されているオブジェクトを追加
+                Transform rootBone = skinnedMeshRenderer.rootBone;
+                Transform anchor = skinnedMeshRenderer.probeAnchor;
+                if (rootBone) objectsToSave.Add(rootBone.gameObject);
+                if (anchor) objectsToSave.Add(anchor.gameObject);
+
+                if (settings != null && settings.newmesh!= null && skins.Count() == 1) skinnedMeshRenderer.sharedMesh = settings.newmesh;
+
+                // ウェイトをつけているオブジェクトを追加
+                HashSet<GameObject> weightedBones = GetWeightedBones(skinnedMeshRenderer);
+                UnityEngine.Debug.Log($"Bones weighting {skin.name}: {weightedBones.Count}/{skinnedMeshRenderer.bones.Length}");
+                allweightedBones.UnionWith(weightedBones);
+                objectsToSave.UnionWith(weightedBones);
+
             }
 
-            // SkinnedMeshRendererのrootBoneとanchor overrideに設定されているオブジェクトを追加
-            Transform rootBone = skinnedMeshRenderer.rootBone;
-            Transform anchor = skinnedMeshRenderer.probeAnchor;
-            if (rootBone) objectsToSave.Add(rootBone.gameObject);
-            if (anchor) objectsToSave.Add(anchor.gameObject);
-
-            // ウェイトをつけているオブジェクトを追加
-            HashSet<GameObject> weightedBones = GetWeightedBones(skinnedMeshRenderer);
-            UnityEngine.Debug.Log($"Bones weighting {skin.name}: {weightedBones.Count}/{skinnedMeshRenderer.bones.Length}");
-            objectsToSave.UnionWith(weightedBones);
-
             // PhysBoneに関連するオブジェクトを追加
-            if (settings != null && settings.newmesh != null) 
+            if (settings != null && settings.IncludePhysBone) 
             {
-                (HashSet<GameObject> PhysBoneObjects, HashSet<object> PBComponents)  = FindPhysBoneObjects(new_root, weightedBones, settings);
+                (HashSet<GameObject> PhysBoneObjects, HashSet<object> PBComponents) = FindPhysBoneObjects(new_root, allweightedBones, settings);
                 objectsToSave.UnionWith(PhysBoneObjects);
                 componentsToSave.UnionWith(PBComponents);
             }
+
 
             CheckAndDeleteRecursive(new_root, objectsToSave, componentsToSave);
 
             return skinnedMeshRenderer;
         }
 
-        private static GameObject GetSkin(GameObject new_root, int skin_index)
+        private static IEnumerable<GameObject> GetSkin(GameObject new_root, IEnumerable<int> skinIndices)
         {
             Transform[] AllChildren = GetAllChildren(new_root);
-            GameObject skin = AllChildren[skin_index].gameObject;
-            return skin;
+            List<GameObject> skins = new List<GameObject>();
+
+            foreach (int index in skinIndices)
+            {
+                if (index >= 0 && index < AllChildren.Length)
+                {
+                    skins.Add(AllChildren[index].gameObject);
+                }
+                else
+                {
+                    Debug.LogWarning($"Index {index} is out of bounds for the children of {new_root.name}");
+                }
+            }
+
+            return skins;
         }
 
         private static HashSet<GameObject> GetWeightedBones(SkinnedMeshRenderer skinnedMeshRenderer)
@@ -263,7 +318,7 @@ namespace com.aoyon.scenemeshutils
                     physBoneObjects.Add(physBone.gameObject);
                     physBoneObjects.UnionWith(weightedPBObjects);
 
-                    if (settings.IncludeIgnoreTransforms == true)
+                    if (settings.IncludePhysBoneColider == true)
                     {
                         foreach (VRCPhysBoneCollider collider in physBone.colliders)
                         {
@@ -278,7 +333,7 @@ namespace com.aoyon.scenemeshutils
             }
 
             // PhysBoneColiderに対する処理
-            ProcessPhysBoneColliders(root, physBoneObjects, componentsToSave, settings);
+            if (settings.IncludePhysBoneColider == true) ProcessPhysBoneColliders(root, physBoneObjects, componentsToSave, settings);
 
             return (physBoneObjects, componentsToSave);
         }
