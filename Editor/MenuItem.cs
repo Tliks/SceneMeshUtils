@@ -8,16 +8,19 @@ namespace com.aoyon.scenemeshutils
     public class MenuItems : EditorWindow
     {
         private const int MENU_PRIORITY = 49;
-        static int count = 0;
+        private static int count = 0;
 
+        private const string MCPATH = "GameObject/Module Creator";
 
-         [MenuItem("GameObject/SMU Module Creator/Create Module", true, MENU_PRIORITY)]
+        private const string CREATEMODULE = "Create Module"; 
+
+        [MenuItem(MCPATH + "/" + CREATEMODULE, true, MENU_PRIORITY)]
         static bool CreateModuleValidation()
         {
             return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
         }
 
-        [MenuItem("GameObject/SMU Module Creator/Create Module", false, MENU_PRIORITY)]
+        [MenuItem(MCPATH + "/" + CREATEMODULE, false, MENU_PRIORITY)]
         static void CreateModule()
         {
             count++; 
@@ -31,8 +34,9 @@ namespace com.aoyon.scenemeshutils
             count = 0;
         }
         
+        private const string CREATEMODULEMERGED = "Create Module (Merged)";
 
-        [MenuItem("GameObject/SMU Module Creator/Create Module (Merged)", true, MENU_PRIORITY)]
+        [MenuItem(MCPATH + "/" + CREATEMODULEMERGED, true, MENU_PRIORITY)]
         static bool CreateModuleMergedValidation()
         {
             if (Selection.gameObjects.Length < 2) return false;
@@ -46,7 +50,7 @@ namespace com.aoyon.scenemeshutils
             return true;
         }
 
-        [MenuItem("GameObject/SMU Module Creator/Create Module (Merged)", false, MENU_PRIORITY)]
+        [MenuItem(MCPATH + "/" + CREATEMODULEMERGED, false, MENU_PRIORITY)]
         static void CreateModuleMerged()
         {   
             count++; 
@@ -56,16 +60,17 @@ namespace com.aoyon.scenemeshutils
             
             count = 0;
         }
+        
+        private const string CREATEMODULETR= "Create Module with Triangle Selector";
 
-
-        [MenuItem("GameObject/SMU Module Creator/Create Module with Triangle Selector", true, MENU_PRIORITY)]
+        [MenuItem(MCPATH + "/" + CREATEMODULETR, true, MENU_PRIORITY)]
         static bool CreateModuleTRValidation()
         {
             if (Selection.gameObjects.Length >= 2) return false;
             return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
         }
 
-        [MenuItem("GameObject/SMU Module Creator/Create Module with Triangle Selector", false, MENU_PRIORITY)]
+        [MenuItem(MCPATH + "/" + CREATEMODULETR, false, MENU_PRIORITY)]
         static void CreateModuleTR()
         {
             SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
