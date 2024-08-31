@@ -13,11 +13,9 @@ namespace com.aoyon.scenemeshutils
 
             foreach (var comonent in comonents)
             {
-                if (comonent == null) return;
-
                 List<int> triangleSelection = comonent.triangleSelection;
 
-                if (triangleSelection == null || triangleSelection == null || triangleSelection.Count == 0)
+                if (triangleSelection == null || triangleSelection.Count == 0)
                 {
                     Object.DestroyImmediate(comonent);
                     return;
