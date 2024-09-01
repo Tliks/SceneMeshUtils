@@ -46,6 +46,8 @@ namespace com.aoyon.scenemeshutils
         private bool _isPreviewEnabled = true;
         private int _iseditmodeasnew = 0;
 
+        private Color selectionColor = new Color(0.6f, 0.7f, 0.8f, 0.25f);
+
         public static TriangleSelector ShowWindow(TriangleSelectorContext context, SkinnedMeshRenderer skinnedMeshRenderer)
         {
             Type[] types = new Type[] { typeof(ModuleCreator), typeof(MaskTextureGenerator) };
@@ -157,9 +159,27 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
+        private bool FilterEvent(Event e)
+        {
+            switch (e.type)
+            {
+                case EventType.Layout:
+                case EventType.Repaint:
+                case EventType.ExecuteCommand:
+                    return false;
+                case EventType.MouseMove:
+                case EventType.MouseUp:
+                case EventType.MouseDown:
+                case EventType.MouseDrag:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         private void HandleMouseEvents(SceneView sceneView, Event e)
         {   
-            if (e.isMouse)
+            if (FilterEvent(e))
             {
                 Vector2 mousePos = e.mousePosition;
                 //consoleがrectに入っているので多分あまり正確ではない
@@ -223,7 +243,7 @@ namespace com.aoyon.scenemeshutils
 
                 }
                 //ドラッグしていないとき
-                else if (!_isdragging)
+                else if (e.type != EventType.MouseDrag && !_isdragging)
                 {
                     double currentTime = EditorApplication.timeSinceStartup;
                     if (currentTime - _lastUpdateTime >= raycastInterval)
@@ -238,8 +258,6 @@ namespace com.aoyon.scenemeshutils
         private void DrawSelectionRectangle()
         {
             Handles.BeginGUI();
-            //Color selectionColor = _isPreviewSelected ? new Color(1, 0, 0, 0.2f) : new Color(0, 1, 1, 0.2f);
-            Color selectionColor = new Color(0.6f, 0.7f, 0.8f, 0.25f); 
             GUI.color = selectionColor;
             GUI.DrawTexture(_selectionRect, EditorGUIUtility.whiteTexture);
             Handles.EndGUI();

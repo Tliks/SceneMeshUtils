@@ -21,16 +21,7 @@ namespace com.aoyon.scenemeshutils
                 return false;
             }
 
-            switch (Event.current.type)
-            {
-                case EventType.Layout:
-                case EventType.Repaint:
-                case EventType.ExecuteCommand:
-                    break;
-                default:
-                    HandleUtility.PickGameObject(Event.current.mousePosition, false);
-                    break;
-            }
+            HandleUtility.PickGameObject(Event.current.mousePosition, false);
 
             Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
             
