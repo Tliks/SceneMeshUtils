@@ -60,6 +60,9 @@ namespace com.aoyon.scenemeshutils
 
         private void Initialize(TriangleSelectorContext _triangleSelectorContext)
         {
+            NDMFToggleButton.StopNDMFPreview(RemoveMeshFromScenePreview.ToggleNode);
+            NDMFToggleButton.StopNDMFPreview(AddShrinkBlendShapePreview.ToggleNode);
+
             this._triangleSelectorContext = _triangleSelectorContext;
             _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
             _previewController = new();
@@ -73,6 +76,9 @@ namespace com.aoyon.scenemeshutils
             _previewController.Dispose();
             _triangleSelectorContext.end = true;
             SceneView.duringSceneGui -= OnSceneGUI;
+            
+            NDMFToggleButton.StartNDMFPreview(RemoveMeshFromScenePreview.ToggleNode);
+            NDMFToggleButton.StartNDMFPreview(AddShrinkBlendShapePreview.ToggleNode);
         }
 
         public void Dispose()
