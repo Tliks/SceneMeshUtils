@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using nadena.dev.ndmf.preview;
 using Debug = UnityEngine.Debug;
 using Color = UnityEngine.Color;
 
@@ -60,8 +61,7 @@ namespace com.aoyon.scenemeshutils
 
         private void Initialize(TriangleSelectorContext _triangleSelectorContext)
         {
-            NDMFToggleButton.StopNDMFPreview(RemoveMeshFromScenePreview.ToggleNode);
-            NDMFToggleButton.StopNDMFPreview(AddShrinkBlendShapePreview.ToggleNode);
+            NDMFPreview.DisablePreviewDepth += 1;
 
             this._triangleSelectorContext = _triangleSelectorContext;
             _OriginskinnedMeshRenderer = _triangleSelectorContext.SkinnedMeshRenderer;
@@ -76,9 +76,8 @@ namespace com.aoyon.scenemeshutils
             _previewController.Dispose();
             _triangleSelectorContext.end = true;
             SceneView.duringSceneGui -= OnSceneGUI;
-            
-            NDMFToggleButton.StartNDMFPreview(RemoveMeshFromScenePreview.ToggleNode);
-            NDMFToggleButton.StartNDMFPreview(AddShrinkBlendShapePreview.ToggleNode);
+
+            NDMFPreview.DisablePreviewDepth -= 1;
         }
 
         public void Dispose()
