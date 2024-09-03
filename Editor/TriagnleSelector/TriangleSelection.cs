@@ -80,7 +80,6 @@ namespace com.aoyon.scenemeshutils
                     else
                     {
                         ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
-                        SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
                         //StartPreview();
                     }
                 }
