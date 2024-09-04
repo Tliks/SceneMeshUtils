@@ -1,14 +1,16 @@
 {
   "name": "com.aoyon.scenemeshutils",
   "displayName": "SceneMeshUtils",
-  "version": "0.0.1",
+  "version": "0.1.0-beta.1",
   "unity": "2022.3",
-  "description": "Mesh Utility featuring an interface for scene mesh selection",
+  "description": "Mesh Utility featuring Triangle Selector",
   "author": {
     "name": "Ao_425",
     "url": "https://github.com/Tliks"
   },
   "url": "https://github.com/Tliks/SceneMeshUtils",
+  "changelogUrl": "https://github.com/Tliks/SceneMeshUtils/blob/dev/CHANGELOG.md",
+  "documentationUrl": "https://tliks.github.io/SMU-Docs/",
   "vpmDependencies": {
     "com.vrchat.avatars": ">=3.0.0",
     "nadena.dev.ndmf": "^1.5.0"
