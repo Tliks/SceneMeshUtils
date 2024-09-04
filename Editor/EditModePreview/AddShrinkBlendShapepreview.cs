@@ -29,35 +29,36 @@ namespace com.aoyon.scenemeshutils
         public ImmutableList<RenderGroup> GetTargetGroups(ComputeContext context)
         {
             return context.GetComponentsByType<AddShrinkBlendShape>()
-            .Select(c => RenderGroup.For(context.GetComponent<SkinnedMeshRenderer>(c.gameObject)))
+            .Select(component => (component, context.GetComponent<SkinnedMeshRenderer>(component.gameObject)))
+            .Where(((component, renderer) => renderer != null && renderer.sharedMesh != null))
+            .Select((component, renderer) => RenderGroup.For(renderer).WithData(new[] { component }))
             .ToImmutableList();
         }
 
         public Task<IRenderFilterNode> Instantiate(RenderGroup group, IEnumerable<(Renderer, Renderer)> proxyPairs, ComputeContext context)
         {
-            var addShrinkBlendShape = group.Renderers.First().GetComponent<AddShrinkBlendShape>();
-            var pair = proxyPairs.First();
-            var targetRenderer = pair.Item2;
-            Mesh mesh = null;
+            var component = group.GetData<AddShrinkBlendShape[]>().SingleOrDefault();
+            if (component == default) return null;
 
-            switch (targetRenderer)
-            {
-                case SkinnedMeshRenderer smr: { mesh = smr.sharedMesh; break; }
-                default: { break; }
-            }
+            context.Observe(component);
 
-            if (mesh == null) {return null;}
-            context.Observe(addShrinkBlendShape);
+            var pair = proxyPairs.SingleOrDefault();
+            if (pair == default) return null;
 
-            Mesh modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(mesh, addShrinkBlendShape.triangleSelection.ToHashSet());
+            if (!(pair.Item1 is SkinnedMeshRenderer original)) return null;
+            if (!(pair.Item2 is SkinnedMeshRenderer proxy)) return null;
+
+            Mesh mesh = proxy.sharedMesh;
+            if (mesh == null) return null;
+
+            Mesh modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(mesh, component.triangleSelection.ToHashSet());
             return Task.FromResult<IRenderFilterNode>(new AddShrinkBlendShapePreviewNode(modifiedMesh));
-
         }
     }
 
     internal class AddShrinkBlendShapePreviewNode : IRenderFilterNode
     {
-        public RenderAspects WhatChanged => RenderAspects.Everything;
+        public RenderAspects WhatChanged => RenderAspects.Mesh;
         private Mesh _modifiedMesh; 
 
         public AddShrinkBlendShapePreviewNode(Mesh mesh)
@@ -70,6 +71,7 @@ namespace com.aoyon.scenemeshutils
             if (original is SkinnedMeshRenderer o_smr && proxy is SkinnedMeshRenderer p_smr)
             {
                 p_smr.sharedMesh = _modifiedMesh;
+                return;
             }
         }
 

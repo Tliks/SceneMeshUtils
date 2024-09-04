@@ -29,9 +29,9 @@ namespace com.aoyon.scenemeshutils
         public ImmutableList<RenderGroup> GetTargetGroups(ComputeContext context)
         {
             return context.GetComponentsByType<RemoveMeshFromScene>()
-            .Select(c => (c, context.GetComponent<SkinnedMeshRenderer>(c.gameObject)))
-            .Where(p => p.Item2 != null && p.Item2.sharedMesh != null)
-            .Select(p => RenderGroup.For(p.Item2).WithData<RemoveMeshFromScene[]>(new[] { p.Item1 }))
+            .Select(component => (component, context.GetComponent<SkinnedMeshRenderer>(component.gameObject)))
+            .Where(((component, renderer) => renderer != null && renderer.sharedMesh != null))
+            .Select((component, renderer) => RenderGroup.For(renderer).WithData(new[] { component }))
             .ToImmutableList();
         }
 
