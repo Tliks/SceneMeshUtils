@@ -94,4 +94,5 @@ jobs:
           workflow: build-listing.yml
           repo: Tliks/vpm-repos
           token: ${{ secrets.DISPATCH_TOKEN }}
+          ref: main
       
