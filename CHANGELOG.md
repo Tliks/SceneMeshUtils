@@ -10,9 +10,12 @@
 ### Removed
 
 ### Fixed
-- compile error
 
 ### Security
+
+## [0.1.0-beta.3] - 2024-09-04
+### Fixed
+- compile error
 
 ## [0.1.0-beta.2] - 2024-09-04
 ### Fixed
