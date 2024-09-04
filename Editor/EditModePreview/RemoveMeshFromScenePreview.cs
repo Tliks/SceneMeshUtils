@@ -30,8 +30,8 @@ namespace com.aoyon.scenemeshutils
         {
             return context.GetComponentsByType<RemoveMeshFromScene>()
             .Select(component => (component, context.GetComponent<SkinnedMeshRenderer>(component.gameObject)))
-            .Where(((component, renderer) => renderer != null && renderer.sharedMesh != null))
-            .Select((component, renderer) => RenderGroup.For(renderer).WithData(new[] { component }))
+            .Where(pair => pair.Item2 != null && pair.Item2.sharedMesh != null)
+            .Select(pair => RenderGroup.For(pair.Item2).WithData(new[] { pair.Item1 }))
             .ToImmutableList();
         }
 
