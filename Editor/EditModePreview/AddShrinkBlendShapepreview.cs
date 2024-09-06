@@ -37,22 +37,9 @@ namespace com.aoyon.scenemeshutils
 
         public Task<IRenderFilterNode> Instantiate(RenderGroup group, IEnumerable<(Renderer, Renderer)> proxyPairs, ComputeContext context)
         {
-            var component = group.GetData<AddShrinkBlendShape[]>().SingleOrDefault();
-            if (component == default) return null;
-
-            context.Observe(component);
-
-            var pair = proxyPairs.SingleOrDefault();
-            if (pair == default) return null;
-
-            if (!(pair.Item1 is SkinnedMeshRenderer original)) return null;
-            if (!(pair.Item2 is SkinnedMeshRenderer proxy)) return null;
-
-            Mesh mesh = proxy.sharedMesh;
-            if (mesh == null) return null;
-
-            Mesh modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(mesh, component.triangleSelection.ToHashSet());
-            return Task.FromResult<IRenderFilterNode>(new AddShrinkBlendShapePreviewNode(modifiedMesh));
+            var node = new AddShrinkBlendShapePreviewNode();
+            if (!node.Initialize(group, proxyPairs, context)) return null;
+            return Task.FromResult<IRenderFilterNode>(node);
         }
     }
 
@@ -60,12 +47,65 @@ namespace com.aoyon.scenemeshutils
     {
         public RenderAspects WhatChanged => RenderAspects.Mesh;
         private Mesh _modifiedMesh; 
+        private AddShrinkBlendShape _component;
 
-        public AddShrinkBlendShapePreviewNode(Mesh mesh)
+        public bool Initialize(RenderGroup group, IEnumerable<(Renderer, Renderer)> proxyPairs, ComputeContext context)
         {
-            _modifiedMesh = mesh;
+            _component = group.GetData<AddShrinkBlendShape[]>().SingleOrDefault();
+            if (_component == default) 
+            {
+                return false;
+            }
+
+            SkinnedMeshRenderer proxy = GetProxy(proxyPairs);
+            if (proxy == null)
+            {
+                return false;
+            } 
+
+            context.Observe(_component);
+            _modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
+
+            return true;
         }
 
+        public Task<IRenderFilterNode> Refresh(IEnumerable<(Renderer, Renderer)> proxyPairs, ComputeContext context, RenderAspects updatedAspects)
+        {              
+            if ((updatedAspects & RenderAspects.Mesh) == 0 && updatedAspects != 0)
+            {
+                return Task.FromResult<IRenderFilterNode>(null);
+            }
+
+            if (_component == null) 
+            {
+                return Task.FromResult<IRenderFilterNode>(null);
+            }
+
+            SkinnedMeshRenderer proxy = GetProxy(proxyPairs);
+            if (proxy == null) 
+            {
+                return Task.FromResult<IRenderFilterNode>(null);
+            }
+
+            context.Observe(_component);
+            _modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
+
+            return Task.FromResult<IRenderFilterNode>(this);
+        }
+
+        private static SkinnedMeshRenderer GetProxy(IEnumerable<(Renderer, Renderer)> proxyPairs)
+        {
+            var pair = proxyPairs.SingleOrDefault();
+            if (pair == default) return null;
+
+            if (!(pair.Item1 is SkinnedMeshRenderer original)) return null;
+            if (!(pair.Item2 is SkinnedMeshRenderer proxy)) return null;
+
+            if (proxy.sharedMesh == null) return null;
+
+            return proxy;
+        }
+        
         public void OnFrame(Renderer original, Renderer proxy)
         {
             if (original is SkinnedMeshRenderer o_smr && proxy is SkinnedMeshRenderer p_smr)
