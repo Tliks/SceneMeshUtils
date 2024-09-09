@@ -61,82 +61,9 @@ namespace com.aoyon.scenemeshutils
             CustomAnimationMode.StopAnimationMode();
         }
 
-        public void RenderGUI()
+
+        private void ProcessNewSelection()
         {
-            LocalizationEditor.RenderLocalize();
-            GUI.enabled = _triangleSelector == null;
-            using (new GUILayout.HorizontalScope())
-            {   
-                GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelection.TriangleSelection"));
-                int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions);
-                if (selectedIndex != _selectedIndex)
-                {   
-                    _selectedIndex = selectedIndex;
-                    if (_selectedIndex == 0)
-                    {
-                        ReplaceListValues(_target, new List<int>());
-                        //StopPrview();
-                    }
-                    else
-                    {
-                        ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
-                        //StartPreview();
-                    }
-                }
-
-                GUI.enabled = _selectedIndex != 0;
-                if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.Remove")))
-                {
-                    //StopPrview();
-                    SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
-                    LoadAsset();
-                    _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
-                    if (_selectedIndex != 0)
-                    {
-                        ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
-                    }
-                    else
-                    {
-                        ReplaceListValues(_target, new List<int>());
-                    }
-                    //StartPreview();
-                    
-                }
-                GUI.enabled = true;
-            }
-            GUI.enabled = true;
-            
-            string label = _selectedIndex == 0 ? LocalizationEditor.GetLocalizedText("TriangleSelection.Add") : LocalizationEditor.GetLocalizedText("TriangleSelection.Edit");
-            if (GUILayout.Button(_triangleSelector == null ? label : LocalizationEditor.GetLocalizedText("TriangleSelection.CloseSelector")))
-            {
-                if (_triangleSelector == null)
-                {
-                    //StopPrview();
-
-                    // Add New Selection
-                    if (_selectedIndex == 0)
-                    {
-                        _selectorcontext.isedit = false;
-                        _selectorcontext.target_default = new HashSet<int>();
-                    }
-                    // Edit Current Selection
-                    else
-                    {
-                        _selectorcontext.isedit = true;
-                        _selectorcontext.target_default = new HashSet<int>(_triangleSelections[_selectedIndex - 1].selection);
-                        _selectorcontext.displayname = _triangleSelections[_selectedIndex - 1].displayname;
-                    }
-
-                    _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
-                }
-                else
-                {
-                    _triangleSelector.Dispose();
-                }
-            }
-            
-            // 新規選択
-            GUI.enabled = _triangleSelector == null;
             if (_selectorcontext.end)
             {
                 _selectorcontext.end = false;
@@ -179,12 +106,106 @@ namespace com.aoyon.scenemeshutils
                 
                 //StartPreview();
             }
+        }
+
+        public void RenderGUI()
+        {
+            LocalizationEditor.RenderLocalize();
+
+            GUI.enabled = _triangleSelector == null;
+            using (new GUILayout.HorizontalScope())
+            {   
+                GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelection.TriangleSelection"));
+                RenderTriangleSelection();
+
+                GUI.enabled = _selectedIndex != 0;
+                RenderRemoveSelection();
+                GUI.enabled = true;
+            }
             GUI.enabled = true;
 
-            /*
-            string label = (target as RemoveMeshFromScene).triangleSelection != null ? (target as RemoveMeshFromScene).triangleSelection.selection.Count.ToString() : "なくない?";
-            GUILayout.Label(label);
-            */
+            RenderEditSelection();
+            
+            // 新規選択
+            GUI.enabled = _triangleSelector == null;
+            ProcessNewSelection();
+            GUI.enabled = true;
+        }
+
+        public void RenderTriangleSelection()
+        {
+            int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions);
+            if (selectedIndex != _selectedIndex)
+            {   
+                _selectedIndex = selectedIndex;
+                if (_selectedIndex == 0)
+                {
+                    ReplaceListValues(_target, new List<int>());
+                    //StopPrview();
+                }
+                else
+                {
+                    ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
+                    //StartPreview();
+                }
+            }
+        }
+
+        public void RenderRemoveSelection()
+        {
+            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.Remove")))
+            {
+                //StopPrview();
+                SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
+                LoadAsset();
+                _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
+                if (_selectedIndex != 0)
+                {
+                    ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
+                }
+                else
+                {
+                    ReplaceListValues(_target, new List<int>());
+                }
+                //StartPreview();
+            }
+        }
+
+        public void RenderEditSelection()
+        {
+            string label = _selectedIndex == 0 ? LocalizationEditor.GetLocalizedText("TriangleSelection.Add") : LocalizationEditor.GetLocalizedText("TriangleSelection.Edit");
+            RenderEditSelection(label);
+        }
+
+        public void RenderEditSelection(string label)
+        {
+            if (GUILayout.Button(_triangleSelector == null ? label : LocalizationEditor.GetLocalizedText("TriangleSelection.CloseSelector")))
+            {
+                if (_triangleSelector == null)
+                {
+                    //StopPrview();
+
+                    // Add New Selection
+                    if (_selectedIndex == 0)
+                    {
+                        _selectorcontext.isedit = false;
+                        _selectorcontext.target_default = new HashSet<int>();
+                    }
+                    // Edit Current Selection
+                    else
+                    {
+                        _selectorcontext.isedit = true;
+                        _selectorcontext.target_default = new HashSet<int>(_triangleSelections[_selectedIndex - 1].selection);
+                        _selectorcontext.displayname = _triangleSelections[_selectedIndex - 1].displayname;
+                    }
+
+                    _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+                }
+                else
+                {
+                    _triangleSelector.Dispose();
+                }
+            }
         }
 
         private void LoadAsset()
@@ -209,19 +230,6 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
-        private void ToggleAutoPreview()
-        {
-            if ( !_isAutoPreview)
-            {
-                _isAutoPreview = true;
-                //StartPreview();
-            }
-            else
-            {
-                _isAutoPreview = false;
-                //StopPrview();
-            }
-        }
 
         internal void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, RenderSelectorContext ctx, object value)
         {
