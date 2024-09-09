@@ -35,14 +35,8 @@ namespace com.aoyon.scenemeshutils
         {
             _originskinnedMeshRenderer = skinnedMeshRenderer;
             _renderSelector = CreateInstance<RenderSelector>();
-            RenderSelectorContext ctx = new()
-            {
-                isKeep = true,
-                isRenderToggle = true,
-                FixedPreview = true
-            };
             serializedObject = new SerializedObject(this);
-            _renderSelector.Initialize(_originskinnedMeshRenderer, ctx, serializedObject.FindProperty("_targetselection"));
+            _renderSelector.Initialize(_originskinnedMeshRenderer, serializedObject.FindProperty("_targetselection"));
             _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
         }
 

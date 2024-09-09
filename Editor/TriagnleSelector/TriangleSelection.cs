@@ -10,13 +10,6 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 namespace com.aoyon.scenemeshutils
 {
 
-    public class RenderSelectorContext
-    {
-        public bool isKeep = true;
-        public bool isRenderToggle = true;
-        public bool FixedPreview = true;
-        public bool isblendhsape = false;
-    }
 
     public class RenderSelector : Editor
     {
@@ -29,26 +22,17 @@ namespace com.aoyon.scenemeshutils
         private string[] _displayedOptions;
         private int _selectedIndex = 0;
         private TriangleSelectorContext _selectorcontext;
-        private RenderSelectorContext _renderctx;
 
-        private bool _isAutoPreview = true;
 
         public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, SerializedProperty target)
         {
-            Initialize(skinnedMeshRenderer, new RenderSelectorContext(), target);
-        }
-
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, RenderSelectorContext ctx, SerializedProperty target)
-        {
             CustomAnimationMode.StopAnimationMode();
             _skinnedMeshRenderer = skinnedMeshRenderer;
-            _renderctx = ctx;
             _mesh = _skinnedMeshRenderer.sharedMesh;
             LoadAsset();
             _target = target;
             _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
             _selectorcontext = CreateInstance<TriangleSelectorContext>();
-            if (!_renderctx.isRenderToggle) _isAutoPreview = _renderctx.FixedPreview;
             //StartPreview();
         }
 
@@ -228,12 +212,6 @@ namespace com.aoyon.scenemeshutils
             {
                 listProperty.GetArrayElementAtIndex(i).intValue = newValues[i];
             }
-        }
-
-
-        internal void Initialize(SkinnedMeshRenderer originskinnedMeshRenderer, RenderSelectorContext ctx, object value)
-        {
-            throw new NotImplementedException();
         }
     }
 

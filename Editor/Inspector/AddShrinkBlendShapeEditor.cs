@@ -13,11 +13,7 @@ namespace com.aoyon.scenemeshutils
             SkinnedMeshRenderer skinnedMeshRenderer = (target as AddShrinkBlendShape).GetComponent<SkinnedMeshRenderer>();
             SerializedProperty targetselection = serializedObject.FindProperty(nameof(AddShrinkBlendShape.triangleSelection));
             _renderSelector = CreateInstance<RenderSelector>();
-            RenderSelectorContext ctx = new()
-            {
-                isblendhsape = true,
-            };
-            _renderSelector.Initialize(skinnedMeshRenderer, ctx, targetselection);
+            _renderSelector.Initialize(skinnedMeshRenderer, targetselection);
         }
 
         private void OnDisable()
