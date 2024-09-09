@@ -40,7 +40,12 @@ namespace com.aoyon.scenemeshutils
 
         public bool _mergeSamePosition = true;
         private bool _checkAll = true;
-        private bool _isIsland = true;
+        private enum SelectionModes
+        {
+            Island,
+            Poligon
+        }
+        private SelectionModes _selectionMode;
         public float _scale = 0.03f;
         private string _selectionName = "";
 
@@ -101,7 +106,8 @@ namespace com.aoyon.scenemeshutils
             LocalizationEditor.RenderLocalize();
             
             EditorGUILayout.Space();
-            GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectedTotalPolygonsLabel"), EditorStyles.boldLabel);
+            string label  = $"{LocalizationEditor.GetLocalizedText("TriangleSelector.SelectedTotalPolygonsLabel")}: {_OriginskinnedMeshRenderer.name}";
+            GUILayout.Label(label, EditorStyles.boldLabel);
             GUILayout.Label($"{_previewController._triangleSelectionManager.GetSelectedTriangles().Count}/{_previewController._triangleSelectionManager.GetAllTriangles().Count}");
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.commondescription"), MessageType.Info);
 
@@ -111,10 +117,9 @@ namespace com.aoyon.scenemeshutils
 
             EditorGUILayout.Space();
 
-            GUILayout.BeginHorizontal();
             RenderSelectionMode();
-            RenderModeoff();
-            GUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
 
             process_options();
 
@@ -205,6 +210,8 @@ namespace com.aoyon.scenemeshutils
                     }
                     return;
                 }
+
+                bool _isIsland = _selectionMode == SelectionModes.Island;
 
                 //左クリック
                 if (e.type == EventType.MouseDown && e.button == 0)
@@ -312,53 +319,70 @@ namespace com.aoyon.scenemeshutils
 
         private void RenderSelectionMode()
         {
-            GUILayout.BeginHorizontal();
-
-            GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionMode"));
-
-            string[] options = { LocalizationEditor.GetLocalizedText("TriangleSelector.island"), LocalizationEditor.GetLocalizedText("TriangleSelector.polygon") };
-            int SelectionModeIndex = _isIsland ? 0 : 1;
-            SelectionModeIndex = EditorGUILayout.Popup(SelectionModeIndex, options);
-            _isIsland = SelectionModeIndex == 0 ? true: false;
-
-            GUILayout.EndHorizontal();
-        }
-
-        private void RenderModeoff()
-        {
-            if (GUILayout.Button(!_isPreviewEnabled ? LocalizationEditor.GetLocalizedText("TriangleSelector.EnableSelectionButton") : LocalizationEditor.GetLocalizedText("TriangleSelector.DisableSelectionButton")))
+            using (new GUILayout.HorizontalScope())
             {
-                _isPreviewEnabled = !_isPreviewEnabled;
+                GUILayoutOption[] options = {GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false)};
+                GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.SelectionMode"), options);
+                string[] modes = { LocalizationEditor.GetLocalizedText("TriangleSelector.islandMode"), LocalizationEditor.GetLocalizedText("TriangleSelector.polygonMode") };
+                _selectionMode = (SelectionModes)GUILayout.Toolbar((int)_selectionMode, modes);
+                string lebal;
+                if (_selectionMode == SelectionModes.Island)
+                {
+                    lebal = LocalizationEditor.GetLocalizedText("TriangleSelector.island.description");
+                }
+                else if (_selectionMode == SelectionModes.Poligon)
+                {
+                    lebal = LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.description");
+                }
+                else
+                {
+                    throw new InvalidOperationException("invalid selection mode");
+                }
+                RenderInfo(lebal);
             }
         }
 
         private void process_options()
         {
-            if (_isIsland)
+            if (_selectionMode == SelectionModes.Island)
             {
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.description"), MessageType.Info);
-                EditorGUILayout.Space();
-                _mergeSamePosition = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle"), !_mergeSamePosition);
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle.description"), MessageType.Info);
-                _checkAll = !EditorGUILayout.Toggle(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle"), !_checkAll);
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle.description"), MessageType.Info);
+                using (new GUILayout.HorizontalScope())
+                {
+                    string label = LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle");
+                    _mergeSamePosition = !EditorGUILayout.Toggle(label, !_mergeSamePosition);
+                    RenderInfo(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SplitMeshMoreToggle.description"));
+                }
+
+                using (new GUILayout.HorizontalScope())
+                {
+                    string label = LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle");
+                    _checkAll = !EditorGUILayout.Toggle(label, !_checkAll);
+                    RenderInfo(LocalizationEditor.GetLocalizedText("TriangleSelector.island.SelectAllInRangeToggle.description"));
+                }
             }
-            else
+            else if (_selectionMode == SelectionModes.Poligon)
             {
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.description"), MessageType.Info);
-                EditorGUILayout.Space();
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.scale"));
                     _scale = EditorGUILayout.Slider(_scale, 0.0f, 0.1f);
+                    RenderInfo(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.scale.description"));  
                 }
-                EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("TriangleSelector.polygon.scale.description"), MessageType.Info);
             }
-
-            EditorGUILayout.Space();
+            else
+            {
+                throw new InvalidOperationException("invalid selection mode");
+            }
 
         }
 
+        private void RenderInfo(string label)
+        {
+            GUIContent infoContent = new GUIContent(EditorGUIUtility.IconContent("_Help"));
+            infoContent.tooltip = label;
+            GUILayoutOption[] options = {GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false)};
+            GUILayout.Label(infoContent, options);
+        }
 
     }
 }
