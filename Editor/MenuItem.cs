@@ -54,11 +54,12 @@ namespace com.aoyon.scenemeshutils
         static void CreateModuleMerged()
         {   
             count++; 
-            if (count != Selection.gameObjects.Count()) return;
+            if (count != Selection.gameObjects.Count())
+            {
+                ModuleCreatorProcessor.CheckAndCopyBones(Selection.gameObjects, new ModuleCreatorSettings());
+                count = 0;
+            }
 
-            ModuleCreatorProcessor.CheckAndCopyBones(Selection.gameObjects, new ModuleCreatorSettings());
-            
-            count = 0;
         }
         
         private const string CREATEMODULETR= "Create Module with Triangle Selector";
@@ -66,16 +67,24 @@ namespace com.aoyon.scenemeshutils
         [MenuItem(MCPATH + "/" + CREATEMODULETR, true, MENU_PRIORITY)]
         static bool CreateModuleTRValidation()
         {
-            if (Selection.gameObjects.Length >= 2) return false;
             return Selection.activeGameObject != null && Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>() != null;
         }
 
         [MenuItem(MCPATH + "/" + CREATEMODULETR, false, MENU_PRIORITY)]
         static void CreateModuleTR()
         {
-            SkinnedMeshRenderer skinnedMeshRenderer = Selection.activeGameObject.GetComponent<SkinnedMeshRenderer>();
-            ModuleCreator.ShowWindow(skinnedMeshRenderer);
+            count++;
+            if (count == Selection.gameObjects.Count())
+            {
+                SkinnedMeshRenderer[] skinnedMeshRenderers = Selection.gameObjects
+                    .Select(obj => obj.GetComponent<SkinnedMeshRenderer>())
+                    .Where(renderer => renderer != null)
+                    .ToArray();
+                ModuleCreator.ShowWindow(skinnedMeshRenderers);
+                count = 0;
+            }
         }
+
 
 
         [MenuItem("GameObject/SceneMeshUtils/Create Mask texture", true, MENU_PRIORITY)]

@@ -16,38 +16,51 @@ namespace com.aoyon.scenemeshutils
             IncludePhysBoneColider = true
         };
 
-        public SkinnedMeshRenderer _originskinnedMeshRenderer;
-        private static string _rootname;
+        private SkinnedMeshRenderer[] _skinnedMeshRenderers;
         [SerializeField]
-        private List<int> _targetselection = new();
-        private RenderSelector _renderSelector;
+        private List<List<int>> _targetselections = new();
+        private RenderSelector[] _renderSelectors;
         private bool _outputunselected = false;
         private SerializedObject serializedObject;
 
-        public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
+        public static void ShowWindow(SkinnedMeshRenderer[] skinnedMeshRenderers)
         {
             ModuleCreator window = GetWindow<ModuleCreator>();
-            window.Initialize(skinnedMeshRenderer);
+            window.Initialize(skinnedMeshRenderers);
             window.Show();
         }
 
-        private void Initialize(SkinnedMeshRenderer skinnedMeshRenderer)
+        private void Initialize(SkinnedMeshRenderer[] skinnedMeshRenderers)
         {
-            _originskinnedMeshRenderer = skinnedMeshRenderer;
-            _renderSelector = CreateInstance<RenderSelector>();
+            _skinnedMeshRenderers = skinnedMeshRenderers;
+
             serializedObject = new SerializedObject(this);
-            _renderSelector.Initialize(_originskinnedMeshRenderer, serializedObject.FindProperty("_targetselection"));
-            _rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
+
+            _renderSelectors = new RenderSelector[_skinnedMeshRenderers.Length];
+            for (int i = 0; i < _skinnedMeshRenderers.Length; i++)
+            {
+                var renderSelector = CreateInstance<RenderSelector>();                
+                renderSelector.Initialize(_skinnedMeshRenderers[i], serializedObject.FindProperty("_targetselections").GetArrayElementAtIndex(i));
+                _renderSelectors[i] = renderSelector;
+            }
         }
 
         void OnDestroy()
         {
-            _renderSelector.Dispose();
+            foreach(var renderSelector in _renderSelectors)
+            {
+                renderSelector.Dispose();
+            }
         }
         
         void OnGUI()
         {
             serializedObject.Update();
+
+            for (int i = 0; i < numberOfRenderers; i++)
+            {
+                _skinnedMeshRenderers[i] = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(_skinnedMeshRenderers[i], typeof(SkinnedMeshRenderer), true);
+            }
 
             _renderSelector.RenderGUI();
 
@@ -94,8 +107,9 @@ namespace com.aoyon.scenemeshutils
                 {
                     newMesh = MeshUtility.DeleteMesh(_originskinnedMeshRenderer.sharedMesh, Triangles);
                 }
-                 
-                string path = AssetPathUtility.GenerateMeshPath(_rootname, "PartialMesh");
+                
+                string rootname = CheckUtility.CheckRoot(_originskinnedMeshRenderer.gameObject).name;
+                string path = AssetPathUtility.GenerateMeshPath(rootname, "PartialMesh");
                 AssetDatabase.CreateAsset(newMesh, path);
                 AssetDatabase.SaveAssets();
 
