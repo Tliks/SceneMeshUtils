@@ -116,9 +116,18 @@ namespace com.aoyon.scenemeshutils
             GUI.enabled = true;
         }
 
-        public void RenderTriangleSelection()
+        public void RenderTriangleSelection(GUILayoutOption[] options = null)
         {
-            int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions);
+            RenderTriangleSelection("None", options);
+        }
+
+        public void RenderTriangleSelection(string label, GUILayoutOption[] options = null)
+        {
+            string[] displayedOptions = new[] { label }
+                .Concat(_displayedOptions)
+                .ToArray();
+
+            int selectedIndex = EditorGUILayout.Popup(_selectedIndex, displayedOptions, options);
             if (selectedIndex != _selectedIndex)
             {   
                 _selectedIndex = selectedIndex;
@@ -155,15 +164,22 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
-        public void RenderEditSelection()
+        public void RenderEditSelection(GUILayoutOption[] options = null)
         {
-            string label = _selectedIndex == 0 ? LocalizationEditor.GetLocalizedText("TriangleSelection.Add") : LocalizationEditor.GetLocalizedText("TriangleSelection.Edit");
-            RenderEditSelection(label);
+            string add = LocalizationEditor.GetLocalizedText("TriangleSelection.Add");
+            string edit = LocalizationEditor.GetLocalizedText("TriangleSelection.Edit");
+            string close = LocalizationEditor.GetLocalizedText("TriangleSelection.CloseSelector");
+            string[] labels = new string[] { add, edit, close };
+            RenderEditSelection(labels, options);
         }
 
-        public void RenderEditSelection(string label)
-        {
-            if (GUILayout.Button(_triangleSelector == null ? label : LocalizationEditor.GetLocalizedText("TriangleSelection.CloseSelector")))
+        public void RenderEditSelection(string[] labels, GUILayoutOption[] options = null)
+        {   
+            string label = _triangleSelector == null 
+                ? (_selectedIndex == 0 ? labels[0] : labels[1]) 
+                : labels[2];
+
+            if (GUILayout.Button(label, options))
             {
                 if (_triangleSelector == null)
                 {
@@ -198,9 +214,6 @@ namespace com.aoyon.scenemeshutils
             _triangleSelections = _triangleSelectionContainer.selections;
             _displayedOptions = _triangleSelections
                 .Select(ts => $"{ts.displayname} ({SaveAsScriptableObject.CalculatePercent(ts.selection.Count(), _triangleSelectionContainer.TriangleCount)}%)")
-                .ToArray();
-            _displayedOptions = new[] { "None" }
-                .Concat(_displayedOptions)
                 .ToArray();
         }
 
