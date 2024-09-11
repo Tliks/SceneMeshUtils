@@ -10,6 +10,8 @@
 ### Removed
 
 ### Fixed
+- invalid reference of renderer
+- BeginLayoutGroup must be called first.
 
 ### Security
 
