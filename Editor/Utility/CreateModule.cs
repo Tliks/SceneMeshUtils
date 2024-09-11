@@ -219,17 +219,17 @@ namespace com.aoyon.scenemeshutils
                     new_root.transform.position = Vector3.zero;
 
                     var target = new List<GameObject> { _skinnedMeshRenderers[i].gameObject };
-                    List<SkinnedMeshRenderer> newskinnedMeshRenderers = ModuleCreatorProcessor.GetRenderers(root, new_root, target).ToList();
+                    var newskinnedMeshRender = ModuleCreatorProcessor.GetRenderers(root, new_root, target).Single();
                     var triangleindies = _targetselections[i].List;
                     if (triangleindies.Count() > 0)
                     {
-                        Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
+                        Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRender.sharedMesh, triangleindies.ToHashSet());
                         string path = AssetPathUtility.GenerateMeshPath(root.name, "PartialMesh");
                         AssetDatabase.CreateAsset(newMesh, path);
                         AssetDatabase.SaveAssets();
-                        newskinnedMeshRenderers[i].sharedMesh = newMesh;
+                        newskinnedMeshRender.sharedMesh = newMesh;
                     }
-                    ModuleCreatorProcessor.CreateModule(new_root, newskinnedMeshRenderers, _Settings, root.scene);
+                    ModuleCreatorProcessor.CreateModule(new_root, new List<SkinnedMeshRenderer>{ newskinnedMeshRender }, _Settings, root.scene);
                     Debug.Log("Saved prefab to " + variantPath);
 
                 }
