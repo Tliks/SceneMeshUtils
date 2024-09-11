@@ -137,6 +137,7 @@ namespace com.aoyon.scenemeshutils
             {
                 CreateModule();
                 Close();
+                GUIUtility.ExitGUI(); 
             }
             GUI.enabled = true;
 
