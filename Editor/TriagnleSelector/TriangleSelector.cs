@@ -59,6 +59,8 @@ namespace com.aoyon.scenemeshutils
             Type[] types = new Type[] { typeof(ModuleCreator), typeof(MaskTextureGenerator) };
             TriangleSelector window = GetWindow<TriangleSelector>(types); 
             context.SkinnedMeshRenderer = skinnedMeshRenderer;
+            Selection.activeObject = null; 
+            Selection.activeGameObject = skinnedMeshRenderer.gameObject;
             window.Initialize(context);
             window.Show();
             return window;
