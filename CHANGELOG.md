@@ -10,10 +10,13 @@
 ### Removed
 
 ### Fixed
-- invalid reference of renderer
-- BeginLayoutGroup must be called first.
 
 ### Security
+
+## [0.1.0-beta.5] - 2024-09-12
+### Fixed
+- invalid reference of renderer
+- BeginLayoutGroup must be called first
 
 ## [0.1.0-beta.4] - 2024-09-12
 ### Added
