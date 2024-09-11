@@ -28,12 +28,14 @@ namespace com.aoyon.scenemeshutils
 
             foreach (var obj in Selection.gameObjects)
             {
-                ModuleCreatorProcessor.CheckAndCopyBones(new List<GameObject> {obj}, new ModuleCreatorSettings());
+                var skinnedMeshRenderer = obj.GetComponent<SkinnedMeshRenderer>();
+                ModuleCreatorProcessor.CheckAndCopyBones(new List<SkinnedMeshRenderer> {skinnedMeshRenderer}, new ModuleCreatorSettings());
             }
 
             count = 0;
         }
         
+        /*
         private const string CREATEMODULEMERGED = "Create Module (Merged)";
 
         [MenuItem(MCPATH + "/" + CREATEMODULEMERGED, true, MENU_PRIORITY)]
@@ -56,13 +58,15 @@ namespace com.aoyon.scenemeshutils
             count++; 
             if (count != Selection.gameObjects.Count())
             {
-                ModuleCreatorProcessor.CheckAndCopyBones(Selection.gameObjects, new ModuleCreatorSettings());
+                var target = Selection.gameObjects.Select(obj => obj.GetComponent<SkinnedMeshRenderer>());
+                ModuleCreatorProcessor.CheckAndCopyBones(target, new ModuleCreatorSettings());
                 count = 0;
             }
 
         }
+        */
         
-        private const string CREATEMODULETR= "Create Module with Triangle Selector";
+        private const string CREATEMODULETR= "Create Module (Advanced)";
 
         [MenuItem(MCPATH + "/" + CREATEMODULETR, true, MENU_PRIORITY)]
         static bool CreateModuleTRValidation()

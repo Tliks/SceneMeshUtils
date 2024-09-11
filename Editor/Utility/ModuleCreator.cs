@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VRC.SDK3.Dynamics.PhysBone.Components;
+using System.Collections.Immutable;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -23,38 +24,22 @@ namespace com.aoyon.scenemeshutils
     public class ModuleCreatorProcessor
     {
         
-        public static GameObject CheckAndCopyBones(IEnumerable<GameObject> objs, ModuleCreatorSettings settings)
+        public static GameObject CheckAndCopyBones(IEnumerable<SkinnedMeshRenderer> skinnedMeshRenderers, ModuleCreatorSettings settings)
         {   
             GameObject instance = null;
             try
             {
+
+                IEnumerable<GameObject> objs = skinnedMeshRenderers.Select(r => r.gameObject);
                 GameObject root = CheckUtility.CheckObjects(objs);
-                IEnumerable<int> skinIndices = CheckUtility.GetIndices(root, objs);
 
                 string mesh_name = objs.Count() == 1 ? objs.First().name : $"{root.name} Parts";
                 (GameObject new_root, string variantPath) = SaveRootObject(root, mesh_name);
                 new_root.transform.position = Vector3.zero;
 
-                CheckUtility.CleanUpHierarchy(new_root, skinIndices, settings);
+                IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers = GetRenderers(root, new_root, objs);
 
-                PrefabUtility.SavePrefabAsset(new_root);
-
-                //float BaseX = root.transform.position.x;
-                //float randomX = UnityEngine.Random.Range(BaseX + 1, BaseX + 2);
-                instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
-                SceneManager.MoveGameObjectToScene(instance, objs.First().scene);
-                //Vector3 newPosition = instance.transform.position;
-                //newPosition.x = randomX;
-                //instance.transform.position = newPosition;
-
-                //Selection.objects.Append(instance);
-
-                EditorGUIUtility.PingObject(instance);
-                Selection.activeGameObject = instance;
-                //Selection.objects = Selection.gameObjects.Append(instance).ToArray();
-
-                Selection.activeGameObject = new_root;
-                EditorUtility.FocusProjectWindow();
+                CreateModule(new_root, newskinnedMeshRenderers, settings, root.scene);
                 UnityEngine.Debug.Log("Saved prefab to " + variantPath);
 
             }
@@ -72,17 +57,39 @@ namespace com.aoyon.scenemeshutils
             return instance;
         }
 
-        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(SkinnedMeshRenderer sourceRenderer)
+        public static void CreateModule(GameObject new_root, IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers, ModuleCreatorSettings settings, Scene scene)
         {
-            List<GameObject> objs = new List<GameObject> {sourceRenderer.gameObject};
-            GameObject root = CheckUtility.CheckObjects(objs);
-            IEnumerable<int> skinIndices = CheckUtility.GetIndices(root, objs);
-            GameObject new_root = CopyObjects(root, "AAU Preview");
-            SkinnedMeshRenderer skinnedMeshRenderer = CheckUtility.CleanUpHierarchy(new_root, skinIndices);
-            return (new_root, skinnedMeshRenderer);
+            GameObject instance = null;
+            try
+            {
+                CheckUtility.CleanUpHierarchy(new_root, newskinnedMeshRenderers, settings);
+
+                PrefabUtility.SavePrefabAsset(new_root);
+
+                instance = PrefabUtility.InstantiatePrefab(new_root) as GameObject;
+                SceneManager.MoveGameObjectToScene(instance, scene);
+
+                EditorGUIUtility.PingObject(instance);
+                Selection.activeGameObject = instance;
+
+                Selection.activeGameObject = new_root;
+                EditorUtility.FocusProjectWindow();
+
+            }
+
+            catch (InvalidOperationException ex)
+            {
+                UnityEngine.Debug.LogError("[Module Creator] " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogError(ex.StackTrace);
+                UnityEngine.Debug.LogError(ex);
+            }
+
         }
 
-        private static (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
+        public static (GameObject, string) SaveRootObject(GameObject root_object, string source_name)
         {
             string variantPath = AssetPathUtility.GeneratePrefabPath(root_object.name, source_name);
 
@@ -95,13 +102,51 @@ namespace com.aoyon.scenemeshutils
 
         }
 
-        private static GameObject CopyObjects(GameObject root_object, string source_name)
+        public static (GameObject, IEnumerable<SkinnedMeshRenderer>, string) SaveRenderes(IEnumerable<SkinnedMeshRenderer> skinnedMeshRenderers, string source_name)
         {
-            GameObject duplicatedParent = UnityEngine.Object.Instantiate(root_object);
-            duplicatedParent.name = source_name;
-            return duplicatedParent;
+            IEnumerable<GameObject> objs = skinnedMeshRenderers.Select(r => r.gameObject);
+            GameObject root = CheckUtility.CheckObjects(objs);
+
+            (GameObject new_root, string variantPath) = SaveRootObject(root, source_name);
+
+            IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers = GetRenderers(root, new_root, objs);
+
+            return (new_root, newskinnedMeshRenderers, variantPath);
         }
 
+        public static (GameObject, IEnumerable<SkinnedMeshRenderer>) CopyRenderers(IEnumerable<SkinnedMeshRenderer> skinnedMeshRenderers)
+        {
+            IEnumerable<GameObject> objs = skinnedMeshRenderers.Select(r => r.gameObject);
+            GameObject root = CheckUtility.CheckObjects(objs);
+
+            GameObject new_root = UnityEngine.Object.Instantiate(root);
+
+            IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers = GetRenderers(root, new_root, objs);
+
+            return (new_root, newskinnedMeshRenderers);
+
+        }
+
+        public static (GameObject, SkinnedMeshRenderer) PreviewMesh(SkinnedMeshRenderer sourceRenderer)
+        {
+            List<GameObject> objs = new List<GameObject> {sourceRenderer.gameObject};
+            GameObject root = CheckUtility.CheckObjects(objs);
+
+            GameObject new_root = UnityEngine.Object.Instantiate(root);
+            new_root.name = "SMU Preview";
+
+            IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers = GetRenderers(root, new_root, objs);
+
+            CheckUtility.CleanUpHierarchy(new_root, newskinnedMeshRenderers);
+            return (new_root, newskinnedMeshRenderers.First());
+        }
+
+        public static IEnumerable<SkinnedMeshRenderer> GetRenderers(GameObject root, GameObject new_root, IEnumerable<GameObject> objs)
+        {
+            IEnumerable<int> skinIndices = CheckUtility.GetIndices(root, objs);
+            IEnumerable<SkinnedMeshRenderer> newskinnedMeshRenderers = CheckUtility.GetSkin(new_root, skinIndices);
+            return newskinnedMeshRenderers;
+        }
 
     }
 }

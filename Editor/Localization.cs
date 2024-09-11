@@ -52,6 +52,7 @@ namespace com.aoyon.scenemeshutils
             { "Utility.ModuleCreator.advancedoptions", new string[] {"Advanced Options", "高度なオプション"}},
             { "Utility.ModuleCreator.CreateModuleButton", new string[] { "Create Module", "モジュールを作成" } },
             { "Utility.ModuleCreator.OutputUnselcted", new string[] { "Include Unselected Module", "未選択のモジュールも含める" } },
+            { "Utility.ModuleCreator.MergePrefab", new string[] { "Combine into a Single Prefab", "一つのPrefabにまとめる" } },
             { "Utility.ModuleCreator.PhysBoneToggle", new string[] { "PhysBone", "PhysBone" } },
             { "Utility.ModuleCreator.PhysBoneColiderToggle", new string[] { "PhysBoneColider", "PhysBoneColider" } },
             { "Utility.ModuleCreator.AdditionalTransformsToggle", new string[] { "Additional Transforms", "追加のTransform" } },
