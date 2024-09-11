@@ -14,9 +14,7 @@ namespace com.aoyon.scenemeshutils
             SkinnedMeshRenderer skinnedMeshRenderer = (target as RemoveMeshFromScene).GetComponent<SkinnedMeshRenderer>();
             SerializedProperty targetselection = serializedObject.FindProperty(nameof(RemoveMeshFromScene.triangleSelection));
             _renderSelector = CreateInstance<RenderSelector>();
-            RenderSelectorContext ctx = new();
-            ctx.isKeep = false;
-            _renderSelector.Initialize(skinnedMeshRenderer, ctx, targetselection);
+            _renderSelector.Initialize(skinnedMeshRenderer, targetselection);
         }
 
         private void OnDisable()
