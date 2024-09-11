@@ -199,7 +199,7 @@ namespace com.aoyon.scenemeshutils
                     var triangleindies = _targetselections[i].List;
                     if (triangleindies.Count() > 0)
                     {
-                        Mesh newMesh = MeshUtility.DeleteMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
+                        Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
                         string path = AssetPathUtility.GenerateMeshPath(root.name, "PartialMesh");
                         AssetDatabase.CreateAsset(newMesh, path);
                         AssetDatabase.SaveAssets();
@@ -223,7 +223,7 @@ namespace com.aoyon.scenemeshutils
                     var triangleindies = _targetselections[i].List;
                     if (triangleindies.Count() > 0)
                     {
-                        Mesh newMesh = MeshUtility.DeleteMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
+                        Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
                         string path = AssetPathUtility.GenerateMeshPath(root.name, "PartialMesh");
                         AssetDatabase.CreateAsset(newMesh, path);
                         AssetDatabase.SaveAssets();
