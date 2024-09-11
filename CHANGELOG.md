@@ -2,14 +2,23 @@
 
 ## [Unreleased]
 ### Added
+- MenuItem of Create Module (Advanced)
+    - UI for Multiple Renderers
+    - feat to Combine into Single Prefab
 
 ### Changed
+- add .meta
+- Simplify the UI of triangle selector
+- select renderer on initilaize triangle selector
 
 ### Deprecated
 
 ### Removed
+- MenuItem of Create Module (Merged)
+- MenuItem of Create Module with Triangle Selector
 
 ### Fixed
+- downstream nodes do not refresh
 
 ### Security
 
