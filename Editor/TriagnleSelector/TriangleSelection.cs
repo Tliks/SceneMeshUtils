@@ -45,53 +45,6 @@ namespace com.aoyon.scenemeshutils
             CustomAnimationMode.StopAnimationMode();
         }
 
-
-        private void ProcessNewSelection()
-        {
-            if (_selectorcontext.end)
-            {
-                _selectorcontext.end = false;
-
-                List<int> newSelection = _selectorcontext.target;
-                if (newSelection != null && newSelection.Count > 0)
-                {
-                    //Debug.Log("update");
-                    _selectorcontext.target = new List<int>();
-                    
-                    string displayname = _selectorcontext.displayname;
-                    // displaynameが未入力時は自動決定
-                    if (displayname == null || displayname == "")
-                    {
-                        string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
-                        displayname = uniquename;
-                    }
-                    _selectorcontext.displayname = null;
-
-                    if (_selectorcontext.iseditmodeasnew)
-                    {
-                        TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
-                        newTriangleSelection.displayname = displayname;
-                        newTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
-                        SaveAsScriptableObject.AddData(_triangleSelectionContainer, newTriangleSelection);
-                    }
-                    else
-                    {
-                        TriangleSelection currentTriangleSelection = _triangleSelectionContainer.selections[_selectedIndex - 1];
-                        currentTriangleSelection.selection = newSelection;
-                        currentTriangleSelection.displayname = displayname;
-                        currentTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
-                        SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
-                    }
-
-                    ReplaceListValues(_target, new List<int>(newSelection));
-                    LoadAsset();
-                    _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
-                }
-                
-                //StartPreview();
-            }
-        }
-
         public void RenderGUI()
         {
             LocalizationEditor.RenderLocalize();
@@ -109,11 +62,6 @@ namespace com.aoyon.scenemeshutils
             GUI.enabled = true;
 
             RenderEditSelection();
-            
-            // 新規選択
-            GUI.enabled = _triangleSelector == null;
-            ProcessNewSelection();
-            GUI.enabled = true;
         }
 
         public void RenderTriangleSelection(GUILayoutOption[] options = null)
@@ -205,6 +153,57 @@ namespace com.aoyon.scenemeshutils
                 {
                     _triangleSelector.Dispose();
                 }
+            }
+
+            // 新規選択
+            GUI.enabled = _triangleSelector == null;
+            ProcessNewSelection();
+            GUI.enabled = true;
+        }
+
+        private void ProcessNewSelection()
+        {
+            if (_selectorcontext.end)
+            {
+                _selectorcontext.end = false;
+
+                List<int> newSelection = _selectorcontext.target;
+                if (newSelection != null && newSelection.Count > 0)
+                {
+                    //Debug.Log("update");
+                    _selectorcontext.target = new List<int>();
+                    
+                    string displayname = _selectorcontext.displayname;
+                    // displaynameが未入力時は自動決定
+                    if (displayname == null || displayname == "")
+                    {
+                        string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
+                        displayname = uniquename;
+                    }
+                    _selectorcontext.displayname = null;
+
+                    if (_selectorcontext.iseditmodeasnew)
+                    {
+                        TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
+                        newTriangleSelection.displayname = displayname;
+                        newTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
+                        SaveAsScriptableObject.AddData(_triangleSelectionContainer, newTriangleSelection);
+                    }
+                    else
+                    {
+                        TriangleSelection currentTriangleSelection = _triangleSelectionContainer.selections[_selectedIndex - 1];
+                        currentTriangleSelection.selection = newSelection;
+                        currentTriangleSelection.displayname = displayname;
+                        currentTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
+                        SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
+                    }
+
+                    ReplaceListValues(_target, new List<int>(newSelection));
+                    LoadAsset();
+                    _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
+                }
+                
+                //StartPreview();
             }
         }
 
