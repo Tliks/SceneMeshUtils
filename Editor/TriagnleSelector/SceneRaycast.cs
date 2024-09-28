@@ -5,14 +5,14 @@ using UnityEngine;
 namespace com.aoyon.scenemeshutils
 {
 
-    public static class SceneRaycastUtility
+    public class SceneRaycastUtility
     {
-        private static MeshCollider selectedMeshCollider;
-        private static MeshCollider ubselectedMeshCollider;
+        private MeshCollider selectedMeshCollider;
+        private MeshCollider ubselectedMeshCollider;
 
-        private static RaycastHit[] hits = new RaycastHit[20];
+        private RaycastHit[] hits = new RaycastHit[20];
 
-        public static bool TryRaycast(out RaycastHit hitInfo)
+        public bool TryRaycast(out RaycastHit hitInfo)
         {
             hitInfo = new RaycastHit();
 
@@ -39,7 +39,7 @@ namespace com.aoyon.scenemeshutils
             return false;
         }
 
-        public static bool IsSelected(RaycastHit hitInfo)
+        public bool IsSelected(RaycastHit hitInfo)
         {
             MeshCollider hitcolider = hitInfo.collider as MeshCollider;
             if (hitcolider == selectedMeshCollider)
@@ -52,7 +52,7 @@ namespace com.aoyon.scenemeshutils
             }
         }
         
-        public static void AddCollider(GameObject selectedObject, GameObject unselectedObject)
+        public void AddCollider(GameObject selectedObject, GameObject unselectedObject)
         {   
             selectedMeshCollider = AddMeshCollider(selectedObject);
             ubselectedMeshCollider = AddMeshCollider(unselectedObject);
@@ -72,7 +72,7 @@ namespace com.aoyon.scenemeshutils
             
         }
 
-        public static void UpdateColider(Mesh mesh, bool IsSelected)
+        public void UpdateColider(Mesh mesh, bool IsSelected)
         {
             if (IsSelected)
             {

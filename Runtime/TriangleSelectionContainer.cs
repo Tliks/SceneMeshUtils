@@ -17,8 +17,8 @@ namespace com.aoyon.scenemeshutils
     {
         public List<int> selection = new();
 
-        public string displayname;
-        public long createtime;
+        public string displayname = "";
+        public long createtime = 0;
     }
 }
 

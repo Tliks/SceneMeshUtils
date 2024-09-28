@@ -1,19 +1,23 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
+using nadena.dev.ndmf.preview;
 
 namespace com.aoyon.scenemeshutils
 {
     [CustomEditor(typeof(AddShrinkBlendShape))]
     public class AddShrinkBlendShapeEditor: Editor
     {
+        private AddShrinkBlendShape _target;
         private RenderSelector _renderSelector;
 
         private void OnEnable()
         {
-            SkinnedMeshRenderer skinnedMeshRenderer = (target as AddShrinkBlendShape).GetComponent<SkinnedMeshRenderer>();
-            SerializedProperty targetselection = serializedObject.FindProperty(nameof(AddShrinkBlendShape.triangleSelection));
+            _target = target as AddShrinkBlendShape;
+            var skinnedMeshRenderer = _target.GetComponent<SkinnedMeshRenderer>();
             _renderSelector = CreateInstance<RenderSelector>();
-            _renderSelector.Initialize(skinnedMeshRenderer, targetselection);
+            _renderSelector.Initialize(skinnedMeshRenderer, _target.triangleSelection);
+            _renderSelector.RegisterApplyCallback(OnTriangleSelectionChanged);
         }
 
         private void OnDisable()
@@ -21,15 +25,18 @@ namespace com.aoyon.scenemeshutils
             _renderSelector.Dispose();
         }
 
+        private void OnTriangleSelectionChanged(List<int> newSelection)
+        {
+            _target.triangleSelection = newSelection;
+            ChangeNotifier.NotifyObjectUpdate(_target);
+        }
+
+
         public override void OnInspectorGUI()
         {
-            serializedObject.Update();
-            
             _renderSelector.RenderGUI();
             NDMFToggleButton.RenderNDMFToggle(AddShrinkBlendShapePreview.ToggleNode);
-            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.BlendShape.description"), MessageType.Info);
-
-            serializedObject.ApplyModifiedProperties();
+            //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.BlendShape.description"), MessageType.Info);
         }
     }
 }

@@ -17,16 +17,9 @@ namespace com.aoyon.scenemeshutils
         private GameObject _preview;
         private IEnumerable<SkinnedMeshRenderer> _previewRenderers;
 
-        [System.Serializable]
-        public class ListWrapper
-        {
-            public List<int> List = new();
-        }
-        [SerializeField]
-        private List<ListWrapper> _targetselections;
+        private List<List<int>> _targetselections = new();
         private RenderSelector[] _renderSelectors;
 
-        private SerializedObject serializedObject;
         private Vector2 scrollPosition;
 
 
@@ -55,21 +48,14 @@ namespace com.aoyon.scenemeshutils
             (_preview, _previewRenderers) = ModuleCreatorProcessor.CopyRenderers(_skinnedMeshRenderers);
             _preview.transform.position += new Vector3(-100, 0, -100);
 
-            serializedObject = new SerializedObject(this);
-            serializedObject.Update();
-
-            SerializedProperty listProperty = serializedObject.FindProperty("_targetselections");
-            listProperty.arraySize = _skinnedMeshRenderers.Count();
-
             _renderSelectors = new RenderSelector[_skinnedMeshRenderers.Count()];
             for (int i = 0; i < _skinnedMeshRenderers.Count(); i++)
             {
                 var renderSelector = CreateInstance<RenderSelector>();
-                renderSelector.Initialize(_skinnedMeshRenderers[i], listProperty.GetArrayElementAtIndex(i).FindPropertyRelative("List"));
+                renderSelector.Initialize(_skinnedMeshRenderers[i], _targetselections[i], "(100%)%");
+                renderSelector.RegisterApplyCallback(newSelection => _targetselections[i] = newSelection);
                 _renderSelectors[i] = renderSelector;
             }
-
-            serializedObject.ApplyModifiedProperties();
         }
 
         void OnDestroy()
@@ -83,8 +69,6 @@ namespace com.aoyon.scenemeshutils
         
         void OnGUI()
         {
-            serializedObject.Update();
-
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
             // 冒頭
@@ -106,7 +90,7 @@ namespace com.aoyon.scenemeshutils
 
                     _skinnedMeshRenderers[i] = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(_skinnedMeshRenderers[i], typeof(SkinnedMeshRenderer), true, GUILayout.Width(width1));
 
-                    _renderSelectors[i].RenderTriangleSelection("(100%)", new GUILayoutOption[]{ GUILayout.Width(width2)});
+                    _renderSelectors[i].RenderTriangleSelection(new GUILayoutOption[]{ GUILayout.Width(width2)});
 
                     string[] labels = new string[]{ "Edit", "Edit", "Close" };
                     GUILayoutOption[] options = new GUILayoutOption[]{ GUILayout.Width(80f), GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false)};
@@ -174,11 +158,6 @@ namespace com.aoyon.scenemeshutils
 
 
             EditorGUILayout.EndScrollView();
-
-            if (serializedObject != null && serializedObject.targetObject != null)
-            {
-                serializedObject.ApplyModifiedProperties();
-            }
             
         }
 
@@ -197,7 +176,7 @@ namespace com.aoyon.scenemeshutils
 
                 for (int i = 0; i < newskinnedMeshRenderers.Count(); i++)
                 {
-                    var triangleindies = _targetselections[i].List;
+                    var triangleindies = _targetselections[i];
                     if (triangleindies.Count() > 0)
                     {
                         Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRenderers[i].sharedMesh, triangleindies.ToHashSet());
@@ -221,7 +200,7 @@ namespace com.aoyon.scenemeshutils
 
                     var target = new List<GameObject> { _skinnedMeshRenderers[i].gameObject };
                     var newskinnedMeshRender = ModuleCreatorProcessor.GetRenderers(root, new_root, target).Single();
-                    var triangleindies = _targetselections[i].List;
+                    var triangleindies = _targetselections[i];
                     if (triangleindies.Count() > 0)
                     {
                         Mesh newMesh = MeshUtility.KeepMesh(newskinnedMeshRender.sharedMesh, triangleindies.ToHashSet());

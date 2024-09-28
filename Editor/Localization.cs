@@ -27,7 +27,7 @@ namespace com.aoyon.scenemeshutils
             { "TriangleSelector.RedoButton", new string[] { "Redo (Ctrl+Y)", "やり直す (Ctrl+Y)" } },
             { "TriangleSelector.EnableSelectionButton", new string[] { "Resume Selection", "選択を再開" } },
             { "TriangleSelector.DisableSelectionButton", new string[] { "Stop Selection", "選択を停止" } },
-            { "TriangleSelector.SelectionMode", new string[] { "SelectionMode", "選択モード" }},
+            { "TriangleSelector.SelectionMode", new string[] { "SelectMode", "選択モード" }},
 
             { "TriangleSelector.islandMode", new string[] { "Island", "アイランド" }},
             { "TriangleSelector.island.description", new string[] {"In Island Mode, you can select structurally separated parts of the mesh (islands). For range selection, drag to ensure the desired  island is completely within the selection range.", "アイランドモードでは構造的に分離されたメッシュの一部(アイランド)が選択できます。範囲選択では選択したいアイランドが範囲内に完全に入るようにドラックしてください。"}},
@@ -41,10 +41,10 @@ namespace com.aoyon.scenemeshutils
             { "TriangleSelector.polygon.scale", new string[] { "Scale", "スケール" }},
             { "TriangleSelector.polygon.scale.description", new string[] { "The value that determines how far polygons from the clicked point are included in the selection.", "クリックした箇所からどれだけ離れた位置にあるポリゴンまで選択対象に含めるかの値です。" }},
 
-            { "TriangleSelector.SelectionName", new string[] { "SelectionName(Optional)", "選択箇所の名前(オプション)"}},
+            { "TriangleSelector.SelectionName", new string[] { "SaveName(Optional)", "保存名(オプション)"}},
             { "TriangleSelector.SaveMode", new string[] { "Save Method", "保存方法"}},
-            { "TriangleSelector.SaveMode.edit", new string[] { "Overwrite", "上書き"}},
-            { "TriangleSelector.SaveMode.new", new string[] { "New", "新規"}},
+            { "TriangleSelector.SaveMode.overwrite", new string[] { "Overwrite", "上書き"}},
+            { "TriangleSelector.SaveMode.EditNew", new string[] { "New", "新規"}},
             { "TriangleSelector.Apply", new string[] { "Apply", "適用"}},
         
 

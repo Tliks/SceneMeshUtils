@@ -1,50 +1,51 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
-using System.Linq;
+using nadena.dev.ndmf.preview;
 using Stopwatch = System.Diagnostics.Stopwatch;
+using Object = UnityEngine.Object;
 
 namespace com.aoyon.scenemeshutils
 {
     
     public class PreviewController
     {
-        public TriangleSelectionManager _triangleSelectionManager;
+        public TriangleSelectionManager TriangleSelectionManager;
         private IslandUtility _islandUtility;
+        private MouseEvents _mouseEvents;
+        private SceneRaycastUtility _sceneRaycastUtility;
+
+        private SceneView _defaultSceneView;
+        private CustomSceneView _customSceneView;
 
         private GameObject _selectedObject; 
         private GameObject _unselectedObject; 
 
         private SkinnedMeshRenderer _selectedMeshRenderer;
-        private SkinnedMeshRenderer _unselectedMeshRenderer;
+        public SkinnedMeshRenderer UnselectedMeshRenderer;
 
         private Mesh _originalMesh;
         private Mesh _bakedMesh;
 
-        private CustomSceneView _customSceneView;
-
         private Dictionary<int, int> _selectedoldToNewIndexMap;
         private Dictionary<int, int> _unselectedoldToNewIndexMap;
 
-        public void Initialize(SkinnedMeshRenderer renderer, HashSet<int> defaultselection)
+
+        public void Initialize(
+            SkinnedMeshRenderer renderer,
+            IReadOnlyCollection<int> defaultselection,
+            string defaultSelectionName)
         {
-            AddpreviewObject(ref _unselectedObject, renderer.transform.position, renderer.transform.rotation);
-            AddpreviewObject(ref _selectedObject, renderer.transform.position + new Vector3(100, 0, -100), renderer.transform.rotation);
+            UnselectedMeshRenderer = renderer;
 
             _originalMesh = renderer.sharedMesh;
             _bakedMesh = new Mesh(); 
             renderer.BakeMesh(_bakedMesh);
 
-            _unselectedMeshRenderer = renderer;
-            GameObject selectedroot;
-            (selectedroot, _selectedMeshRenderer) = ModuleCreatorProcessor.PreviewMesh(renderer);
-            selectedroot.transform.position += new Vector3(100, 0, -100);
-            selectedroot.transform.SetParent(_selectedObject.transform, true);            
-
-            OpenCustomSceneView();
-
             HashSet<int> allTriangleIndices = Enumerable.Range(0, _bakedMesh.triangles.Count() / 3).ToHashSet();    
-            _triangleSelectionManager = new TriangleSelectionManager(allTriangleIndices, defaultselection);
+            TriangleSelectionManager = new TriangleSelectionManager(allTriangleIndices, defaultselection);
 
             Stopwatch stopwatch = new();
             stopwatch.Start();
@@ -52,21 +53,65 @@ namespace com.aoyon.scenemeshutils
             stopwatch.Stop();
             Debug.Log($"Islands Merged: {_islandUtility.GetMergedIslandCount()} of {_islandUtility.GetIslandCount()} - Elapsed Time: {stopwatch.ElapsedMilliseconds} ms");
 
-            SceneRaycastUtility.AddCollider(_selectedObject, _unselectedObject);
+            _sceneRaycastUtility = new();
+
+            _mouseEvents = new MouseEvents(this);
+
+            TriangleSelectorOverlay.Initialize(this, defaultSelectionName);
+        }
+
+        public void ShowWindow()
+        {
+            NDMFPreview.DisablePreviewDepth += 1;
+            CustomAnimationMode.StartAnimationMode(UnselectedMeshRenderer);
+
+            Selection.activeObject = null; 
+            Selection.activeGameObject = UnselectedMeshRenderer.gameObject;
+
+            AddpreviewObject(ref _unselectedObject, UnselectedMeshRenderer.transform.position, UnselectedMeshRenderer.transform.rotation);
+            AddpreviewObject(ref _selectedObject, UnselectedMeshRenderer.transform.position + new Vector3(100, 0, -100), UnselectedMeshRenderer.transform.rotation);
+
+            GameObject selectedroot;
+            (selectedroot, _selectedMeshRenderer) = ModuleCreatorProcessor.PreviewMesh(UnselectedMeshRenderer);
+            selectedroot.transform.position += new Vector3(100, 0, -100);
+            selectedroot.transform.SetParent(_selectedObject.transform, true);
+
+            _customSceneView = OpenCustomSceneView();
+            TriangleSelectorOverlay.ShowOverlay(_customSceneView);
+          
+            _sceneRaycastUtility.AddCollider(_selectedObject, _unselectedObject);
             HighlightEdgesManager.AddComponent(_selectedObject, _unselectedObject);
 
-            CustomAnimationMode.StopAnimationMode();
-            CustomAnimationMode.StartAnimationMode(renderer);
+            SceneView.duringSceneGui += _mouseEvents.OnSceneGUI;
 
             UpdateMesh();
         }
 
         public void Dispose()
         {
-            _customSceneView.Close();
+            CustomSceneView.Dispose();
             Object.DestroyImmediate(_selectedObject);
             Object.DestroyImmediate(_unselectedObject);
+            SceneView.duringSceneGui -= _mouseEvents.OnSceneGUI;
             CustomAnimationMode.StopAnimationMode();
+            
+            if (NDMFPreview.DisablePreviewDepth < 0)
+                throw new InvalidCastException($"invaild NDMFPreview.DisablePreviewDepth: {NDMFPreview.DisablePreviewDepth}");
+            NDMFPreview.DisablePreviewDepth -= 1;
+        }
+
+        public void Apply()
+        {
+            TriangleSelectorResult result = new()
+            {
+                SelectedTriangleIndices = TriangleSelectionManager.GetSelectedTriangles().ToList(),
+                UnSelectedTriangleIndices = TriangleSelectionManager.GetUnselectedTriangles().ToList(),
+
+                SelectionName = TriangleSelectorOverlay.Options?.SelectionName,
+                SaveMode = TriangleSelectorOverlay.Options?.SaveMode
+            };
+
+            TriangleSelector.InvokeAndDispose(result);
         }
 
         private void AddpreviewObject(ref GameObject obj, Vector3 position, Quaternion rotation)
@@ -77,41 +122,27 @@ namespace com.aoyon.scenemeshutils
             obj.transform.rotation = rotation;
         }
 
-        private void OpenCustomSceneView()
+        private CustomSceneView OpenCustomSceneView()
         {
-            SceneView defaultSceneView = SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null;
-            defaultSceneView.drawGizmos = true;
-            _customSceneView = CustomSceneView.ShowWindow(defaultSceneView);
-            _customSceneView.drawGizmos = true;
-            FocusCustomViewObject(_customSceneView, _bakedMesh, _selectedMeshRenderer.transform);
-        }
+            _defaultSceneView = SceneView.lastActiveSceneView;
+            _defaultSceneView.drawGizmos = true;
+            var customSceneView = CustomSceneView.ShowWindow(_defaultSceneView);
+            customSceneView.drawGizmos = true;
+            CustomSceneView.FocusCustomViewObject(customSceneView, _bakedMesh, _selectedMeshRenderer.transform);
 
-        private void FocusCustomViewObject(SceneView sceneView, Mesh mesh, Transform origin)
-        {
-            Vector3 middleVertex = Vector3.zero;
-            Vector3[] vertices = mesh.vertices;
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                middleVertex += origin.position + origin.rotation * vertices[i];
-            }
-            middleVertex /= vertices.Length;
-
-            float cameraDistance = 0.3f;
-            sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
-            sceneView.Repaint();
+            return customSceneView;
         }
 
         private void UpdateMesh()
         {   
-            HashSet<int> selectedtriangleIndices = _triangleSelectionManager.GetSelectedTriangles();
-            HashSet<int> unselectedtriangleIndices = _triangleSelectionManager.GetUnselectedTriangles();
+            HashSet<int> selectedtriangleIndices = TriangleSelectionManager.GetSelectedTriangles();
+            HashSet<int> unselectedtriangleIndices = TriangleSelectionManager.GetUnselectedTriangles();
 
             Mesh selectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, unselectedtriangleIndices);
             Mesh unselectedPreviewMesh = MeshUtility.RemoveTriangles(_originalMesh, selectedtriangleIndices);
 
             _selectedMeshRenderer.sharedMesh = selectedPreviewMesh;
-            _unselectedMeshRenderer.sharedMesh = unselectedPreviewMesh;
+            UnselectedMeshRenderer.sharedMesh = unselectedPreviewMesh;
 
             Mesh selectedcolliderMesh = null;
             Mesh unselectedcolliderMesh = null;
@@ -125,34 +156,41 @@ namespace com.aoyon.scenemeshutils
                 (unselectedcolliderMesh,  _unselectedoldToNewIndexMap) = MeshUtility.ProcesscolliderMesh(_bakedMesh, unselectedtriangleIndices);
             }
 
-            SceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
-            SceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
+            _sceneRaycastUtility.UpdateColider(selectedcolliderMesh, true);
+            _sceneRaycastUtility.UpdateColider(unselectedcolliderMesh, false);
+
+            HandleUtility.Repaint();
         }
 
 
-        public void HandleClick(bool isUpdate, bool isIsland, bool mergeSamePosition, float scale)
+        public void HandleClick(bool updateMesh)
         {
-            if (SceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
+            var options = TriangleSelectorOverlay.Options;
+            if (_sceneRaycastUtility.TryRaycast(out RaycastHit hitInfo))
             {
-                bool IsSelected = SceneRaycastUtility.IsSelected(hitInfo);
-                Transform origin = IsSelected ? _selectedMeshRenderer.transform : _unselectedMeshRenderer.transform;
+                bool IsSelected = _sceneRaycastUtility.IsSelected(hitInfo);
+                Transform origin = IsSelected ? _selectedMeshRenderer.transform : UnselectedMeshRenderer.transform;
                 var indexmap = IsSelected ? _selectedoldToNewIndexMap : _unselectedoldToNewIndexMap;
 
                 int triangleIndex = hitInfo.triangleIndex;
                 triangleIndex = MeshUtility.ConvertNewTriangleIndexToOld(triangleIndex, indexmap);
 
                 HashSet<int> TriangleIndices;
-                if (isIsland)
+                if (options.SelectionMode == SelectionModes.Island)
                 {
-                    TriangleIndices = _islandUtility.GetIslandtrianglesFromTriangleIndex(triangleIndex, mergeSamePosition);
+                    TriangleIndices = _islandUtility.GetIslandtrianglesFromTriangleIndex(triangleIndex, options.MergeSamePosition);
+                }
+                else if (options.SelectionMode == SelectionModes.Polygon)
+                {
+                    TriangleIndices = _islandUtility.GetTrianglesNearPositionInIsland(triangleIndex, hitInfo.point, options.Scale, origin);
                 }
                 else
                 {
-                    TriangleIndices = _islandUtility.GetTrianglesNearPositionInIsland(triangleIndex, hitInfo.point, scale, origin);
+                    throw new InvalidOperationException();
                 }
-                TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
+                TriangleIndices = TriangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
 
-                if (isUpdate)
+                if (updateMesh)
                 {
                     UpdatePreview(TriangleIndices, IsSelected);
                 }
@@ -167,28 +205,34 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
-        public void HandleDrag(bool isUpdate, bool isIsland, bool mergeSamePosition, bool checkAll, Vector2 startpos, Vector2 endpos)
+        public void HandleDrag(bool updateMesh, Vector2 startpos, Vector2 endpos)
         {
             if (startpos.x == endpos.x || startpos.y == endpos.y) return;
 
+            var options = TriangleSelectorOverlay.Options;
             bool IsSelected = CustomSceneView.IsSelected();
-            Transform origin = IsSelected ? _selectedMeshRenderer.transform : _unselectedMeshRenderer.transform;
+            Transform origin = IsSelected ? _selectedMeshRenderer.transform : UnselectedMeshRenderer.transform;
             
             MeshCollider meshCollider = GenerateColider(startpos, endpos);
 
             HashSet<int> TriangleIndices;
-            if (isIsland)
+            if (options.SelectionMode == SelectionModes.Island)
             {
-                TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, mergeSamePosition, checkAll, origin);
+                TriangleIndices = _islandUtility.GetIslandTrianglesInCollider(meshCollider, options.MergeSamePosition, options.CheckAll, origin);
             }
-            else
+            else if (options.SelectionMode == SelectionModes.Polygon)
             {
                 TriangleIndices = _islandUtility.GetTrianglesInsideCollider(meshCollider, origin);
             }
-            Object.DestroyImmediate(meshCollider.gameObject);
-            TriangleIndices = _triangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
+            else
+            {
+                throw new InvalidOperationException();
+            }
 
-            if (isUpdate)
+            Object.DestroyImmediate(meshCollider.gameObject);
+            TriangleIndices = TriangleSelectionManager.GetUniqueTriangles(TriangleIndices, IsSelected);
+
+            if (updateMesh)
             {
                 UpdatePreview(TriangleIndices, IsSelected);
             }
@@ -200,7 +244,7 @@ namespace com.aoyon.scenemeshutils
 
         private void UpdatePreview(HashSet<int> TriangleIndices, bool IsSelected)
         {
-            _triangleSelectionManager.UpdateSelection(TriangleIndices, IsSelected);
+            TriangleSelectionManager.UpdateSelection(TriangleIndices, IsSelected);
             UpdateMesh();
             HighlightEdgesManager.ClearHighlights();
         }
@@ -210,7 +254,7 @@ namespace com.aoyon.scenemeshutils
             Color color = IsSelected ? Color.red : Color.cyan;
             HighlightEdgesManager.SetHighlightColor(color);
 
-            Transform origin = IsSelected ? _selectedMeshRenderer.transform : _unselectedMeshRenderer.transform;
+            Transform origin = IsSelected ? _selectedMeshRenderer.transform : UnselectedMeshRenderer.transform;
             HighlightEdgesManager.PrepareTriangleHighlights(_bakedMesh.triangles, TriangleIndices, _bakedMesh.vertices, origin);
         }
     
@@ -276,31 +320,31 @@ namespace com.aoyon.scenemeshutils
 
         public void PerformUndo()
         {
-            _triangleSelectionManager.Undo();
+            TriangleSelectionManager.Undo();
             UpdateMesh();
         }
 
         public void PerformRedo()
         {
-            _triangleSelectionManager.Redo();
+            TriangleSelectionManager.Redo();
             UpdateMesh();       
         }
 
         public void SelectAll()
         {
-            _triangleSelectionManager.SelectAllTriangles();
+            TriangleSelectionManager.SelectAllTriangles();
             UpdateMesh();
         }
 
         public void UnselectAll()
         {
-            _triangleSelectionManager.UnselectAllTriangles();
+            TriangleSelectionManager.UnselectAllTriangles();
             UpdateMesh();
         }
 
         public void ReverseAll()
         {
-            _triangleSelectionManager.ReverseAllTriangles();
+            TriangleSelectionManager.ReverseAllTriangles();
             UpdateMesh();
         }
 

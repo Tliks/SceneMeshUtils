@@ -1,20 +1,23 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using nadena.dev.ndmf.preview;
 
 namespace com.aoyon.scenemeshutils
 {
     [CustomEditor(typeof(RemoveMeshFromScene))]
     public class RemoveMeshFromSceneEditor: Editor
     {
+        private RemoveMeshFromScene _target;
         private RenderSelector _renderSelector;
 
         private void OnEnable()
         {
-            SkinnedMeshRenderer skinnedMeshRenderer = (target as RemoveMeshFromScene).GetComponent<SkinnedMeshRenderer>();
-            SerializedProperty targetselection = serializedObject.FindProperty(nameof(RemoveMeshFromScene.triangleSelection));
+            _target = target as RemoveMeshFromScene;
+            var skinnedMeshRenderer = _target.GetComponent<SkinnedMeshRenderer>();
             _renderSelector = CreateInstance<RenderSelector>();
-            _renderSelector.Initialize(skinnedMeshRenderer, targetselection);
+            _renderSelector.Initialize(skinnedMeshRenderer, _target.triangleSelection);
+            _renderSelector.RegisterApplyCallback(OnTriangleSelectionChanged);
         }
 
         private void OnDisable()
@@ -22,16 +25,17 @@ namespace com.aoyon.scenemeshutils
             _renderSelector.Dispose();
         }
 
-        public override void OnInspectorGUI()
+        private void OnTriangleSelectionChanged(List<int> newSelection)
         {
-            serializedObject.Update();
-
-            _renderSelector.RenderGUI();
-            NDMFToggleButton.RenderNDMFToggle(RemoveMeshFromScenePreview.ToggleNode);
-            EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh.description"), MessageType.Info);
-            
-            serializedObject.ApplyModifiedProperties();
+            _target.triangleSelection = newSelection;
+            ChangeNotifier.NotifyObjectUpdate(_target);
         }
 
+        public override void OnInspectorGUI()
+        {
+            _renderSelector.RenderGUI();
+            NDMFToggleButton.RenderNDMFToggle(RemoveMeshFromScenePreview.ToggleNode);
+            //EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.DeleteMesh.description"), MessageType.Info);
+        }
     }
 }

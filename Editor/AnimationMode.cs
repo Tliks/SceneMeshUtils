@@ -31,6 +31,7 @@ namespace com.aoyon.scenemeshutils
     {
         public static void StartAnimationMode(SkinnedMeshRenderer rendrer)
         {
+            StopAnimationMode();
             AnimationMode.StartAnimationMode();
             AnimationMode.BeginSampling();
             try

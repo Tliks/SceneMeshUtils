@@ -56,11 +56,11 @@ namespace com.aoyon.scenemeshutils
         private HashSet<int> _allTriangleIndices;
         private HashSet<int> _selectedTriangleIndices;
 
-        public TriangleSelectionManager(HashSet<int> allTriangleIndices, HashSet<int> defaultselection)
+        public TriangleSelectionManager(HashSet<int> allTriangleIndices, IReadOnlyCollection<int> defaultselection)
         {
             _history = new HistoryManager();
             _allTriangleIndices = new HashSet<int>(allTriangleIndices);
-            _selectedTriangleIndices = defaultselection;
+            _selectedTriangleIndices = new HashSet<int>(defaultselection);
         }
 
         public void SelectAllTriangles()

@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
-using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -15,101 +14,75 @@ namespace com.aoyon.scenemeshutils
     {
         private SkinnedMeshRenderer _skinnedMeshRenderer;
         private Mesh _mesh;
-        private TriangleSelector _triangleSelector;
         private TriangleSelectionContainer _triangleSelectionContainer;
         private List<TriangleSelection> _triangleSelections;
-        private SerializedProperty _target;
+        private Action<List<int>> _onSelectionChanged;
         private string[] _displayedOptions;
         private int _selectedIndex = 0;
-        private TriangleSelectorContext _selectorcontext;
+        private string _noneLabel;
 
 
-        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, SerializedProperty target)
+        public void Initialize(SkinnedMeshRenderer skinnedMeshRenderer, IReadOnlyList<int> defaultSelection, string label = "None")
         {
-            CustomAnimationMode.StopAnimationMode();
             _skinnedMeshRenderer = skinnedMeshRenderer;
             _mesh = _skinnedMeshRenderer.sharedMesh;
+            _noneLabel = label;
             LoadAsset();
-            _target = target;
-            _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
-            _selectorcontext = CreateInstance<TriangleSelectorContext>();
-            //StartPreview();
+            _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, defaultSelection);
+        }
+
+        public void RegisterApplyCallback(Action<List<int>> onSelectionChanged)
+        {
+            _onSelectionChanged = onSelectionChanged;
         }
 
         public void Dispose()
         {
-            if (_triangleSelector != null)
+            if (!TriangleSelector.Disposed)
             {
-                _triangleSelector.Dispose();
+                TriangleSelector.Dispose();
             }
-            CustomAnimationMode.StopAnimationMode();
         }
 
         public void RenderGUI()
         {
             LocalizationEditor.RenderLocalize();
 
-            GUI.enabled = _triangleSelector == null;
+            GUI.enabled = TriangleSelector.Disposed;
             using (new GUILayout.HorizontalScope())
             {   
                 GUILayout.Label(LocalizationEditor.GetLocalizedText("TriangleSelection.TriangleSelection"));
                 RenderTriangleSelection();
 
-                GUI.enabled = _selectedIndex != 0;
                 RenderRemoveSelection();
-                GUI.enabled = true;
             }
             GUI.enabled = true;
 
             RenderEditSelection();
         }
 
+
         public void RenderTriangleSelection(GUILayoutOption[] options = null)
         {
-            RenderTriangleSelection("None", options);
-        }
-
-        public void RenderTriangleSelection(string label, GUILayoutOption[] options = null)
-        {
-            string[] displayedOptions = new[] { label }
-                .Concat(_displayedOptions)
-                .ToArray();
-
-            int selectedIndex = EditorGUILayout.Popup(_selectedIndex, displayedOptions, options);
+            int selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions, options);
             if (selectedIndex != _selectedIndex)
             {   
                 _selectedIndex = selectedIndex;
-                if (_selectedIndex == 0)
-                {
-                    ReplaceListValues(_target, new List<int>());
-                    //StopPrview();
-                }
-                else
-                {
-                    ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
-                    //StartPreview();
-                }
+                CallSelectionChange(_triangleSelections[_selectedIndex].selection);
             }
         }
 
         public void RenderRemoveSelection()
         {
+            GUI.enabled = _selectedIndex != 0;
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("TriangleSelection.Remove")))
             {
-                //StopPrview();
-                SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex - 1);
+                SaveAsScriptableObject.RemoveData(_triangleSelectionContainer, _selectedIndex);
                 LoadAsset();
-                _selectedIndex = _selectedIndex > 0 ? _selectedIndex - 1 : 0;
-                if (_selectedIndex != 0)
-                {
-                    ReplaceListValues(_target, new List<int>(_triangleSelections[_selectedIndex - 1].selection));
-                }
-                else
-                {
-                    ReplaceListValues(_target, new List<int>());
-                }
-                //StartPreview();
+                _selectedIndex = Math.Max(0, _selectedIndex - 1);
+                CallSelectionChange(_triangleSelections[_selectedIndex].selection);
             }
+            GUI.enabled = true;
         }
 
         public void RenderEditSelection(GUILayoutOption[] options = null)
@@ -122,108 +95,94 @@ namespace com.aoyon.scenemeshutils
         }
 
         public void RenderEditSelection(string[] labels, GUILayoutOption[] options = null)
-        {   
-            string label = _triangleSelector == null 
-                ? (_selectedIndex == 0 ? labels[0] : labels[1]) 
-                : labels[2];
+        {
+            string label;
 
-            if (GUILayout.Button(label, options))
+            // OpenSelector
+            if (TriangleSelector.Disposed)
             {
-                if (_triangleSelector == null)
+                label = labels[_selectedIndex == 0 ? 0 : 1];
+                if (GUILayout.Button(label, options))
                 {
-                    //StopPrview();
-
-                    // Add New Selection
+                    /// Add
                     if (_selectedIndex == 0)
                     {
-                        _selectorcontext.isedit = false;
-                        _selectorcontext.target_default = new HashSet<int>();
+                        TriangleSelector.Initialize(_skinnedMeshRenderer);
                     }
-                    // Edit Current Selection
+                    // Edit
                     else
                     {
-                        _selectorcontext.isedit = true;
-                        _selectorcontext.target_default = new HashSet<int>(_triangleSelections[_selectedIndex - 1].selection);
-                        _selectorcontext.displayname = _triangleSelections[_selectedIndex - 1].displayname;
+                        var defaultSelection = _triangleSelections[_selectedIndex];
+                        TriangleSelector.Initialize(_skinnedMeshRenderer, defaultSelection.selection, defaultSelection.displayname);
                     }
+                    TriangleSelector.RegisterApplyCallback(ProcessNewSelection);
+                }
+            }
+            // CloseSelector
+            else
+            {
+                label = labels[2];
+                if (GUILayout.Button(label, options))
+                {
+                    TriangleSelector.Dispose();
+                }
+            }
+        }
 
-                    _triangleSelector = TriangleSelector.ShowWindow(_selectorcontext, _skinnedMeshRenderer);
+        private void ProcessNewSelection(TriangleSelectorResult result)
+        {
+            List<int> newSelection = result.SelectedTriangleIndices;
+            if (newSelection != null && newSelection.Count > 0)
+            {
+                string displayname = result.SelectionName;
+                // displaynameが未入力時は自動決定
+                if (displayname == null || displayname == "")
+                {
+                    string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
+                    displayname = uniquename;
+                }
+
+                if (result.SaveMode == SaveModes.New || result.SaveMode == SaveModes.EditNew)
+                {
+                    TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
+                    newTriangleSelection.displayname = displayname;
+                    newTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
+                    SaveAsScriptableObject.AddData(_triangleSelectionContainer, newTriangleSelection);
+                }
+                else if (result.SaveMode == SaveModes.OverWrite)
+                {
+                    TriangleSelection currentTriangleSelection = _triangleSelectionContainer.selections[_selectedIndex];
+                    currentTriangleSelection.selection = newSelection;
+                    currentTriangleSelection.displayname = displayname;
+                    currentTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
+                    SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
                 }
                 else
                 {
-                    _triangleSelector.Dispose();
+                    throw new InvalidCastException("invaild SaveMode");
                 }
-            }
-
-            // 新規選択
-            GUI.enabled = _triangleSelector == null;
-            ProcessNewSelection();
-            GUI.enabled = true;
-        }
-
-        private void ProcessNewSelection()
-        {
-            if (_selectorcontext.end)
-            {
-                _selectorcontext.end = false;
-
-                List<int> newSelection = _selectorcontext.target;
-                if (newSelection != null && newSelection.Count > 0)
-                {
-                    //Debug.Log("update");
-                    _selectorcontext.target = new List<int>();
-                    
-                    string displayname = _selectorcontext.displayname;
-                    // displaynameが未入力時は自動決定
-                    if (displayname == null || displayname == "")
-                    {
-                        string uniquename = SaveAsScriptableObject.GetUniqueDisplayname(_triangleSelections);
-                        displayname = uniquename;
-                    }
-                    _selectorcontext.displayname = null;
-
-                    if (_selectorcontext.iseditmodeasnew)
-                    {
-                        TriangleSelection newTriangleSelection = new TriangleSelection { selection = newSelection };
-                        newTriangleSelection.displayname = displayname;
-                        newTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
-                        SaveAsScriptableObject.AddData(_triangleSelectionContainer, newTriangleSelection);
-                    }
-                    else
-                    {
-                        TriangleSelection currentTriangleSelection = _triangleSelectionContainer.selections[_selectedIndex - 1];
-                        currentTriangleSelection.selection = newSelection;
-                        currentTriangleSelection.displayname = displayname;
-                        currentTriangleSelection.createtime = SaveAsScriptableObject.GetTimestamp();
-                        SaveAsScriptableObject.UpdateData(_triangleSelectionContainer);
-                    }
-
-                    ReplaceListValues(_target, new List<int>(newSelection));
-                    LoadAsset();
-                    _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, _target) + 1;
-                }
-                
-                //StartPreview();
-            }
+ 
+                LoadAsset();
+                _selectedIndex = SaveAsScriptableObject.FindIndex(_triangleSelections, newSelection);
+                CallSelectionChange(_triangleSelections[_selectedIndex].selection);
+            }  
         }
 
         private void LoadAsset()
         {
             _triangleSelectionContainer = SaveAsScriptableObject.GetContainer(_mesh);
+            SaveAsScriptableObject.AddDefaultSelection(_triangleSelectionContainer);
             _triangleSelections = _triangleSelectionContainer.selections;
             _displayedOptions = _triangleSelections
-                .Select(ts => $"{ts.displayname} ({SaveAsScriptableObject.CalculatePercent(ts.selection.Count(), _triangleSelectionContainer.TriangleCount)}%)")
+                .Select(ts => ts.selection.Count() == 0 
+                    ? _noneLabel 
+                    : $"{ts.displayname} ({SaveAsScriptableObject.CalculatePercent(ts.selection.Count(), _triangleSelectionContainer.TriangleCount)}%)")
                 .ToArray();
         }
 
-        private void ReplaceListValues(SerializedProperty listProperty, List<int> newValues)
+        private void CallSelectionChange(List<int> newValues)
         {
-            // 普通に遅い
-            listProperty.arraySize = newValues.Count;
-            for (int i = 0; i < newValues.Count; i++)
-            {
-                listProperty.GetArrayElementAtIndex(i).intValue = newValues[i];
-            }
+            _onSelectionChanged?.Invoke(new List<int>(newValues));
         }
     }
 
@@ -251,9 +210,9 @@ namespace com.aoyon.scenemeshutils
             }
         }
 
-        public static void UpdateData(TriangleSelectionContainer triangleSelection)
+        public static void UpdateData(TriangleSelectionContainer container)
         {
-            EditorUtility.SetDirty(triangleSelection);
+            EditorUtility.SetDirty(container);
             AssetDatabase.SaveAssets();
         }
 
@@ -263,7 +222,7 @@ namespace com.aoyon.scenemeshutils
             return index;
         }
 
-        public static int FindIndex(List<TriangleSelection> triangleSelections, List<int> selection)
+        public static int FindIndex(List<TriangleSelection> triangleSelections, IReadOnlyList<int> selection)
         {
             int index = triangleSelections.FindIndex(ts => ts.selection.SequenceEqual(selection));
             return index;
@@ -325,7 +284,20 @@ namespace com.aoyon.scenemeshutils
             AssetDatabase.Refresh();
 
             var loadedInstance = (TriangleSelectionContainer)AssetDatabase.LoadAssetAtPath(uniquePath, typeof(TriangleSelectionContainer));
+
+            AddDefaultSelection(loadedInstance);
             return loadedInstance;
+        }
+
+        public static void AddDefaultSelection(TriangleSelectionContainer container)
+        {
+            bool hasEmptySelection = container.selections.Any(s => s.selection.Count == 0);
+            if (!hasEmptySelection)
+            {
+                var defaultSelection = new TriangleSelection() { selection = new List<int>() };
+                container.selections.Insert(0, defaultSelection);
+                UpdateData(container);
+            }
         }
 
         public static string GetUniqueDisplayname(List<TriangleSelection> selections)

@@ -13,7 +13,6 @@ namespace com.aoyon.scenemeshutils
         private SkinnedMeshRenderer _originskinnedMeshRenderer;
         private string _rootname;
 
-        [SerializeField]
         private List<int> _targetselection = new();
         private RenderSelector _renderSelector;
 
@@ -22,7 +21,6 @@ namespace com.aoyon.scenemeshutils
         private int _areacolorindex = 0;
         private int _backcolorindex = 1;
         private int _expansion = 2;
-        private SerializedObject serializedObject;
 
         public static void ShowWindow(SkinnedMeshRenderer skinnedMeshRenderer)
         {
@@ -35,8 +33,8 @@ namespace com.aoyon.scenemeshutils
         {
             _originskinnedMeshRenderer = originskinnedMeshRenderer;
             _renderSelector = CreateInstance<RenderSelector>();
-            serializedObject = new SerializedObject(this);
-            _renderSelector.Initialize(_originskinnedMeshRenderer, serializedObject.FindProperty("_targetselection"));
+            _renderSelector.Initialize(_originskinnedMeshRenderer, _targetselection);
+            _renderSelector.RegisterApplyCallback(newselection => _targetselection = newselection);
             _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
         }
 
@@ -47,19 +45,11 @@ namespace com.aoyon.scenemeshutils
 
         void OnGUI()
         {
-            serializedObject.Update();
-
             _renderSelector.RenderGUI();
             EditorGUILayout.HelpBox(LocalizationEditor.GetLocalizedText("Utility.mask.description"), MessageType.Info);
 
             EditorGUILayout.Space();
-            RenderGenerateMask();
-
-            if (serializedObject != null && serializedObject.targetObject != null)
-            {
-                serializedObject.ApplyModifiedProperties();
-            }
-            
+            RenderGenerateMask();            
         }
 
         public void RenderGenerateMask()

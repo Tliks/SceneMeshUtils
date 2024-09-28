@@ -25,6 +25,7 @@ SOFTWARE.
 using System;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Overlays;
 using UnityEngine;
 
 namespace com.aoyon.scenemeshutils
@@ -33,19 +34,20 @@ namespace com.aoyon.scenemeshutils
     {
         private static bool isMouseOver = false;
         private static SceneView _defaultSceneView;
+        private static CustomSceneView _window = null;
 
         public static CustomSceneView ShowWindow(SceneView defaultSceneView)
         {
-            var window = CreateWindow<CustomSceneView>();
-            window.titleContent = new GUIContent("Selected Mesh Preview");
-            window.Show();
+            _window = CreateWindow<CustomSceneView>();
+            _window.titleContent = new GUIContent("Triangle Selector");
+            _window.Show();
             _defaultSceneView = defaultSceneView;
             SetLastActiveSceneView(_defaultSceneView);
-            Initialize(window);
-            return window;
+            InitializeCamera(_window);
+            return _window;
         }
 
-        private static void Initialize(CustomSceneView customSceneView)
+        private static void InitializeCamera(CustomSceneView customSceneView)
         {
             var copied = new CameraSettings();
 
@@ -65,15 +67,25 @@ namespace com.aoyon.scenemeshutils
             customSceneView.cameraSettings = copied;
         }
 
+        public static void Dispose()
+        {
+            if (_window != null)
+            {
+                _window.Close();
+            }
+        }
+
         void OnDestroy()
         {
+            _window = null;
             SetLastActiveSceneView(_defaultSceneView);
             isMouseOver = false;
+            TriangleSelector.Dispose();
         }
     
         public void OnGUI()
         {
-            if (EditorWindow.mouseOverWindow == this)
+            if (mouseOverWindow == this)
             {
                 if (!isMouseOver)
                 {
@@ -115,6 +127,23 @@ namespace com.aoyon.scenemeshutils
         {
             return isMouseOver;
         }
+
+        public static void FocusCustomViewObject(SceneView sceneView, Mesh mesh, Transform origin)
+        {
+            Vector3 middleVertex = Vector3.zero;
+            Vector3[] vertices = mesh.vertices;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                middleVertex += origin.position + origin.rotation * vertices[i];
+            }
+            middleVertex /= vertices.Length;
+
+            float cameraDistance = 0.3f;
+            sceneView.LookAt(middleVertex, Quaternion.Euler(0, 180, 0), cameraDistance);
+            sceneView.Repaint();
+        }
+
         
     }
 }
