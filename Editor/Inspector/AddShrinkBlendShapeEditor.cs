@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using nadena.dev.ndmf.preview;
+using com.aoyon.triangleselector;
+using com.aoyon.triangleselector.utils;
 
 namespace com.aoyon.scenemeshutils
 {

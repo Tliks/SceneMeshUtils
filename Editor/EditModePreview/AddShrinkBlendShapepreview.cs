@@ -64,7 +64,7 @@ namespace com.aoyon.scenemeshutils
             } 
 
             context.Observe(_component);
-            _modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
+            _modifiedMesh = ShrinkBlendShape.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
 
             return true;
         }
@@ -88,7 +88,7 @@ namespace com.aoyon.scenemeshutils
             }
 
             context.Observe(_component);
-            _modifiedMesh = ShrinkBlendShapeUtility.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
+            _modifiedMesh = ShrinkBlendShape.GenerateShrinkBlendShape(proxy.sharedMesh, _component.triangleSelection.ToHashSet());
 
             return Task.FromResult<IRenderFilterNode>(this);
         }

@@ -2,22 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using com.aoyon.triangleselector.utils;
 
 namespace com.aoyon.scenemeshutils
 {
-    public class ShrinkBlendShapeUtility
+    public class ShrinkBlendShape
     {
-        private static SkinnedMeshRenderer _originskinnedMeshRenderer;
-        private static string _rootname;
-        private static TriangleSelectionManager _triangleSelectionManager;
-
-        public static void Initialize(SkinnedMeshRenderer origSkinnedMeshRenderer, TriangleSelectionManager triangleSelectionManager)
-        {
-            _originskinnedMeshRenderer = origSkinnedMeshRenderer;
-            _triangleSelectionManager = triangleSelectionManager;
-            _rootname = CheckUtility.CheckRoot(origSkinnedMeshRenderer.gameObject).name;
-        }
-
         public static Mesh GenerateShrinkBlendShape(Mesh originalMesh, HashSet<int> triangleIndices)
         {
             Mesh newMesh = Object.Instantiate(originalMesh);
@@ -133,28 +123,5 @@ namespace com.aoyon.scenemeshutils
             return uniqueName;
         }
 
-        private static void ReplaceMesh()
-        {
-            Mesh newMesh = GenerateShrinkBlendShape(_originskinnedMeshRenderer.sharedMesh, _triangleSelectionManager.GetSelectedTriangles());
-
-            string path = AssetPathUtility.GenerateMeshPath(_rootname, "shrinkMesh");
-            AssetDatabase.CreateAsset(newMesh, path);
-            AssetDatabase.SaveAssets();
-
-            _originskinnedMeshRenderer.sharedMesh = newMesh;
-        }
-
-        public static void Rendergenerateshrink()
-        {
-            EditorGUILayout.Space();
-            GUI.enabled = _triangleSelectionManager.GetSelectedTriangles().Count > 0;
-            if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.BlendShape")))
-            {
-                CustomAnimationMode.StopAnimationMode();
-                ReplaceMesh();
-                CustomAnimationMode.StartAnimationMode(_originskinnedMeshRenderer);
-            }
-            GUI.enabled = true;
-        }
     }
 }

@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using com.aoyon.triangleselector;
+using com.aoyon.triangleselector.utils;
 
 namespace com.aoyon.scenemeshutils
 {
@@ -35,7 +37,7 @@ namespace com.aoyon.scenemeshutils
             _renderSelector = CreateInstance<RenderSelector>();
             _renderSelector.Initialize(_originskinnedMeshRenderer, _targetselection);
             _renderSelector.RegisterApplyCallback(newselection => _targetselection = newselection);
-            _rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
+            //_rootname = CheckUtility.CheckRoot(originskinnedMeshRenderer.gameObject).name;
         }
 
         void OnDisable()
@@ -74,7 +76,6 @@ namespace com.aoyon.scenemeshutils
             EditorGUILayout.Space();
             if (GUILayout.Button(LocalizationEditor.GetLocalizedText("Utility.mask.createtexture")))
             {   
-                CustomAnimationMode.StopAnimationMode();
                 GenerateMask(_targetselection.ToHashSet());
                 Close();
             }
@@ -143,7 +144,11 @@ namespace com.aoyon.scenemeshutils
             foreach (KeyValuePair<string, Texture2D> kvp in maskTextures)
             {
                 string timeStamp = DateTime.Now.ToString("yyMMdd_HHmmss");
-                string path = AssetPathUtility.GenerateTexturePath(_rootname, $"{timeStamp}_{_originskinnedMeshRenderer.name}_{kvp.Key}");
+                string folderpath = $"Assets/SceneMeshUtils/{_rootname}/Texture";
+                string fileName = $"{timeStamp}_{_originskinnedMeshRenderer.name}_{kvp.Key}";
+                string fileExtension = "png";
+                string path = AssetUtility.GenerateVaildPath(folderpath, fileName, fileExtension);
+
                 byte[] bytes = kvp.Value.EncodeToPNG();
                 File.WriteAllBytes(path, bytes);
                 AssetDatabase.Refresh();

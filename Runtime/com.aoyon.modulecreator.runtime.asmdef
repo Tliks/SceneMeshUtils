@@ -1,20 +1,13 @@
 {
     "name": "com.aoyon.scenemeshutils.runtime",
     "rootNamespace": "",
-    "references": [
-        "VRC.SDK3A",
-        "VRC.SDK3A.Editor",
-        "VRC.SDKBase",
-        "VRC.SDKBase.Editor",
-        "nadena.dev.ndmf",
-        "nadena.dev.ndmf.runtime"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": true,
+    "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

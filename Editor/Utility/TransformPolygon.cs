@@ -1,3 +1,5 @@
+/*
+
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
@@ -12,7 +14,6 @@ namespace com.aoyon.scenemeshutils
 
         public static void Initialize(SkinnedMeshRenderer orignalSkinnedMeshRenderer, HashSet<int> triangleIndices)
         {   
-            CustomAnimationMode.StopAnimationMode();
             TransformPolygonUtility transformPolygonUtility = orignalSkinnedMeshRenderer.gameObject.AddComponent<TransformPolygonUtility>();
             Mesh bakedMesh = new Mesh();
             orignalSkinnedMeshRenderer.BakeMesh(bakedMesh);
@@ -46,12 +47,11 @@ namespace com.aoyon.scenemeshutils
         private void UpdateMesh()
         {
             TransformPolygonUtility targetScript = (TransformPolygonUtility)target;
-            HashSet<int> vertexIndices = MeshUtility.GetPolygonVertexIndices(targetScript.originalMesh, targetScript.triangleIndices);
+            HashSet<int> vertexIndices = MeshHelper.GetPolygonVertexIndices(targetScript.originalMesh, targetScript.triangleIndices);
             Mesh newMesh = TransformVertices(targetScript.originalMesh, vertexIndices, targetScript.position, targetScript.rotation, targetScript.scale);
             targetScript.origSkinnedMeshRenderer.sharedMesh = newMesh;
         }
 
-        /*
         private void SaveMesh(TransformPolygonUtility targetScript)
         {
             UpdateMesh();
@@ -59,7 +59,6 @@ namespace com.aoyon.scenemeshutils
             AssetDatabase.CreateAsset(targetScript.origSkinnedMeshRenderer.sharedMesh, path);
             AssetDatabase.SaveAssets();
         }
-        */
 
         private Mesh TransformVertices(Mesh mesh, HashSet<int> vertexIndices, Vector3 position, Vector3 rotation, Vector3 scale)
         {
@@ -129,3 +128,5 @@ namespace com.aoyon.scenemeshutils
     }
     #endif
 }
+
+*/

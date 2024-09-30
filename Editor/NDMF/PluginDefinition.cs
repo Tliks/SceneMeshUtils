@@ -23,9 +23,7 @@ namespace com.aoyon.scenemeshutils
 
             sequence
             .Run(AddShrinkBlendShapePass.Instance)
-            .PreviewingWith(new AddShrinkBlendShapePreview()).Then
-            .Run(RemoveMeshFromScenePass.Instance)
-            .PreviewingWith(new RemoveMeshFromScenePreview());
+            .PreviewingWith(new AddShrinkBlendShapePreview());
         }
     }
 }
